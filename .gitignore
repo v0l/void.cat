@@ -1,0 +1,4 @@
+out/
+*.xml
+config.php
+google*.html

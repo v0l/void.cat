@@ -1,0 +1,12 @@
+<?php
+	/* DB SETTINGS */
+	define('_DB_HOST', '127.0.0.1');
+	define('_DB_DATABASE', 'baba');
+	define('_DB_USER', 'root');
+	define('_DB_PASS', 'root');
+	
+	/* GENERAL SETTINGS */
+	define('_DEFAULT_TYPE', 'application/octet-stream');
+	define('_SITEURL', 'http://example.com/');
+	define('_FILEPATH', dirname ( __FILE__ ) . '/out/');
+?>

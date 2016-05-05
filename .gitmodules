@@ -1,0 +1,3 @@
+[submodule "sitemap-php"]
+	path = sitemap-php
+	url = https://github.com/o/sitemap-php
