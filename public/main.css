@@ -119,15 +119,6 @@ video {
 	line-height: 38px;
 }
 
-#footer a {
-	border-right: 1px solid #B3B3B3;
-	padding-right: 5px;
-}
-
-#footer a:last-child {
-	border-right: 0;
-}
-
 #stats 
 {
 	width: 500px;

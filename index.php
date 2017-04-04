@@ -114,7 +114,9 @@
 				}
 			?>
 			<div id="footer">
-				<a href="https://github.com/v0l/baba">Github</a>
+				<a href="https://github.com/v0l/void.cat">Github</a>
+				| <a href="https://twitter.com/chkn10deez">Twitter</a>
+				| Hosting: <?php echo explode("\t", exec("du -sh " . _FILEPATH))[0]; ?>
 			</div>
 		</div>
 		<script src="public/main.js"></script>
