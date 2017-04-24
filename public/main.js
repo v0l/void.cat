@@ -55,6 +55,25 @@ function addPasteFunctions()
 	document.addEventListener('paste', handleFilePaste, false);
 }
 
+function loadHistory(){
+	var hist = localStorage.getItem("history");
+	if(hist.length > 0) {
+		hist = JSON.parse(hist);
+	} else {
+		hist = [];
+	}
+	
+	return hist;
+}
+
+function saveToHistory(r){
+	var hist = loadHistory();
+		
+	hist[hist.length] = r;
+	
+	localStorage.setItem("history", JSON.stringify(hist));
+}
+
 function uploadComplete(rsp, id, s)
 {
 	var upl = $('#' + id);
@@ -99,6 +118,9 @@ function uploadComplete(rsp, id, s)
 					+ '<br/><small><b>Hash256:</b> ' + rsp.hash 
 					+ '</small><br/><small><b>Hash160:</b> ' + rsp.publichash + '</small>'
 					+ '<br/><small><a target=\"_blank\" href=\"//' + lk + '&v\">(link)</a></small>';
+					
+				//save to history
+				saveToHistory(rsp);
 				break;
 			}
 		}

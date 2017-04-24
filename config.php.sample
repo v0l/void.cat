@@ -8,5 +8,6 @@
 	/* GENERAL SETTINGS */
 	define('_DEFAULT_TYPE', 'application/octet-stream');
 	define('_SITEURL', 'http://example.com/');
-	define('_FILEPATH', dirname ( __FILE__ ) . '/out/');
+	define('_UPLOADDIR', '/out/');
+	define('_FILEPATH', dirname ( __FILE__ ) . _UPLOADDIR);
 ?>

@@ -1,4 +1,6 @@
 <?php
+	session_start();
+	
 	//check for view param otherwise return file
 	$hash = isset($_GET["hash"]) ? substr($_GET["hash"], strrpos($_GET["hash"], '/') + 1) : null;
 	if(!isset($_GET["v"]) && $hash != null)
@@ -8,20 +10,9 @@
 		$db = new DB();
 		$f = $db->GetFile($hash);
 		if($f->id != 0){
-			include_once('download.php');
-			smartReadFile($f->path, $f->filename, $f->mime);
-		}
-		
-		exit;
-	}else if(isset($_GET["thumb"]) && $hash != null)
-	{
-		include_once('db.php');
-
-		$db = new DB();
-		$f = $db->GetFile($hash);
-		if($f->id != 0){
-			include_once('download.php');
-			smartReadFile($f->path . '/thumb/', $f->filename, $f->mime);
+			include_once('download2.php');
+			
+			$db->AddView($f->hash160);
 		}
 		
 		exit;
@@ -113,6 +104,10 @@
 						echo "<div id=\"uploads\" style=\"display: none\"></div><div id=\"upload\">Drop Files < " . $maxsizeM . "</div>";
 				}
 			?>
+			<div id="history">
+				<h3>Your Uploads</h3>
+				<small>History is saved in <a style="display: initial; padding: initial; margin: initial;" href="https://www.w3schools.com/html/html5_webstorage.asp">localStorage</a> <b style="cursor: pointer; user-select: none;" onclick="localStorage.setItem('history', ''); window.location.reload();">(clear)</b></small>
+			</div>
 			<div id="footer">
 				<a href="https://github.com/v0l/void.cat">Github</a>
 				| <a href="https://twitter.com/chkn10deez">Twitter</a>
@@ -128,6 +123,19 @@
 
   			ga('create', 'UA-73200448-1', 'auto');
   			ga('send', 'pageview');
+		</script>
+		<script>
+			var h = loadHistory();
+			var hl = document.querySelector('#history');
+			for(var x = h.length - 1; x >= 0; x--) {
+				var hx = h[x];
+				var nh = document.createElement('a');
+				nh.href =  hx.link + '&v';
+				nh.target = '_blank'
+				nh.text = (hx.filename === null ? 'clipboard' : hx.filename);
+				
+				hl.appendChild(nh);
+			}
 		</script>
 	</body>
 </html>

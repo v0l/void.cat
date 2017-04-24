@@ -39,6 +39,8 @@
 		$response["hash"] = $fh;
 		rewind($tmpf);
 		
+		$response["filename"] = $fname;
+		
 		//check for dupes
 		$f_e = $db->Exists256($fh);
 		if($f_e->id != 0)

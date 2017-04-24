@@ -140,6 +140,18 @@ video {
     font-weight: bold;
 }
 
+#history {
+	margin: 10px;
+	padding: 10px;
+    border: 2px solid #eee;
+    background-color: rgba(238, 238, 238, 0.18);
+}
+
+#history a {
+	display: block;
+	margin: 5px;
+}
+
 /* MEDIA OVERWRITE QUERIES */
 @media (max-width: 720px) {
 	#main {
