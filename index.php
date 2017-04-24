@@ -11,6 +11,7 @@
 		$f = $db->GetFile($hash);
 		if($f->id != 0){
 			include_once('download2.php');
+			XFastDownload(_UPLOADDIR . $f->hash160, $f->filename, $f->mime);
 			
 			$db->AddView($f->hash160);
 		}
