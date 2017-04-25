@@ -166,6 +166,15 @@ function changeUI()
 */
 function uploadFile(f, id)
 {
+	if(typeof f === "string"){
+		var fx = new File([], 'remote');
+		fx.type = "text/plain";
+		fx.size = 0;
+		fx.url = f;
+		
+		f = fx;
+	}
+	
 	if(f instanceof Blob || f instanceof File)
 	{
 		if($('#' + id) === null){
@@ -225,7 +234,7 @@ function uploadFile(f, id)
 				xhr.upload.addEventListener('abort', function(evt) { uploadProgress(evt, id); });
 				xhr.addEventListener('readystatechange', function(evt) { uploadProgress(evt, id); });
 				
-				xhr.open("POST", "upload.php?filename=" + f.name);
+				xhr.open("POST", "upload.php?filename=" + f.name + (f.url !== undefined ? "&remote=" + encodeURIComponent(f.url) : ""));
 				xhr.send(f);
 			}
 		}
@@ -285,6 +294,12 @@ function handleFilePaste(evt)
 			var file_t = file.getAsFile();
 			file_t.name = "clipboard.png";
 			uploadFile(file_t, fid);
+		}else if(file.kind === 'string' && file.type === 'text/plain'){
+			var file_t = file.getAsString(function(url){
+				if(url.indexOf('http://') === 0 || url.indexOf('https://') === 0) {
+					uploadFile(url);
+				}
+			});
 		}
 	}
 }

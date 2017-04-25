@@ -24,8 +24,24 @@
 	}
 	else
 	{
-		$rawf = fopen('php://input', 'rb');
-		$tmpf = fopen('php://temp', 'rb+');
+		$source = isset($_GET["remote"]) ? $_GET["remote"] : "php://input";
+		
+		$rawf = fopen($source, 'rb');
+		
+		if(isset($_GET["remote"])){
+			$meta_data = stream_get_meta_data($rawf);
+			foreach($meta_data["wrapper_data"] as $hd){
+				if(strpos($hd, "Content-Type") === 0){
+					$nt = explode(": ", $hd);
+					$mime = $nt[1];
+				}else if(strpos($hd, "Content-Disposition") === 0){
+					$nn = explode("filename=", $hd);
+					$fname = str_replace("\"", "", $nn[1]);
+				}
+			}
+		}
+		
+		$tmpf = fopen("php://temp", 'rb+');
 		stream_copy_to_stream($rawf, $tmpf);
 		rewind($tmpf);
 		
