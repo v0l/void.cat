@@ -34,9 +34,21 @@
 				if(strpos($hd, "Content-Type") === 0){
 					$nt = explode(": ", $hd);
 					$mime = $nt[1];
+					if(strpos($mime, ";") > 0){
+						$ms = explode(";", $mime);
+						$mime = $ms[0];
+					}
 				}else if(strpos($hd, "Content-Disposition") === 0){
 					$nn = explode("filename=", $hd);
 					$fname = str_replace("\"", "", $nn[1]);
+				}
+			}
+			
+			if($fname == "remote"){
+				//parse url if no content-disposition is set
+				preg_match('@^.*\/(.*\.[a-zA-Z0-9]{0,4})@i', $_GET["remote"], $matches);
+				if(count($matches) > 0){
+					$fname = $matches[1];
 				}
 			}
 		}
