@@ -57,7 +57,7 @@ function addPasteFunctions()
 
 function loadHistory(){
 	var hist = localStorage.getItem("history");
-	if(hist.length > 0) {
+	if(hist !== null && hist.length > 0) {
 		hist = JSON.parse(hist);
 	} else {
 		hist = [];
