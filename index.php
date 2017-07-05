@@ -13,8 +13,7 @@
 			include_once('download2.php');
 			XFastDownload(_UPLOADDIR . $f->hash160, $f->filename, $f->mime);
 			
-			if(!isset($_SERVER["HTTP_RANGE"]))
-			{
+			if(!isset($_SERVER['HTTP_RANGE'])){
 				$db->AddView($f->hash160);
 			}
 		}
@@ -116,18 +115,10 @@
 				<a href="https://github.com/v0l/void.cat">Github</a>
 				| <a href="https://twitter.com/chkn10deez">Twitter</a>
 				| Hosting: <?php echo explode("\t", exec("du -sh " . _FILEPATH))[0]; ?>
+				<br/><small>Files expire in 30 days if not viewed</small>
 			</div>
 		</div>
 		<script src="public/main.js"></script>
-		<script>
-  			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-  			ga('create', 'UA-73200448-1', 'auto');
-  			ga('send', 'pageview');
-		</script>
 		<script>
 			var h = loadHistory();
 			var hl = document.querySelector('#history');

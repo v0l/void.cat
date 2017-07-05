@@ -17,7 +17,7 @@
 		{
 			if($this->error == null)
 			{
-				$this->mysqli->close();
+				$this->mysqli->close(); 
 			}
 		}
 		
@@ -25,12 +25,12 @@
 		{
 			$res = new FileUpload();
 			
-			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created from files where hash256 = ? limit 1");
+			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created, expire from files where hash256 = ? limit 1");
 			if($stmt)
 			{
 				$stmt->bind_param("s", $hash);
 				$stmt->execute();
-				$stmt->bind_result($res->id, $res->hash160, $res->hash256, $res->mime, $res->path, $res->filename, $res->views, $res->created);
+				$stmt->bind_result($res->id, $res->hash160, $res->hash256, $res->mime, $res->path, $res->filename, $res->views, $res->created, $res->expire);
 				$stmt->fetch();
 				$stmt->close();
 			}
@@ -42,12 +42,12 @@
 		{
 			$res = new FileUpload();
 			
-			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created from files where hash160 = ? limit 1");
+			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created, expire from files where hash160 = ? limit 1");
 			if($stmt)
 			{
 				$stmt->bind_param("s", $hash);
 				$stmt->execute();
-				$stmt->bind_result($res->id, $res->hash160, $res->hash256, $res->mime, $res->path, $res->filename, $res->views, $res->created);
+				$stmt->bind_result($res->id, $res->hash160, $res->hash256, $res->mime, $res->path, $res->filename, $res->views, $res->created, $res->expire);
 				$stmt->fetch();
 				$stmt->close();
 			}
@@ -55,16 +55,16 @@
 			return $res;
 		}
 
-                function GetFiles()
-                {
-                        $res = array();
+		function GetFiles()
+		{
+			$res = array();
 
-                        $stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created from files");
-                        if($stmt)
-                        {
-                                $stmt->execute();
-                                $stmt->bind_result($id, $hash160, $hash256, $mime, $path, $filename, $views, $created);
-                                while($stmt->fetch()){
+			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created, expire from files");
+			if($stmt)
+			{
+				$stmt->execute();
+				$stmt->bind_result($id, $hash160, $hash256, $mime, $path, $filename, $views, $created, $expire);
+				while($stmt->fetch()){
 					$nf = new FileUpload();
 					$nf->id = $id;
 					$nf->hash160 = $hash160;
@@ -74,14 +74,15 @@
 					$nf->filename = $filename;
 					$nf->views = $views;
 					$nf->created = $created;
-
+					$nf->expire = $expire;
+					
 					array_push($res, $nf);
 				}
-                                $stmt->close();
-                        }
+				$stmt->close();
+			}
 
-                        return $res;
-                }
+			return $res;
+		}
 		
 		function InsertFile($f)
 		{
@@ -96,7 +97,7 @@
 		
 		function AddView($hash160)
 		{
-			$stmt = $this->mysqli->prepare("update files set views = views + 1 where hash160 = ?");
+			$stmt = $this->mysqli->prepare("update files set views = views + 1, expire = DATE_ADD(NOW(), INTERVAL 30 DAY) where hash160 = ?");
 			if($stmt)
 			{
 				$stmt->bind_param("s", $hash160);

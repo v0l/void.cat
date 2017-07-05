@@ -8,6 +8,7 @@
 		public $filename;
 		public $views;
 		public $created;
+		public $expire;
 	}
 	
 	class FileUploadStats {
