@@ -114,8 +114,10 @@
 			<div id="footer">
 				<a href="https://github.com/v0l/void.cat">Github</a>
 				| <a href="https://twitter.com/chkn10deez">Twitter</a>
+				| <a href="http://discord.gg/8BkxTGs">Discord</a>
 				| Hosting: <?php echo explode("\t", exec("du -sh " . _FILEPATH))[0]; ?>
-				<br/><small>Files expire in 30 days if not viewed</small>
+				<br/><small>Files expire in <?php echo _FILE_EXPIRE_TIME; ?> days if not viewed</small>
+				<br/><img src="https://void.cat/graph"/>
 			</div>
 		</div>
 		<script src="public/main.js"></script>

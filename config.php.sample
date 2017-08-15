@@ -10,4 +10,6 @@
 	define('_SITEURL', 'http://example.com/');
 	define('_UPLOADDIR', '/out/');
 	define('_FILEPATH', dirname ( __FILE__ ) . _UPLOADDIR);
+	define('_DISCORD_WEBHOOK', 'DISCORD_HOOK_URL');
+	define('_FILE_EXPIRE_TIME', 30);
 ?>

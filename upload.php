@@ -102,8 +102,8 @@
 			
 			$db->InsertFile($f_e);
 
-			//update sitemap
-			//include("gensitemap.php");
+			$discord_data = array("content" => _SITEURL . $f_e->hash160 . '&v');
+			include("discord.php");
 		}
 
 		//close streams

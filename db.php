@@ -86,7 +86,7 @@
 		
 		function InsertFile($f)
 		{
-			$stmt = $this->mysqli->prepare("insert into files(hash160, hash256, mime, path, filename) values(?,?,?,?,?)");
+			$stmt = $this->mysqli->prepare("insert into files(hash160, hash256, mime, path, filename, expire) values(?,?,?,?,?, DATE_ADD(NOW(), INTERVAL " . _FILE_EXPIRE_TIME . " DAY))");
 			if($stmt)
 			{
 				$stmt->bind_param("sssss", $f->hash160, $f->hash256, $f->mime, $f->path, $f->filename);
@@ -94,16 +94,53 @@
 				$stmt->close();
 			}
 		}
-		
+		function DeleteFile($f)
+		{
+			$stmt = $this->mysqli->prepare("delete from files where id = ?");
+			if($stmt)
+			{
+				$stmt->bind_param("d", $f->id);
+				$stmt->execute();
+				$stmt->close();
+			}
+		}
 		function AddView($hash160)
 		{
-			$stmt = $this->mysqli->prepare("update files set views = views + 1, expire = DATE_ADD(NOW(), INTERVAL 30 DAY) where hash160 = ?");
+			$stmt = $this->mysqli->prepare("update files set views = views + 1, expire = DATE_ADD(NOW(), INTERVAL " . _FILE_EXPIRE_TIME . " DAY) where hash160 = ?");
 			if($stmt)
 			{
 				$stmt->bind_param("s", $hash160);
 				$stmt->execute();
 				$stmt->close();
 			}
+		}
+		function GetExpiredFiles()
+		{
+			$res = array();
+
+			$stmt = $this->mysqli->prepare("select id, hash160, hash256, mime, path, filename, views, created, expire from files where expire < CURRENT_TIMESTAMP");
+			if($stmt)
+			{
+				$stmt->execute();
+				$stmt->bind_result($id, $hash160, $hash256, $mime, $path, $filename, $views, $created, $expire);
+				while($stmt->fetch()){
+					$nf = new FileUpload();
+					$nf->id = $id;
+					$nf->hash160 = $hash160;
+					$nf->hash256 = $hash256;
+					$nf->mime = $mime;
+					$nf->path = $path;
+					$nf->filename = $filename;
+					$nf->views = $views;
+					$nf->created = $created;
+					$nf->expire = $expire;
+					
+					array_push($res, $nf);
+				}
+				$stmt->close();
+			}
+
+			return $res;
 		}
 	};
 ?>
