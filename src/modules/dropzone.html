@@ -148,7 +148,7 @@
                         if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) {
                             this.self.addFileUpload(file);
                         }
-                    });
+                    }.bind({ self: this.self }));
                 }
             }
         }
