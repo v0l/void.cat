@@ -5,9 +5,15 @@
 <dom-module id="void-main">
     <template>
 		<style>
+			a { color: inherit; text-decoration: none; }
+			a:hover { text-decoration: underline; }
 			.footer {
 				text-align:center;
-				margin-top: 20px;
+				margin-top: 10px;
+				text-transform: uppercase;
+			}
+			img {
+				margin-top: 10px;
 			}
 			
 			@media(max-width: 470px) {
@@ -24,6 +30,9 @@
 		</template>
 		
 		<div class="footer">
+			<div class="links">
+				<a href="https://discord.gg/8BkxTGs">Discord</a>
+			</div>
 			<img src="/graph"/>
 		</div>
     </template>

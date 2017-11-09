@@ -71,6 +71,8 @@
 			$db->AddView($f->hash160);
 			$redis->incr($hashKey);
 		}
+	}else{
+		http_response_code(404);
 	}
 	
 	$redis->close();
