@@ -104,7 +104,7 @@
 				$f_e->filename = $fname;
 				
 				$db->InsertFile($f_e);
-				$discord_data = array("content" => _SITEURL . $f_e->hash160 . '&v');
+				$discord_data = array("content" => _SITEURL . '#' . $f_e->hash160);
 				include_once("discord.php");
 				
 				$response["status"] = 200;

@@ -37,6 +37,9 @@
 				$stmt->bind_result($res->files, $res->size, $res->avgSize);
 				$stmt->fetch();
 				$stmt->close();
+				
+				$res->size = floatval($res->size);
+				$res->avgSize = floatval($res->size);
 			}
 			
 			return $res;
