@@ -1,0 +1,25 @@
+<?php
+	/* DB SETTINGS */
+	define('_DB_HOST', '127.0.0.1');
+	define('_DB_DATABASE', 'void');
+	define('_DB_USER', 'root');
+	define('_DB_PASS', 'mysql');
+	
+	/* REDIS CONFIG */
+	define('_REDIS_SERVER', '127.0.0.1');
+	
+	/* GENERAL SETTINGS */
+	define('_DEFAULT_TYPE', 'application/octet-stream');
+	define('_SITEURL', 'https://void.cat/');
+	define('_UPLOADDIR', '/files/');
+	define('_FILEPATH', '/var/www/void.cat' . _UPLOADDIR);
+	define('_DISCORD_WEBHOOK', 'DISCORD_HOOK_URL');
+	define('_FILE_EXPIRE_TIME', 30);
+	define('_GA_CODE', 'UA-73200448-1');
+	
+	/* CAPTCHA SETTINGS */
+	define('_DL_CAPTCHA', 10);
+	define('_CAPTCHA_DL_EXPIRE', 86400);
+	define('_CAPTCHA_KEY', 'CAP_KEY');
+	define('_CAPTCHA_SECRET', 'CAP_SECRET');
+?>

@@ -1,0 +1,249 @@
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
+<dom-module id="void-upload">
+    <template>
+        <style>
+            .upload {
+                margin-bottom: 2px;
+            }
+
+            .upload-header {
+                overflow: hidden;
+                height: 40px;
+                line-height: 20px;
+                background-color: #94aeec;
+                color: #000;
+            }
+
+            .upload-header-content {
+                padding: 10px;
+                float: left;
+            }
+
+            .upload-header-content-filename {
+                float: left;
+                height: 20px;
+                width: 120px;
+                text-overflow: ellipsis;
+                overflow:hidden;
+            }
+
+            .upload-content {
+                background-color: #638aa0;
+            }
+
+            .upload-header-tag {
+                float: right;
+                background-color: #6d6d6d;
+                padding: 10px;
+                width: 80px;
+                text-align: center;
+                font-size: 12px;
+                color: #eee;
+            }
+
+            .abort-tag {
+                background-color: #ff4d4d;
+                width: auto;
+                min-width: 25px;
+            }
+
+            .cap {
+                text-transform: uppercase;
+                font-weight: bold;
+            }
+
+            .cap:hover {
+                cursor: pointer;
+            }
+
+            .upload-progress-bar {
+                background-color: #35b300;
+                height: 10px;
+                border-right: 1px solid #3F51B5;
+            }
+
+            @keyframes uploadAnimated {
+                0% {
+                    background-color: #6c8bff;
+                }
+
+                50% {
+                    background-color: #95acff;
+                }
+
+                100% {
+                    background-color: #6c8bff;
+                }
+            }
+
+            .material-icons {
+                font-family: 'Material Icons';
+                font-weight: normal;
+                font-style: normal;
+                font-size: 24px;
+                letter-spacing: normal;
+                text-transform: none;
+                display: block;
+                float: left;
+                white-space: nowrap;
+                word-wrap: normal;
+                direction: ltr;
+                -webkit-font-feature-settings: 'liga';
+                -webkit-font-smoothing: antialiased;
+            }
+        </style>
+
+        <div class="upload">
+            <div class="upload-header">
+                <div class="upload-header-content">
+                    <i class="material-icons" style="margin-right: 10px">file_upload</i>
+                    <div class="upload-header-content-filename">{{file.name}}</div>
+                </div>
+                <template is="dom-if" if="{{!complete}}">
+                    <div class="upload-header-tag abort-tag">
+                        <i class="material-icons" on-click="abortUpload">cancel</i>
+                    </div>
+                    <div class="upload-header-tag">
+                        {{formatBytes(transferRate)}}/s
+                    </div>
+                </template>
+                <template is="dom-if" if="{{complete}}">
+                    <template is="dom-if" if="{{!error}}">
+                        <div class="upload-header-tag" style="border-left: 1px solid #888;">
+                            <div class="cap" on-click="openLink">link</div>
+                        </div>
+						<div class="upload-header-tag">
+                            <div class="cap" on-click="openViewLink">view</div>
+                        </div>
+                    </template>
+                    <template is="dom-if" if="{{error}}">
+                        <div class="upload-header-tag abort-tag"><i class="material-icons" style="margin-right: 10px">error_outline</i> {{response.msg}}</div>
+                    </template>
+                </template>
+            </div>
+            <div class="upload-content">
+                <template is="dom-if" if="{{!complete}}">
+                    <div class="upload-progress-bar" style="width: calc(100 * {{progress}}%)"></div>
+                </template>
+            </div>
+        </div>
+    </template>
+</dom-module>
+<script>
+    class VoidUpload extends Polymer.Element {
+        static get is() { return "void-upload"; }
+
+        static get properties() {
+            return {
+                file: Object
+            };
+        }
+
+        truncatedName() {
+            return this.file !== undefined ? this.file.name.substring(0, 10) : '';
+        }
+
+        abortUpload() {
+            if (this.xhr) {
+                this.xhr.abort();
+                this.response = { msg: "Aborted by user" };
+            }
+        }
+
+        openLink() {
+            if (this.response !== undefined && this.response !== null && this.response.link !== undefined && this.response.link !== null && this.response.link.length > 0) {
+                window.open(this.response.link, '_blank');
+            }
+        }
+		
+		openViewLink() {
+            if (this.response !== undefined && this.response !== null && this.response.link !== undefined && this.response.link !== null && this.response.link.length > 0) {
+                window.open(this.response.link.replace(this.response.publichash, '#' + this.response.publichash), '_blank');
+            }
+        }
+
+        uploadBlob() {
+            if (!this.xhr) {
+                this.xhr = new XMLHttpRequest();
+
+                this.xhr.upload.addEventListener('progress', this.uploadProgress.bind({ self: this }));
+                this.xhr.upload.addEventListener('load', this.uploadProgress.bind({ self: this }));
+                this.xhr.upload.addEventListener('error', this.uploadProgress.bind({ self: this }));
+                this.xhr.upload.addEventListener('abort', this.uploadProgress.bind({ self: this }));
+                this.xhr.addEventListener('readystatechange', this.uploadProgress.bind({ self: this }));
+
+                this.xhr.open("POST", "/src/php/upload.php?filename=" + this.file.name + (this.file.url ? "&remote=" + encodeURIComponent(this.file.url) : ""));
+                this.xhr.send(this.file);
+            }
+        }
+
+        uploadProgress(evt) {
+            switch (evt.type) {
+                case 'readystatechange': {
+                    if (evt.target.readyState == 4) {
+                        this.self.complete = true;
+                        if (evt.target.status == 200) {
+                            this.self.response = JSON.parse(evt.target.response);
+                            if (this.self.response.status !== 200) {
+                                this.self.error = true;
+                            }
+                            this.self.notifyPath('error');
+                        } else {
+                            this.self.error = true;
+                        }
+                    }
+                    break;
+                }
+                case 'progress': {
+                    this.self.progress = parseFloat(evt.loaded) / parseFloat(evt.total);
+
+                    let txnow = Date.now()
+                    let txdif = evt.loaded - this.self.lastProgressLoaded;
+                    let txt = txnow - this.self.lastProgress;
+
+                    let txrate = txdif / (txt / 1000.0);
+                    this.self.transferRate = txrate;
+                    this.self.lastProgressLoaded = evt.loaded;
+                    this.self.lastProgress = txnow;
+                    break;
+                }
+                case 'error': {
+                    this.self.error = true;
+                    this.self.complete = true;
+                    break;
+                }
+            }
+        }
+
+        constructor(dz, file) {
+            super();
+
+			this.dropZone = dz;
+            this.formatBytes = Util.formatBytes;
+            this.file = file;
+            this.progress = 0;
+            this.lastProgressLoaded = 0;
+            this.lastProgress = Date.now();
+            this.transferRate = 0;
+            this.response = {}
+            this.complete = false;
+            this.error = false;
+
+            if (file.size > this.dropZone.maxSize) {
+                this.complete = true;
+                this.error = true;
+                this.response = { msg: "File too big" };
+            }
+        }
+
+        ready() {
+            super.ready()
+
+            if (!this.error) {
+                this.uploadBlob();
+            }
+        }
+    }
+
+    customElements.define(VoidUpload.is, VoidUpload);
+</script>

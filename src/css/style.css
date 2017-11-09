@@ -1,0 +1,41 @@
+html, body {
+	background-color: #dbedf5;
+	font-family: 'Roboto', sans-serif;
+    font-size: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.page {
+	width:1024px;
+	margin-left:auto;
+	margin-right:auto;
+	margin-top:20px;
+	background-color: #a5d4ea;
+	border-radius: 5px;
+	border: 1px solid #aaa;
+}
+
+.content {
+	padding:20px;
+}
+
+.header{
+	text-align: center;
+    color: #555555;
+    font-size: 50px;
+    padding: 10px;
+    border-bottom: 1px solid #aaa;
+    background-color: #E4E4E4;
+	border-radius: 5px 5px 0px 0px;
+}
+
+@media(max-width: 1024px){
+    .page {
+        width: auto;
+        margin: 10px 0 0 0;
+    }
+    .content {
+        padding: 5px;
+    }
+}

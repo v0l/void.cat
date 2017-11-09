@@ -1,0 +1,22 @@
+{
+  "name": "void.cat",
+  "description": "void.cat",
+  "main": "index.html",
+  "authors": [
+    "v0l"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/v0l/void.cat",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "polymer/polymer#^2.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.17"
+  }
+}

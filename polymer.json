@@ -1,0 +1,22 @@
+{
+	"entrypoint": "index.html",
+	"fragments": [
+		"src/modules/main.html",
+		"src/modules/dropzone.html",
+		"src/modules/upload.html",
+		"src/modules/view.html"
+	],
+	"sources": [ 
+		"src/php/*.php",
+		"src/js/*.js",
+		"src/css/*.css"
+	],
+	"builds": [
+		{
+			"bundle": true,
+			"js": { "compile": true, "minify": true },
+			"css": { "minify": true },
+			"html": { "minify": true }
+		}
+	]
+}

@@ -1,4 +1,4 @@
 out/
 *.xml
-config.php
+src/php/config.php
 google*.html

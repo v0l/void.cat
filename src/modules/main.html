@@ -1,0 +1,54 @@
+<link rel="import" href="/bower_components/polymer/polymer-element.html">
+<link rel="import" href="/src/modules/dropzone.html">
+<link rel="import" href="/src/modules/upload.html">
+<link rel="import" href="/src/modules/view.html">
+<dom-module id="void-main">
+    <template>
+		<style>
+			.footer {
+				text-align:center;
+				margin-top: 20px;
+			}
+			
+			@media(max-width: 470px) {
+                img {
+					width: 100%;
+				}
+            }
+		</style>
+		<template is="dom-if" if="{{view}}">
+			<void-view hash="{{hash}}"></void-view>
+		</template>
+		<template is="dom-if" if="{{!view}}">
+			<void-drop-zone></void-drop-zone>
+		</template>
+		
+		<div class="footer">
+			<img src="/graph"/>
+		</div>
+    </template>
+</dom-module>
+
+<script>
+    class VoidMain extends Polymer.Element {
+        static get is() { return "void-main"; }
+
+        constructor() {
+            super();
+			
+        }
+
+        ready() {
+            super.ready();
+			
+			this.hash = window.location.hash;
+			if(this.hash.length === 41){
+				this.view = true;
+			}else{
+				this.view = false;
+			}
+        }
+
+    }
+    customElements.define(VoidMain.is, VoidMain)
+</script>

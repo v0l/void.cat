@@ -1,6 +1,6 @@
 <?php
-	include('db.php');
-	
+	require_once('db.php');
+
 	$response = array(
 		"status" => 0,
 		"msg" => null,
@@ -20,7 +20,7 @@
 	
 	if($fsize > $maxsize)
 	{
-		$response["msg"] = "File size larger than " . $maxsizeM;
+		$response["msg"] = "File too big";
 	}
 	else
 	{
@@ -71,10 +71,12 @@
 		
 		//check for dupes
 		$f_e = $db->Exists256($fh);
-		if($f_e->id != 0)
+		if($f_e->hash160 != NULL)
 		{
 			//file already exists
+			$response["status"] = 200;
 			$response["publichash"] = $f_e->hash160;
+			$response["link"] = _SITEURL . $f_e->hash160;
 			$response["mime"] = $f_e->mime;
 		}
 		else
@@ -85,34 +87,37 @@
 			hash_update($phc, $fh);
 			$ph = hash_final($phc);
 			$response["publichash"] = $ph;
-
 			//save to disk
 			$op = _FILEPATH . $ph;
 			$fo = fopen($op, 'wb+');
-			stream_copy_to_stream($tmpf, $fo);
-			fclose($fo);
-			
-			//save to db
-			$f_e = new FileUpload();
-			$f_e->hash160 = $ph;
-			$f_e->hash256 = $fh;
-			$f_e->mime = $mime;
-			$f_e->path = $op;
-			$f_e->filename = $fname;
-			
-			$db->InsertFile($f_e);
-
-			$discord_data = array("content" => _SITEURL . $f_e->hash160 . '&v');
-			include("discord.php");
+			if($fo !== False){
+				stream_copy_to_stream($tmpf, $fo);
+				fclose($fo);
+				
+				//save to db
+				$f_e = new FileUpload();
+				$f_e->hash160 = $ph;
+				$f_e->hash256 = $fh;
+				$f_e->mime = $mime;
+				$f_e->size = filesize($op);
+				$f_e->path = $op;
+				$f_e->filename = $fname;
+				
+				$db->InsertFile($f_e);
+				$discord_data = array("content" => _SITEURL . $f_e->hash160 . '&v');
+				include_once("discord.php");
+				
+				$response["status"] = 200;
+				$response["link"] = _SITEURL . $f_e->hash160;
+				$response["mime"] = $mime;
+			}else{
+				$response["status"] = 500;
+				$response["msg"] = "Server error!";
+			}
 		}
-
 		//close streams
 		fclose($rawf);
 		fclose($tmpf);
-		
-		$response["status"] = 200;
-		$response["link"] = _SITEURL . $f_e->hash160;
-		$response["mime"] = $mime;
 	}
 	
 	//return response
