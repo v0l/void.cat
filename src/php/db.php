@@ -37,9 +37,9 @@
 				$stmt->bind_result($res->files, $res->size, $res->avgSize);
 				$stmt->fetch();
 				$stmt->close();
-				
+
 				$res->size = floatval($res->size);
-				$res->avgSize = floatval($res->size);
+				$res->avgSize = floatval($res->avgSize);
 			}
 			
 			return $res;
@@ -81,7 +81,7 @@
 					$nf->path = $path;
 					$nf->views = $views;
 					$nf->isAdminFile = $isAdminFile;
-					$nf->uploaded = uploaded;
+					$nf->uploaded = $uploaded;
 					$nf->lastview = $lastview;
 					
 					array_push($res, $nf);
@@ -114,6 +114,17 @@
 			}
 		}
 
+		function UpdateFileSize($h, $s)
+		{
+			$stmt = $this->mysqli->prepare("update files set size = ? where hash160 = ?");
+			if($stmt)
+			{
+				$stmt->bind_param("ds", $s, $h);
+				$stmt->execute();
+				$stmt->close();
+			}
+		}
+		
 		function AddView($hash160)
 		{
 			$stmt = $this->mysqli->prepare("update files set views = views + 1, lastview = NOW() where hash160 = ?");
@@ -133,19 +144,10 @@
 			if($stmt)
 			{
 				$stmt->execute();
-				$stmt->bind_result($id, $hash160, $hash256, $mime, $path, $filename, $views, $created, $expire);
+				$stmt->bind_result($hash160);
 				while($stmt->fetch()){
 					$nf = new FileUpload();
-					$nf->id = $id;
 					$nf->hash160 = $hash160;
-					$nf->hash256 = $hash256;
-					$nf->mime = $mime;
-					$nf->path = $path;
-					$nf->filename = $filename;
-					$nf->views = $views;
-					$nf->created = $created;
-					$nf->expire = $expire;
-					
 					array_push($res, $nf);
 				}
 				$stmt->close();
