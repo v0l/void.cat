@@ -39,7 +39,9 @@ const API = {
 const Util = {
     formatBytes: function (b, f) {
         f = f === undefined ? 2 : f;
-        if (b >= 1073741824) {
+		if(b >= 1099511627776) {
+			return (b / 1099511627776.0).toFixed(f) + ' TiB';
+		}else if (b >= 1073741824) {
             return (b / 1073741824.0).toFixed(f) + ' GiB';
         } else if (b >= 1048576) {
             return (b / 1048576.0).toFixed(f) + ' MiB';

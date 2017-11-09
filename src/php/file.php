@@ -16,5 +16,6 @@
 		public $files;
 		public $size;
 		public $avgSize;
+		public $transfer;
 	}
 ?>

@@ -39,7 +39,7 @@
 			}
 			
 			.stats div {
-				width: 33.333%;
+				width: 25%;
 				float: left;
 			}
 
@@ -54,6 +54,12 @@
                     line-height: 200px;
                 }
             }
+			
+			@media(max-width: 520px) {
+				.stats b {
+					display: block;
+				}
+			}
         </style>
         <div class="drop-zone">
             Max size [[formatBytes(maxSize, 0)]]
@@ -62,6 +68,7 @@
 			<div><b>Files:</b> [[stats.files]]</div>
 			<div><b>Total Size:</b> [[formatBytes(stats.size, 1)]]</div>
 			<div><b>Avg Size:</b> [[formatBytes(stats.avgSize, 1)]]</div>
+			<div><b>Transfer:</b> [[formatBytes(stats.transfer, 1)]]</div>
 		</div>
 		<template is="dom-if" if="[[expire]]">
 			<br/><i class="note">**Expires after [[expire]] days since last view</i>

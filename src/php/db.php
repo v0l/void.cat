@@ -30,16 +30,17 @@
 		{
 			$res = new FileStats();
 			
-			$stmt = $this->mysqli->prepare("select count(hash160), sum(size), avg(size) from files");
+			$stmt = $this->mysqli->prepare("select count(hash160), sum(size), avg(size), sum(views * size) from files");
 			if($stmt)
 			{
 				$stmt->execute();
-				$stmt->bind_result($res->files, $res->size, $res->avgSize);
+				$stmt->bind_result($res->files, $res->size, $res->avgSize, $res->transfer);
 				$stmt->fetch();
 				$stmt->close();
 
 				$res->size = floatval($res->size);
 				$res->avgSize = floatval($res->avgSize);
+				$res->transfer = floatval($res->transfer);
 			}
 			
 			return $res;
