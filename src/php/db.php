@@ -67,7 +67,7 @@
 		{
 			$res = array();
 
-			$stmt = $this->mysqli->prepare("select hash160, hash256, filename, mime, size, path, views, isAdminFile, uploaded, lastview from files");
+			$stmt = $this->mysqli->prepare("select hash160, hash256, filename, mime, size, path, views, isAdminFile, uploaded, lastview from files order by uploaded desc");
 			if($stmt)
 			{
 				$stmt->execute();
@@ -109,7 +109,7 @@
 			$stmt = $this->mysqli->prepare("delete from files where hash160 = ?");
 			if($stmt)
 			{
-				$stmt->bind_param("s", $f->id);
+				$stmt->bind_param("s", $f->hash160);
 				$stmt->execute();
 				$stmt->close();
 			}
@@ -141,14 +141,16 @@
 		{
 			$res = array();
 
-			$stmt = $this->mysqli->prepare("select hash160 from files where date_add(lastview, INTERVAL " . _FILE_EXPIRE_TIME . " DAY) >= CURRENT_TIMESTAMP");
+			$stmt = $this->mysqli->prepare("select hash160, filename, path from files where date_add(lastview, INTERVAL " . _FILE_EXPIRE_TIME . " DAY) < CURRENT_TIMESTAMP");
 			if($stmt)
 			{
 				$stmt->execute();
-				$stmt->bind_result($hash160);
+				$stmt->bind_result($hash160, $filename, $path);
 				while($stmt->fetch()){
 					$nf = new FileUpload();
 					$nf->hash160 = $hash160;
+					$nf->filename = $filename;
+					$nf->path = $path;
 					array_push($res, $nf);
 				}
 				$stmt->close();

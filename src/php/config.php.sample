@@ -15,7 +15,8 @@
 	define('_FILEPATH', '/var/www/void.cat' . _UPLOADDIR);
 	define('_DISCORD_WEBHOOK', 'DISCORD_HOOK_URL');
 	define('_FILE_EXPIRE_TIME', 30);
-	define('_GA_CODE', 'UA-73200448-1');
+	define('_GA_SITE_CODE', 'UA-73200448-1');
+	define('_BLOCK_REFERER', array("yobuilder.com", "adf.ly"));
 	
 	/* CAPTCHA SETTINGS */
 	define('_DL_CAPTCHA', 10);

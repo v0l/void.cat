@@ -1,8 +1,9 @@
 <?php
 	session_start();
 	
-	require_once('config.php');
-
+	include_once('config.php');
+	include_once('ga.php');
+	
 	$body = file_get_contents('php://input');
 	$c = json_decode($body);
 	$rsp = array(
@@ -12,7 +13,7 @@
 	switch($c->cmd){
 		case "config":
 		{
-			require_once("db.php");
+			include_once("db.php");
 			
 			$db = new DB();
 			$rsp["stats"] = $db->GetStats();
@@ -25,7 +26,7 @@
 		}
 		case "file": 
 		{
-			require_once("db.php");
+			include_once("db.php");
 			
 			$db = new DB();
 			$fi = $db->GetFile($c->hash);
@@ -42,10 +43,13 @@
 				
 				$dlCounter = $redis->get($hashKey);
 				if($dlCounter != False && $dlCounter >= _DL_CAPTCHA) {
+					GAEvent("Captcha", "Hit");
 					$rsp["captcha"] = True;
 				}
 				
 				$redis->close();
+			}else { 
+				$rsp["file"] = NULL;
 			}
 			break;
 		}
@@ -78,11 +82,14 @@
 					$dlCounter = 0;
 					$redis->setEx($hashKey, _CAPTCHA_DL_EXPIRE, 0);
 					$rsp["ok"] = True;
+					GAEvent("Captcha", "Pass");
 				}else{
 					$rsp["ok"] = False;
+					GAEvent("Captcha", "Fail");
 				}
 			}else{
 				$rsp["ok"] = True;
+				GAEvent("Captcha", "Miss");
 			}
 			
 			$redis->close();

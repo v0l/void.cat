@@ -9,14 +9,15 @@
     foreach($fl as $f) {
 	if(unlink($f->path)) {
 	    $db->DeleteFile($f);
-	    echo 'Deleted file: ' . $f->filename . ' (' . $f->hash160 . ')\n';
+	    echo 'Deleted file: ' . $f->filename . ' (' . $f->hash160 . ') \n';
+	    $del[] = $f->hash160;
 	}else{
-	    echo 'Cant delete file ' . $f->hash160 . '\n';
+	    echo 'Cant delete file ' . $f->path . ' \n';
 	}
     }
 
     if(count($fl) > 0){
-    	$discord_data = array("content" => 'Deleted ' . count($fl) . ' expired files.');
+    	$discord_data = array("content" => 'Deleted ' . count($fl) . ' expired files. `' . implode("` `", $del) . '`');
     	include('discord.php');
     }
 ?>
