@@ -51,6 +51,11 @@
 				width: 100%;
 			}
 			
+			.default {
+				font-size: 20px;
+				text-align: center;
+			}
+			
 			.captcha { text-align: center; }
 		</style>
 		<template is="dom-if" if="[[isCaptcha]]">
@@ -72,7 +77,9 @@
 			</audio>
 		</template>
 		<template is="dom-if" if="[[isDefault]]">
-			<a href="[[fileInfo.url]]">Download [[fileInfo.filename]]</a>
+			<div class="default">
+				<a href="[[fileInfo.url]]">Download [[fileInfo.filename]]</a>
+			</div>
 		</template>
 		<template is="dom-if" if="[[!isCaptcha]]">
 			<div class="file-info">
