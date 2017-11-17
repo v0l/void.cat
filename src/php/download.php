@@ -15,8 +15,22 @@
 		}
 	}
 	
+	//check is range request
+	$range_start = 0;
+	$range_end = 999;
+	if(isset($_SERVER['HTTP_RANGE'])){
+		$rby = explode('=', $_SERVER['HTTP_RANGE']);
+		$rbv = explode('-', $rby[1]);
+		if($rbv[0] != ''){
+			$range_start = $rbv[0];
+		}
+		if($rbv[1] != ''){
+			$range_end = $rbv[1];
+		}
+	}
+	
 	//block certain bots from counting views (to stop files never expiring)
-	$validRequest = True;
+	$isCrawlBot = False;
 	$ua = isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "";
 	if(preg_match('/.*(\(.*\))/i', $ua, $matches) == 1)
 	{
@@ -29,20 +43,23 @@
 		
 		foreach($opts as $opt){
 			if(in_array(trim($opt), _UA_NO_VIEW)){
-				$validRequest = False;
+				$isCrawlBot = True;
 				break;
 			}
 		}
 	}
 	
 	$redis = new Redis();
-	$redis->connect(_REDIS_SERVER);
+	$redis->pconnect(_REDIS_SERVER);
 	
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
-		if($dlCounter >= _DL_CAPTCHA){
+		if($dlCounter >= _DL_CAPTCHA * 2){
+			http_response_code(444); //for tracking abuse
+			exit();
+		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check
-			$redis->close();
+			$redis->incr($hashKey);
 			GAEvent("Captcha", "Hit");
 			header('location: ' . _SITEURL . '?dl#' . $hash);
 			exit();
@@ -66,14 +83,12 @@
 		header("Content-type: $mimeType");
 		header('Content-Disposition: inline; filename="' . $filename . '"');
 		
-		if($validRequest){
+		if(!$isCrawlBot && $range_start == 0){
 			GAPageView();
 			$db->AddView($f->hash160);
-			$redis->incr($hashKey);
 		}
+		$redis->incr($hashKey);
 	}else{
 		http_response_code(404);
 	}
-	
-	$redis->close();
 ?>
