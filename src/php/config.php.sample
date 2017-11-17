@@ -17,6 +17,7 @@
 	define('_FILE_EXPIRE_TIME', 30);
 	define('_GA_SITE_CODE', 'UA-73200448-1');
 	define('_BLOCK_REFERER', array("yobuilder.com", "adf.ly"));
+	define('_UA_NO_VIEW', array("YandexBot/3.0", "Googlebot/2.1", "Yahoo! Slurp"));
 	
 	/* CAPTCHA SETTINGS */
 	define('_DL_CAPTCHA', 10);

@@ -14,20 +14,27 @@
 			exit();
 		}
 	}
-	$range_start = 0;
-	$range_end = 999;
-	if(isset($_SERVER['HTTP_RANGE'])){
-		$rby = explode('=', $_SERVER['HTTP_RANGE']);
-		$rbv = explode('-', $rby[1]);
-		if($rbv[0] != ''){
-			$range_start = $rbv[0];
+	
+	//block certain bots from counting views (to stop files never expiring)
+	$validRequest = True;
+	$ua = isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "";
+	if(preg_match('/.*(\(.*\))/i', $ua, $matches) == 1)
+	{
+		$opts = array();
+		if(strpos($matches[1], ';') != False){
+			$opts = explode(';', $matches[1]);
+		}else{
+			$opts[0] = $matches[1];
 		}
-		if($rbv[1] != ''){
-			$range_end = $rbv[1];
+		
+		foreach($opts as $opt){
+			if(in_array(trim($opt), _UA_NO_VIEW)){
+				$validRequest = False;
+				break;
+			}
 		}
 	}
 	
-	$validRequest = ($range_start == 0);
 	$redis = new Redis();
 	$redis->connect(_REDIS_SERVER);
 	
