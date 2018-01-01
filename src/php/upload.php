@@ -67,7 +67,6 @@
 		else 
 		{
 			$f = $_FILES['files'];
-			error_log(print_r($f, true));
 			$tmpf = fopen($f['tmp_name'][0], 'rb');
 		}
 		
