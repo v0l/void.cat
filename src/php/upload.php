@@ -11,12 +11,14 @@
 		"filename" => null
 	);
 	
+	$isMultipart = strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== False;
+	
 	//check input size is large enough
 	$maxsizeM = ini_get('post_max_size');
 	$maxsize = (int)(str_replace('M', '', $maxsizeM) * 1024 * 1024);
-	$fsize = (int)$_SERVER['CONTENT_LENGTH'];
-	$mime = strlen($_SERVER['CONTENT_TYPE']) > 0 ? $_SERVER['CONTENT_TYPE'] : _DEFAULT_TYPE;
-	$fname = $_GET["filename"];
+	$fsize = $isMultipart ? $_FILES['files']['size'][0] : (int)$_SERVER['CONTENT_LENGTH'];
+	$mime = $isMultipart ? $_FILES['files']['type'][0] : (strlen($_SERVER['CONTENT_TYPE']) > 0 ? $_SERVER['CONTENT_TYPE'] : _DEFAULT_TYPE);
+	$fname = $isMultipart ? $_FILES['files']['name'][0] : $_GET["filename"];
 	
 	if($fsize > $maxsize)
 	{
@@ -24,38 +26,50 @@
 	}
 	else
 	{
-		$source = isset($_GET["remote"]) ? $_GET["remote"] : "php://input";
+		$tmpf = 0;
 		
-		$rawf = fopen($source, 'rb');
-		
-		if(isset($_GET["remote"])){
-			$meta_data = stream_get_meta_data($rawf);
-			foreach($meta_data["wrapper_data"] as $hd){
-				if(strpos($hd, "Content-Type") === 0){
-					$nt = explode(": ", $hd);
-					$mime = $nt[1];
-					if(strpos($mime, ";") > 0){
-						$ms = explode(";", $mime);
-						$mime = $ms[0];
+		if ($isMultipart === False) 
+		{
+			$source = isset($_GET["remote"]) ? $_GET["remote"] : "php://input";
+			
+			$rawf = fopen($source, 'rb');
+			
+			if(isset($_GET["remote"])){
+				$meta_data = stream_get_meta_data($rawf);
+				foreach($meta_data["wrapper_data"] as $hd){
+					if(strpos($hd, "Content-Type") === 0){
+						$nt = explode(": ", $hd);
+						$mime = $nt[1];
+						if(strpos($mime, ";") > 0){
+							$ms = explode(";", $mime);
+							$mime = $ms[0];
+						}
+					}else if(strpos($hd, "Content-Disposition") === 0){
+						$nn = explode("filename=", $hd);
+						$fname = str_replace("\"", "", $nn[1]);
 					}
-				}else if(strpos($hd, "Content-Disposition") === 0){
-					$nn = explode("filename=", $hd);
-					$fname = str_replace("\"", "", $nn[1]);
+				}
+				
+				if($fname == "remote"){
+					//parse url if no content-disposition is set
+					preg_match('@^.*\/(.*\.[a-zA-Z0-9]{0,4})@i', $_GET["remote"], $matches);
+					if(count($matches) > 0){
+						$fname = $matches[1];
+					}
 				}
 			}
 			
-			if($fname == "remote"){
-				//parse url if no content-disposition is set
-				preg_match('@^.*\/(.*\.[a-zA-Z0-9]{0,4})@i', $_GET["remote"], $matches);
-				if(count($matches) > 0){
-					$fname = $matches[1];
-				}
-			}
+			$tmpf = fopen("php://temp", 'rb+');
+			stream_copy_to_stream($rawf, $tmpf);
+			rewind($tmpf);
+			fclose($rawf);
 		}
-		
-		$tmpf = fopen("php://temp", 'rb+');
-		stream_copy_to_stream($rawf, $tmpf);
-		rewind($tmpf);
+		else 
+		{
+			$f = $_FILES['files'];
+			error_log(print_r($f, true));
+			$tmpf = fopen($f['tmp_name'][0], 'rb');
+		}
 		
 		//Connect to db
 		$db = new DB();
@@ -78,6 +92,11 @@
 			$response["publichash"] = $f_e->hash160;
 			$response["link"] = _SITEURL . $f_e->hash160;
 			$response["mime"] = $f_e->mime;
+			
+			if($isMultipart) {
+				$response["success"] = true;
+				$response["files"] = array(array("url" => $response["link"]));
+			}
 		}
 		else
 		{
@@ -108,15 +127,19 @@
 				include_once("discord.php");
 				
 				$response["status"] = 200;
-				$response["link"] = _SITEURL . $f_e->hash160;
+				$response["link"] = _SITEURL . $f_e->hash160; 
 				$response["mime"] = $mime;
+				
+				if($isMultipart) {
+					$response["success"] = true;
+					$response["files"] = array(array("url" => $response["link"]));
+				}
 			}else{
 				$response["status"] = 500;
 				$response["msg"] = "Server error!";
 			}
 		}
 		//close streams
-		fclose($rawf);
 		fclose($tmpf);
 	}
 	
