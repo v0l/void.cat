@@ -3,6 +3,11 @@
 	include_once('config.php');
 	include_once('ga.php');
 	
+	$redis = new Redis();
+	$redis->pconnect(_REDIS_SERVER);
+	
+	GAPageView($redis);
+
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
 	$hashKey = $_SERVER['REMOTE_ADDR'] . ':' . $hash;
 
@@ -49,9 +54,6 @@
 		}
 	}
 	
-	$redis = new Redis();
-	$redis->pconnect(_REDIS_SERVER);
-	
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
@@ -84,7 +86,6 @@
 		header('Content-Disposition: inline; filename="' . $filename . '"');
 		
 		if(!$isCrawlBot && $range_start == 0){
-			GAPageView();
 			$db->AddView($f->hash160);
 		}
 		$redis->incr($hashKey);

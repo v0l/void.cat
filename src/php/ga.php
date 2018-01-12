@@ -18,15 +18,20 @@
 		curl_close ($ch);
 	}
 	
-	function GAPageView(){
-		GACollect(array(
+	function GAPageView($redis){
+		$msg = http_build_query(array(
+			"v" => "1",
+			"tid" => _GA_SITE_CODE,
+			"cid" => session_id(),
 			"t" => "pageview",
 			"dh" => $_SERVER['HTTP_HOST'],
 			"dp" => urlencode($_SERVER['REQUEST_URI']),
-			"uip" => $_SERVER['REMOTE_ADDR'],
+			"uip" => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'],
 			"ua" => urlencode(isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : ""),
 			"dr" => urlencode(isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : "")
 		));
+		
+		$redis->publish('ga-page-view', $msg);
 	}
 	
 	function GAEvent($cat, $act) {
