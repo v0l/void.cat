@@ -25,10 +25,10 @@
 			"cid" => session_id(),
 			"t" => "pageview",
 			"dh" => $_SERVER['HTTP_HOST'],
-			"dp" => urlencode($_SERVER['REQUEST_URI']),
+			"dp" => $_SERVER['REQUEST_URI'],
 			"uip" => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'],
-			"ua" => urlencode(isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : ""),
-			"dr" => urlencode(isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : "")
+			"ua" => isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "",
+			"dr" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : ""
 		));
 		
 		$redis->publish('ga-page-view', $msg);
