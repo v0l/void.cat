@@ -20,13 +20,15 @@ namespace ga_page_view
         private static async Task startSvc()
         {
             var c = await ConnectionMultiplexer.ConnectAsync("localhost");
-            await c.GetSubscriber().SubscribeAsync("ga-page-view", (a, b) =>
-            {
-                _queue.Post(b.ToString());
-            });
+            await c.GetSubscriber().SubscribeAsync("ga-page-view", queueMsg);
 
             Console.WriteLine("Connected to redis");
             await sendStats();
+        }
+
+        private static void queueMsg(RedisChannel a, RedisValue b)
+        {
+            _queue.Post(b.ToString());
         }
 
         private static async Task sendStats()
@@ -54,12 +56,14 @@ namespace ga_page_view
                     await sw.WriteAsync(string.Join("\r\n", payload));
                 }
 
-                var rsp = (HttpWebResponse)await req.GetResponseAsync();
-                if (rsp.StatusCode != HttpStatusCode.OK)
+                using (var rsp = (HttpWebResponse)await req.GetResponseAsync())
                 {
-                    using (StreamReader sr = new StreamReader(rsp.GetResponseStream()))
+                    if (rsp.StatusCode != HttpStatusCode.OK)
                     {
-                        Console.WriteLine($"Got error reponse from analytics: {await sr.ReadToEndAsync()}");
+                        using (StreamReader sr = new StreamReader(rsp.GetResponseStream()))
+                        {
+                            Console.WriteLine($"Got error reponse from analytics: {await sr.ReadToEndAsync()}");
+                        }
                     }
                 }
             }

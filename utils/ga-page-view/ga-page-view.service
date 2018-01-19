@@ -1,0 +1,10 @@
+[Unit]
+Description=GA page view batching
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/dotnet /usr/local/ga-page-view/ga-page-view.dll
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
