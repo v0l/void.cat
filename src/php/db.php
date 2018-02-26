@@ -139,18 +139,25 @@
 
 		function GetExpiredFiles()
 		{
+			return $this->GetExpiredFilesT(_FILE_EXPIRE_TIME);
+		}
+		
+		function GetExpiredFilesT($tt)
+		{
 			$res = array();
 
-			$stmt = $this->mysqli->prepare("select hash160, filename, path from files where date_add(lastview, INTERVAL " . _FILE_EXPIRE_TIME . " DAY) < CURRENT_TIMESTAMP");
+			$stmt = $this->mysqli->prepare("select hash160, filename, path, lastview, size from files where date_add(lastview, INTERVAL " . $tt . " DAY) < CURRENT_TIMESTAMP or (views = 0 and date_add(lastview, INTERVAL 1 DAY) < CURRENT_TIMESTAMP) order by lastview desc");
 			if($stmt)
 			{
 				$stmt->execute();
-				$stmt->bind_result($hash160, $filename, $path);
+				$stmt->bind_result($hash160, $filename, $path, $lastview, $size);
 				while($stmt->fetch()){
 					$nf = new FileUpload();
 					$nf->hash160 = $hash160;
 					$nf->filename = $filename;
 					$nf->path = $path;
+					$nf->lastview = $lastview;
+					$nf->size = $size;
 					array_push($res, $nf);
 				}
 				$stmt->close();
