@@ -1,5 +1,4 @@
 <?php
-	session_start();
 	include_once('config.php');
 	include_once('ga.php');
 	
@@ -72,23 +71,29 @@
 	}
 	
 	include_once('db.php');
+	include_once('virustotal.php');
 	$db = new DB();
 	$f = $db->GetFile($hash);
 	if($f->hash160 != NULL){
-		$expire = 604800;
-		$location = _UPLOADDIR . $f->hash160;
-		$mimeType = $f->mime;
-		$filename = $f->filename;
-		
-		header("X-Accel-Redirect: $location");
-		header("Cache-Control: public, max-age=$expire");
-		header("Content-type: $mimeType");
-		header('Content-Disposition: inline; filename="' . $filename . '"');
-		
-		if(!$isCrawlBot && $range_start == 0){
-			$db->AddView($f->hash160);
+		$vtr = CheckVirusTotalCached($redis, $f->hash256);
+		if($vtr != null && isset($vtr->positives) && $vtr->positives > 1) {
+			http_response_code(404);
+		}else {
+			$expire = 604800;
+			$location = _UPLOADDIR . $f->hash160;
+			$mimeType = $f->mime;
+			$filename = $f->filename;
+			
+			header("X-Accel-Redirect: $location");
+			header("Cache-Control: public, max-age=$expire");
+			header("Content-type: $mimeType");
+			header('Content-Disposition: inline; filename="' . $filename . '"');
+			
+			if(!$isCrawlBot && $range_start == 0){
+				$db->AddView($f->hash160);
+			}
+			$redis->incr($hashKey);
 		}
-		$redis->incr($hashKey);
 	}else{
 		http_response_code(404);
 	}
