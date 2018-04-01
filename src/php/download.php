@@ -7,8 +7,9 @@
 	
 	GAPageView($redis);
 
+	$ip = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'];
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
-	$hashKey = $_SERVER['REMOTE_ADDR'] . ':' . $hash;
+	$hashKey = $ip . ':' . $hash;
 
 	$refr = isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : False;
 	if($refr != False){
@@ -56,7 +57,12 @@
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
-			http_response_code(444); //for tracking abuse
+			$cfbk = 'VC:CF:BLOCK';
+			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, $ip) == False){
+				$redis->sadd($cfbk, $ip);
+				include_once('cloudflare.php');
+				AddFirewallRule($ip);
+			}
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check

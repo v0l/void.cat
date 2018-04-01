@@ -20,6 +20,11 @@
 	define('_UA_NO_VIEW', array("YandexBot/3.0", "Googlebot/2.1", "Yahoo! Slurp"));
 	define('_VIRUSTOTAL_KEY', 'API_KEY');
 	
+	/* CLOUDFLARE SETTINGS */
+	define('_CLOUDFLARE_API_EMAIL', 'me@me.com');
+	define('_CLOUDFLARE_API_KEY', 'API_KEY');
+	define('_CLOUDFLARE_ZONE', 'ZONE_ID');
+	
 	/* CAPTCHA SETTINGS */
 	define('_DL_CAPTCHA', 10);
 	define('_CAPTCHA_DL_EXPIRE', 86400);
