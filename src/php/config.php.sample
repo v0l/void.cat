@@ -1,4 +1,11 @@
 <?php
+
+	if(!isset($_COOKIE["VC:UID"])) {
+		setcookie("VC:UID", uniqid());
+	}
+	
+	define('_UIP', isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR']);
+	
 	/* DB SETTINGS */
 	define('_DB_HOST', '127.0.0.1');
 	define('_DB_DATABASE', 'void');

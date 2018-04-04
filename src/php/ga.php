@@ -22,11 +22,11 @@
 		$msg = http_build_query(array(
 			"v" => "1",
 			"tid" => _GA_SITE_CODE,
-			"cid" => session_id(),
+			"cid" => $_COOKIE["VC:UID"],
 			"t" => "pageview",
 			"dh" => $_SERVER['HTTP_HOST'],
 			"dp" => $_SERVER['REQUEST_URI'],
-			"uip" => isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'],
+			"uip" => _UIP,
 			"ua" => isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "",
 			"dr" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : ""
 		));

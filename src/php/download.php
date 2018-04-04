@@ -7,9 +7,8 @@
 	
 	GAPageView($redis);
 
-	$ip = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'];
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
-	$hashKey = $ip . ':' . $hash;
+	$hashKey = _UIP . ':' . $hash;
 
 	$refr = isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : False;
 	if($refr != False){
@@ -21,16 +20,12 @@
 	}
 	
 	//check is range request
-	$range_start = 0;
-	$range_end = 999;
+	$is_non_range = True;
 	if(isset($_SERVER['HTTP_RANGE'])){
 		$rby = explode('=', $_SERVER['HTTP_RANGE']);
 		$rbv = explode('-', $rby[1]);
-		if($rbv[0] != ''){
-			$range_start = $rbv[0];
-		}
-		if($rbv[1] != ''){
-			$range_end = $rbv[1];
+		if($rbv[0] != '0'){
+			$is_non_range = False;
 		}
 	}
 	
@@ -58,10 +53,10 @@
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
 			$cfbk = 'VC:CF:BLOCK';
-			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, $ip) == False){
-				$redis->sadd($cfbk, $ip);
+			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, _UIP) == False){
+				$redis->sadd($cfbk, _UIP);
 				include_once('cloudflare.php');
-				AddFirewallRule($ip);
+				AddFirewallRule(_UIP);
 			}
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
@@ -95,10 +90,10 @@
 			header("Content-type: $mimeType");
 			header('Content-Disposition: inline; filename="' . $filename . '"');
 			
-			if(!$isCrawlBot && $range_start == 0){
+			if(!$isCrawlBot && $is_non_range){
 				$db->AddView($f->hash160);
+				$redis->incr($hashKey);
 			}
-			$redis->incr($hashKey);
 		}
 	}else{
 		http_response_code(404);

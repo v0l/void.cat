@@ -1,6 +1,4 @@
-<?php
-	session_start();
-	
+<?php	
 	include_once('config.php');
 	include_once('ga.php');
 	
@@ -9,7 +7,12 @@
 	$rsp = array(
 		"input" => $c
 	);
+	
+	$redis = new Redis();
+	$redis->pconnect(_REDIS_SERVER);
 
+	GAPageView($redis);
+	
 	switch($c->cmd){
 		case "config":
 		{
@@ -36,18 +39,13 @@
 				$fi->url = _SITEURL . $fi->hash160;
 				$rsp["file"] = $fi;
 				
-				$hashKey = $_SERVER['REMOTE_ADDR'] . ':' . $fi->hash160;
-				
-				$redis = new Redis();
-				$redis->connect(_REDIS_SERVER);
+				$hashKey = _UIP . ':' . $fi->hash160;
 				
 				$dlCounter = $redis->get($hashKey);
 				if($dlCounter != False && $dlCounter >= _DL_CAPTCHA) {
 					GAEvent("Captcha", "Hit");
 					$rsp["captcha"] = True;
 				}
-				
-				$redis->close();
 			}else { 
 				$rsp["file"] = NULL;
 			}
@@ -60,11 +58,8 @@
 			break;
 		}
 		case "captcha_verify":
-		{
-			$redis = new Redis();
-			$redis->connect(_REDIS_SERVER);
-			
-			$hashKey = $_SERVER['REMOTE_ADDR'] . ':' . $c->hash;
+		{			
+			$hashKey = _UIP . ':' . $c->hash;
 			
 			$dlCounter = $redis->get($hashKey);
 			if($dlCounter != FALSE) {
@@ -72,7 +67,7 @@
 
 				curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
 				curl_setopt($ch, CURLOPT_POST, 1);
-				curl_setopt($ch, CURLOPT_POSTFIELDS, 'secret=' . _CAPTCHA_SECRET . '&response=' . $c->token . '&remoteip=' . $_SERVER['REMOTE_ADDR']);
+				curl_setopt($ch, CURLOPT_POSTFIELDS, 'secret=' . _CAPTCHA_SECRET . '&response=' . $c->token . '&remoteip=' . _UIP);
 			
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 				$crsp = json_decode(curl_exec($ch));
@@ -91,8 +86,6 @@
 				$rsp["ok"] = True;
 				GAEvent("Captcha", "Miss");
 			}
-			
-			$redis->close();
 			break;
 		}
 	}
