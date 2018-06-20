@@ -27,6 +27,9 @@
 		if($cfr['success'] == True){
 			$discord_data = array("content" => "[IP BLOCKED] " . $ip);
 			include_once("discord.php");
+		}else {
+			$discord_data = array("content" => "[IP BLOCK ERROR] " . $ip . "\n```json\n" . $result . "\n```");
+			include_once("discord.php");
 		}
 		
 		return $cfr;

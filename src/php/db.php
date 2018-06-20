@@ -46,6 +46,24 @@
 			return $res;
 		}
 		
+		function GuessHash($hash) {
+			//sometimes are making a request like this: lets just do a LIKE query to find it bf9fdaa217271f9e1f6ab88...f42bd0a538
+			//poor lost people i cri evry time
+			$res = null;
+			
+			$stmt = $this->mysqli->prepare("select hash160 from files where hash160 like ? limit 1");
+			if($stmt)
+			{
+				$stmt->bind_param("s", $hash);
+				$stmt->execute();
+				$stmt->bind_result($res);
+				$stmt->fetch();
+				$stmt->close();
+			}
+			
+			return $res;
+		}
+		
 		function GetFile($hash, $hc = "hash160")
 		{
 			$res = new FileUpload();

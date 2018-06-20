@@ -31,6 +31,7 @@
 <!doctype html>
 <html>
 	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Tips</title>
 		<style>
 			html, body {
@@ -75,6 +76,16 @@
 			}
 			div.body div.tip-row div.bal {
 				float: right;
+			}
+			
+			@media screen and (max-width: 720px) {
+				div.body {
+					width: auto;
+					margin: 0;
+				}
+				div.body div.tip-row div.bal {
+					display: none;
+				}
 			}
 		</style>
 	</head>

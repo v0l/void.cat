@@ -74,6 +74,17 @@
 	include_once('db.php');
 	include_once('virustotal.php');
 	$db = new DB();
+	
+	//try to guess the hash if the link was truncated with '...'
+	if(strpos($hash, "...") !== false) {
+		$nh = str_replace("...", "%", $hash);
+		$gh = $db->GuessHash($nh);
+		if($gh !== null) {
+			header('location: ' . _SITEURL . $gh);
+			exit();
+		}
+	}
+	
 	$f = $db->GetFile($hash);
 	if($f->hash160 != NULL){
 		$vtr = CheckVirusTotalCached($redis, $f->hash256);

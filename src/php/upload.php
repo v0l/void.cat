@@ -8,7 +8,8 @@
 		"publichash" => null,
 		"link" => null,
 		"mime" => null,
-		"filename" => null
+		"filename" => null,
+		"upload" => json_encode($_FILES)
 	);
 	
 	$isMultipart = strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== False;
@@ -99,7 +100,32 @@
 		}
 		else
 		{
+			/*
 			//file does not exist
+			//check clamav
+			include_once('clamav.php');
+			$sr = ScanStream($tmpf, $fsize);
+			if($sr !== "stream: OK"){
+				$discord_data = array("content" => $sr);
+				include("discord.php");
+			}else{
+				$response["clamav"] = $sr;
+			}*/
+			
+			//check with VT (max upload is 32MB)
+			/*if($fsize < 32 * 1000 * 1000) {
+				$redis = new Redis();
+				$redis->pconnect(_REDIS_SERVER);
+		
+				include_once('virustotal.php');
+				$vtr = CheckVirusTotalCached($redis, $fh);
+				if($vtr != null && isset($vtr->response_code) && $vtr->response_code == 0) {
+					$sr = ScanFile($tmpf);
+					$discord_data = array("content" => $sr->verbose_msg);
+					include("discord.php");
+				}
+			}*/
+			
 			//generate public hash
 			$phc = hash_init('ripemd160');
 			hash_update($phc, $fh);
@@ -123,7 +149,7 @@
 				
 				$db->InsertFile($f_e);
 				$discord_data = array("content" => _SITEURL . '#' . $f_e->hash160);
-				include_once("discord.php");
+				include("discord.php");
 				
 				$response["status"] = 200;
 				$response["link"] = _SITEURL . $f_e->hash160; 

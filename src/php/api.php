@@ -17,6 +17,7 @@
 		case "config":
 		{
 			include_once("db.php");
+			include_once("functions.php");
 			
 			$db = new DB();
 			$rsp["stats"] = $db->GetStats();
@@ -25,6 +26,7 @@
 			$maxsize = (int)(str_replace('M', '', $maxsizeM) * 1000 * 1000);
 			$rsp["maxsize"] = $maxsize;
 			$rsp["expire"] = _FILE_EXPIRE_TIME;
+			//$rsp["tips"] = GetTipTotal();
 			break;
 		}
 		case "file": 

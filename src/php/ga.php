@@ -22,7 +22,7 @@
 		$msg = http_build_query(array(
 			"v" => "1",
 			"tid" => _GA_SITE_CODE,
-			"cid" => $_COOKIE["VC:UID"],
+			"cid" => isset($_COOKIE["VC:UID"]) ? $_COOKIE["VC:UID"] : uniqid(),
 			"t" => "pageview",
 			"dh" => $_SERVER['HTTP_HOST'],
 			"dp" => $_SERVER['REQUEST_URI'],

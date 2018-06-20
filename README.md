@@ -8,7 +8,7 @@ cat src/db.sql | mysql -D YOUR_DB -p
 ```
 
 ```
-location ~ "^\/[0-9a-z]{40}$" {
+location ~ "^\/[0-9a-z\.]{36,40}$" {
 	try_files $uri /src/php/download.php;
 }
 ```
