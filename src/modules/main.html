@@ -34,7 +34,8 @@
 				<a href="https://discord.gg/8BkxTGs">Discord</a> | 
 				<a href="/src/php/tip-me.php">Crypto Tips</a> |
 				<a href="/src/php/lightning-tip.php">⚡Lightning Tip⚡</a> |
-				<a href="dat://0d7fe5f1e26e8541745f585f38f7075f135abcba78409b8b93d13c4322771297/">Dat</a>
+				<a href="dat://0d7fe5f1e26e8541745f585f38f7075f135abcba78409b8b93d13c4322771297/">Dat</a> | 
+				<input type="checkbox" checked="{{miner}}" onclick="localStorage.setItem('miner', this.checked ? 'true' : 'false')"/> Miner enabled
 			</div>
 			<img src="/graph"/>
 		</div>
@@ -54,6 +55,7 @@
             super.ready();
 			
 			this.hash = window.location.hash;
+			this.miner = (localStorage.getItem("miner") || "true") == "true";
 			if(this.hash.length === 41){
 				this.view = true;
 			}else{

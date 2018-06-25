@@ -1,11 +1,11 @@
 <?php
 	include_once('config.php');
-	include_once('ga.php');
+	include_once('functions.php');
 	
 	$redis = new Redis();
 	$redis->pconnect(_REDIS_SERVER);
 	
-	GAPageView($redis);
+	ga_page_view($redis);
 
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
 	$hashKey = _UIP . ':' . $hash;
@@ -15,6 +15,12 @@
 		$rh = parse_url($refr)["host"];
 		if(in_array($rh, _BLOCK_REFERER)){
 			http_response_code(403);
+			exit();
+		}
+		
+		if($rh != "void.cat") {
+			//redirect to view page from hotlink
+			header("location: /#" . $hash);
 			exit();
 		}
 	}
@@ -52,17 +58,18 @@
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
-			$cfbk = 'VC:CF:BLOCK';
+			/*$cfbk = 'VC:CF:BLOCK';
 			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, _UIP) == False){
 				$redis->sadd($cfbk, _UIP);
 				include_once('cloudflare.php');
 				AddFirewallRule(_UIP);
-			}
+			}*/
+			header('location: /');
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check
 			$redis->incr($hashKey);
-			GAEvent("Captcha", "Hit");
+			ga_event("Captcha", "Hit");
 			header('location: ' . _SITEURL . '?dl#' . $hash);
 			exit();
 		}
@@ -72,7 +79,6 @@
 	}
 	
 	include_once('db.php');
-	include_once('virustotal.php');
 	$db = new DB();
 	
 	//try to guess the hash if the link was truncated with '...'

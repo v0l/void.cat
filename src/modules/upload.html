@@ -172,7 +172,7 @@
                 this.xhr.upload.addEventListener('abort', this.uploadProgress.bind({ self: this }));
                 this.xhr.addEventListener('readystatechange', this.uploadProgress.bind({ self: this }));
 
-                this.xhr.open("POST", "/src/php/upload.php?filename=" + this.file.name + (this.file.url ? "&remote=" + encodeURIComponent(this.file.url) : ""));
+                this.xhr.open("POST", "https://upload.void.cat/src/php/upload.php?filename=" + this.file.name + (this.file.url ? "&remote=" + encodeURIComponent(this.file.url) : ""));
                 this.xhr.send(this.file);
             }
         }

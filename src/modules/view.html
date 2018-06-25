@@ -121,7 +121,7 @@
 					}else{
 						this.self.isCaptcha = false;
 						this.self.isImage = (this.self.fileInfo.mime.match(/^image\/(png|jpg|jpeg|gif|bmp)$/gi) !== null);
-						this.self.isVideo = (this.self.fileInfo.mime.match(/^video\/(mp4|mkv|avi|m4v)$/gi) !== null);
+						this.self.isVideo = (this.self.fileInfo.mime.match(/^video\/(mp4|mkv|avi|m4v|webm)$/gi) !== null);
 						this.self.isSound = (this.self.fileInfo.mime.match(/^audio\/(mp3|ogg|flac|wav|alac)$/gi) !== null);
 						this.self.isDefault = !this.self.isImage && !this.self.isVideo && !this.self.isSound;
 					}

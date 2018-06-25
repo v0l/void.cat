@@ -1,6 +1,7 @@
 <?php
-	require_once('db.php');
-
+	include_once('db.php');
+	include_once("functions.php");
+	
 	$response = array(
 		"status" => 0,
 		"msg" => null,
@@ -127,7 +128,7 @@
 			}*/
 			
 			//generate public hash
-			$phc = hash_init('ripemd160');
+			$phc = hash_init(_PUB_HASH);
 			hash_update($phc, $fh);
 			$ph = hash_final($phc);
 			$response["publichash"] = $ph;
@@ -149,7 +150,7 @@
 				
 				$db->InsertFile($f_e);
 				$discord_data = array("content" => _SITEURL . '#' . $f_e->hash160);
-				include("discord.php");
+				send_discord_msg($discord_data);
 				
 				$response["status"] = 200;
 				$response["link"] = _SITEURL . $f_e->hash160; 
