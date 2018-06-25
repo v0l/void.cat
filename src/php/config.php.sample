@@ -16,16 +16,19 @@
 	define('_REDIS_SERVER', '127.0.0.1');
 	
 	/* GENERAL SETTINGS */
+	define('_PUB_HASH', 'ripemd160');
 	define('_DEFAULT_TYPE', 'application/octet-stream');
 	define('_SITEURL', 'https://void.cat/');
 	define('_UPLOADDIR', '/files/');
 	define('_FILEPATH', '/var/www/void.cat' . _UPLOADDIR);
 	define('_DISCORD_WEBHOOK', 'DISCORD_HOOK_URL');
+	define('_DISCORD_WEBHOOK_PUB', 'DISCORD_HOOK_URL');
 	define('_FILE_EXPIRE_TIME', 30);
 	define('_GA_SITE_CODE', 'UA-73200448-1');
 	define('_BLOCK_REFERER', array("yobuilder.com", "adf.ly"));
 	define('_UA_NO_VIEW', array("YandexBot/3.0", "Googlebot/2.1", "Yahoo! Slurp"));
 	define('_VIRUSTOTAL_KEY', 'API_KEY');
+	define('_CURL_USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36');
 	define('_ETHERSCAN_API_KEY', 'API_KEY');
 	
 	/* CLOUDFLARE SETTINGS */
@@ -53,7 +56,6 @@
 		"LTC" => "MGBNvUefXrFvdiZRNrQTG6UX8za2Phr5Eu",
 		"ZEC" => "t1VSkrikVyjoCKrC7DXnVPxPZCWRQihneTz",
 		"ETH" => "0x367e6864d84b38c58312a340afbd55417d1c9Ce2",
-		"EOS" => "0x367e6864d84b38c58312a340afbd55417d1c9Ce2",
 		"TRX" => "0x367e6864d84b38c58312a340afbd55417d1c9Ce2",
 		"ETC" => "0x5653306b771d0ECD9f1010114a378a50301f68c3",
 		"XEM" => "NDWAWGJ5E5FCQTGKMTAQPS5TACICPB5NA4ZVT232"
