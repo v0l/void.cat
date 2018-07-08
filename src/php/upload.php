@@ -2,6 +2,8 @@
 	include_once('db.php');
 	include_once("functions.php");
 	
+	set_time_limit(1200);
+	
 	$response = array(
 		"status" => 0,
 		"msg" => null,
@@ -14,7 +16,7 @@
 	);
 	
 	$isMultipart = strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== False;
-	
+	 
 	//check input size is large enough
 	$maxsizeM = ini_get('post_max_size');
 	$maxsize = (int)(str_replace('M', '', $maxsizeM) * 1024 * 1024);
@@ -132,35 +134,39 @@
 			hash_update($phc, $fh);
 			$ph = hash_final($phc);
 			$response["publichash"] = $ph;
+			
 			//save to disk
 			$op = _FILEPATH . $ph;
 			$fo = fopen($op, 'wb+');
 			if($fo !== False){
-				stream_copy_to_stream($tmpf, $fo);
-				fclose($fo);
-				
 				//save to db
 				$f_e = new FileUpload();
 				$f_e->hash160 = $ph;
 				$f_e->hash256 = $fh;
 				$f_e->mime = $mime;
-				$f_e->size = filesize($op);
+				$f_e->size = $fsize;
 				$f_e->path = $op;
 				$f_e->filename = $fname;
 				
-				$db->InsertFile($f_e);
-				$discord_data = array("content" => _SITEURL . '#' . $f_e->hash160);
-				send_discord_msg($discord_data);
-				
-				$response["status"] = 200;
-				$response["link"] = _SITEURL . $f_e->hash160; 
-				$response["mime"] = $mime;
-				
-				if($isMultipart) {
-					$response["success"] = true;
-					$response["files"] = array(array("url" => $response["link"]));
+				if($db->InsertFile($f_e)) {
+					stream_copy_to_stream($tmpf, $fo);
+					fclose($fo);
+					$discord_data = array("content" => _SITEURL . '#' . $f_e->hash160);
+					send_discord_msg($discord_data);
+					
+					$response["status"] = 200;
+					$response["link"] = _SITEURL . $f_e->hash160; 
+					$response["mime"] = $mime;
+					
+					if($isMultipart) {
+						$response["success"] = true;
+						$response["files"] = array(array("url" => $response["link"]));
+					}
+				} else {
+					$response["status"] = 500;
+					$response["msg"] = "Server error!";
 				}
-			}else{
+			} else {
 				$response["status"] = 500;
 				$response["msg"] = "Server error!";
 			}
