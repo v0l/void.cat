@@ -73,15 +73,22 @@
 					}
 				} else {
 					$id = $_GET["label"];
+					$node = ln_query("getinfo", array());
 					$inv = ln_query("listinvoices", array($id));
 					if(isset($inv->result) && isset($inv->result->invoices[0])) {
 						$i = $inv->result->invoices[0];
+						$n = $node->result;
+						
+						echo "<pre>" . $n->id . "@" . $n->address[0]->address . ":" . $n->address[0]->port . "</pre>";
 						
 						echo "<pre>" . $i->bolt11 . "</pre>";
 						
-						$cmd = "/usr/local/bin/myqr lightning:" . $i->bolt11 . " -n " . $id . ".png -c -d /tmp/ 2>&1";						
-						$qr = shell_exec($cmd);
-						$img_b64 = base64_encode(file_get_contents(substr(explode(", ", substr(explode("\n", $qr)[1], 1, -1))[3], 1, -1)));
+						$fn = "/tmp/" . $id . ".png";
+						if(!file_exists($fn)) {
+							$cmd = "/usr/local/bin/myqr lightning:" . $i->bolt11 . " -n " . $id . ".png -c -d /tmp/ 2>&1";						
+							$qr = shell_exec($cmd);
+						}
+						$img_b64 = base64_encode(file_get_contents($fn));
 						
 						echo "<img class=\"qr\" src=\"data:image/png;base64," . $img_b64 . "\"/>";
 					} else {
