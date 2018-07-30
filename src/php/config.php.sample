@@ -43,7 +43,7 @@
 	define('_CAPTCHA_SECRET', 'CAP_SECRET');
 	
 	/* LN RPC-FILE */
-	define('_LN_RPC_FILE', 'unix:///root/.lightning/lightning-rpc');
+	define('_LN_RPC_FILE', 'tcp://127.0.0.1:9737');
 	define("MSAT", 0.00000000001);
 	define("SAT", 0.00000001);
 	
