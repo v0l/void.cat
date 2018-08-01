@@ -216,7 +216,7 @@
 	}
 	
 	function ga_event($cat, $act) {
-		GACollect(array(
+		ga_collect(array(
 			"t" => "event",
 			"ec" => $cat,
 			"ea" => $act
@@ -331,7 +331,7 @@
 				'target' => 'ip',
 				'value' => $ip
 			),
-			'notes' => 'void.cat auto block'
+			'notes' => 'blocked by: ' . $_SERVER['SERVER_NAME']
 		);
 		
 		$ch = curl_init();
@@ -350,11 +350,9 @@
 		$cfr = json_decode($result, true);
 		
 		if($cfr['success'] == True){
-			$discord_data = array("content" => "[IP BLOCKED] " . $ip);
-			include_once("discord.php");
+			send_discord_msg(array("content" => "[IP BLOCKED] " . $ip));
 		}else {
-			$discord_data = array("content" => "[IP BLOCK ERROR] " . $ip . "\n```json\n" . $result . "\n```");
-			include_once("discord.php");
+			send_discord_msg(array("content" => "[IP BLOCK ERROR] " . $ip . "\n```json\n" . $result . "\n```"));
 		}
 		
 		return $cfr;
