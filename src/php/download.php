@@ -10,15 +10,40 @@
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
 	$hashKey = _UIP . ':' . $hash;
 
+	if(_IS_LB_HOST == False && count(_LB_HOSTS) > 0) {
+		$has_cache = $redis->sIsMember("VC:DL:LB", $hash);
+		if($has_cache == False) {
+			$lb_hash_cache = True;
+			foreach(_LB_HOSTS as $lbh) {
+				$lb_x = json_decode(curl_get($lbh . "/hasfile.php?hash=" . $hash, array("Host: " . _LB_HOSTNAME)));
+				if($lb_x->result == False){
+					$lb_hash_cache = False;
+					break;
+				}
+			}
+			
+			if($lb_hash_cache == True){
+				$redis->sadd("VC:DL:LB", $hash);
+				header("location: https://" . _LB_HOSTNAME . "/" . $hash);
+				exit();
+			}
+		} else {
+			header("location: https://" . _LB_HOSTNAME . "/" . $hash);
+			exit();
+		}
+	}
+	
 	$refr = isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : False;
 	if($refr != False){
 		$rh = parse_url($refr)["host"];
 		if(in_array($rh, _BLOCK_REFERER)){
-			http_response_code(403);
+			header("Content-Type: text/html");
+			echo file_get_contents("empty.html");
+			//http_response_code(403);
 			exit();
 		}
 		
-		if($rh != "void.cat") {
+		if(_IS_LB_HOST == False && $rh != "void.cat") {
 			//redirect to view page from hotlink
 			header("location: /#" . $hash);
 			exit();
@@ -58,11 +83,13 @@
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
-			$cfbk = 'VC:CF:BLOCK';
+			/*$cfbk = 'VC:CF:BLOCK';
 			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, _UIP) == False){
 				$redis->sadd($cfbk, _UIP);
+				include_once('cloudflare.php');
 				AddFirewallRule(_UIP);
-			}
+			}*/
+			header('location: /');
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check
@@ -91,7 +118,7 @@
 	
 	$f = $db->GetFile($hash);
 	if($f->hash160 != NULL){
-		$vtr = CheckVirusTotalCached($redis, $f->hash256);
+		$vtr = CheckVirusTotalCached($redis, $f->hash256, $f->hash160);
 		if($vtr != null && isset($vtr->positives) && $vtr->positives > 1) {
 			http_response_code(404);
 		}else {
