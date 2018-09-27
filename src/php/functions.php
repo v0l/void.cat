@@ -200,6 +200,9 @@
 	}
 	
 	function ga_page_view($redis){
+		matomo_page_view($redis);
+		return;
+		
 		$msg = http_build_query(array(
 			"v" => "1",
 			"tid" => _GA_SITE_CODE,
@@ -213,6 +216,21 @@
 		));
 		
 		$redis->publish('ga-page-view', $msg);
+	}
+	
+	function matomo_page_view($redis){
+		$msg = "?" . http_build_query(array(
+			"idsite" => 1,
+			"rec" => 1,
+			"apiv" => 1,
+			"_id" => isset($_COOKIE["VC:UID"]) ? $_COOKIE["VC:UID"] : uniqid(),
+			"url" => "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]",
+			"cip" => _UIP,
+			"ua" => isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "",
+			"urlref" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : ""
+		));
+		
+		$redis->publish('ga-page-view-matomo', $msg);
 	}
 	
 	function ga_event($cat, $act) {

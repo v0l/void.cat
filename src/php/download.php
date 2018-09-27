@@ -83,13 +83,11 @@
 	$dlCounter = $redis->get($hashKey);
 	if($dlCounter != FALSE) {
 		if($dlCounter >= _DL_CAPTCHA * 2){
-			/*$cfbk = 'VC:CF:BLOCK';
+			$cfbk = 'VC:CF:BLOCK';
 			if(_CLOUDFLARE_API_KEY != 'API_KEY' && $redis->sIsMember($cfbk, _UIP) == False){
 				$redis->sadd($cfbk, _UIP);
-				include_once('cloudflare.php');
 				AddFirewallRule(_UIP);
-			}*/
-			header('location: /');
+			}
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check

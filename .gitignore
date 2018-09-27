@@ -3,3 +3,7 @@ out/
 src/php/config.php
 google*.html
 bower_components/
+.vs
+bin/
+obj/
+*.csproj.user
