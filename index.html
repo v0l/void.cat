@@ -7,14 +7,21 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 		<link href="src/css/style.css" rel="stylesheet">
         <script src="src/js/util.js"></script>
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-73200448-1"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
-			gtag('config', 'UA-73200448-1');
+		<!-- Matomo -->
+		<script type="text/javascript">
+		  var _paq = _paq || [];
+		  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+		  _paq.push(['trackPageView']);
+		  _paq.push(['enableLinkTracking']);
+		  (function() {
+			var u="//matomo.trash.lol/";
+			_paq.push(['setTrackerUrl', u+'piwik.php']);
+			_paq.push(['setSiteId', '1']);
+			var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+			g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+		  })();
 		</script>
-		
+		<!-- End Matomo Code -->	
 		<script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 		<link rel="import" href="bower_components/polymer/polymer.html">
 		<link rel="import" href="src/modules/main.html">
