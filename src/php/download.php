@@ -5,11 +5,20 @@
 	$redis = new Redis();
 	$redis->pconnect(_REDIS_SERVER);
 	
-	ga_page_view($redis);
+	if(!isset($_SERVER['HTTP_RANGE'])) {
+		matomo_page_view($redis);
+	}
 
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
 	$hashKey = _UIP . ':' . $hash;
 
+	$redis->publish('dl-track', json_encode(array(
+		"uid" => $_COOKIE["VC:UID"],
+		"uip" => _UIP,
+		"hash" => $hash,
+		"range" => $_SERVER['HTTP_RANGE']
+	)));
+	
 	if(_IS_LB_HOST == False && count(_LB_HOSTS) > 0) {
 		$has_cache = $redis->sIsMember("VC:DL:LB", $hash);
 		if($has_cache == False) {
@@ -24,11 +33,11 @@
 			
 			if($lb_hash_cache == True){
 				$redis->sadd("VC:DL:LB", $hash);
-				header("location: https://" . _LB_HOSTNAME . "/" . $hash);
+				header("location: https://" . _LB_HOSTNAME . "/" . $hash, true, 301);
 				exit();
 			}
 		} else {
-			header("location: https://" . _LB_HOSTNAME . "/" . $hash);
+			header("location: https://" . _LB_HOSTNAME . "/" . $hash, true, 301);
 			exit();
 		}
 	}
