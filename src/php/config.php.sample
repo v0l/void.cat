@@ -23,7 +23,7 @@
 	/* GENERAL SETTINGS */
 	define('_PUB_HASH', 'ripemd160');
 	define('_DEFAULT_TYPE', 'application/octet-stream');
-	define('_SITEURL', 'https://void.cat/');
+	define('_SITEURL', (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/');
 	define('_UPLOADDIR', '/files/');
 	define('_FILEPATH', '/var/www/void.cat' . _UPLOADDIR);
 	define('_DISCORD_WEBHOOK', 'DISCORD_HOOK_URL');

@@ -8,17 +8,10 @@
 	if(!isset($_SERVER['HTTP_RANGE'])) {
 		matomo_page_view($redis);
 	}
-
+	
 	$hash = substr($_SERVER["REQUEST_URI"], 1);
 	$hashKey = _UIP . ':' . $hash;
 
-	$redis->publish('dl-track', json_encode(array(
-		"uid" => $_COOKIE["VC:UID"],
-		"uip" => _UIP,
-		"hash" => $hash,
-		"range" => $_SERVER['HTTP_RANGE']
-	)));
-	
 	if(_IS_LB_HOST == False && count(_LB_HOSTS) > 0) {
 		$has_cache = $redis->sIsMember("VC:DL:LB", $hash);
 		if($has_cache == False) {
@@ -40,6 +33,14 @@
 			header("location: https://" . _LB_HOSTNAME . "/" . $hash, true, 301);
 			exit();
 		}
+	} else {
+		$redis->publish('dl-track', json_encode(array(
+			"host" => gethostname(),
+			"uid" => isset($_COOKIE["VC:UID"]) ? $_COOKIE["VC:UID"] : NULL,
+			"uip" => _UIP,
+			"hash" => $hash,
+			"range" => isset($_SERVER['HTTP_RANGE']) ? $_SERVER['HTTP_RANGE'] : NULL
+		)));
 	}
 	
 	$refr = isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : False;
@@ -97,6 +98,7 @@
 				$redis->sadd($cfbk, _UIP);
 				AddFirewallRule(_UIP);
 			}
+			header('location: /');
 			exit();
 		}else if($dlCounter >= _DL_CAPTCHA){
 			//redirect for captcha check

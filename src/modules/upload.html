@@ -152,13 +152,13 @@
 
         openLink() {
             if (this.response !== undefined && this.response !== null && this.response.link !== undefined && this.response.link !== null && this.response.link.length > 0) {
-                window.open(this.response.link, '_blank');
+                window.open(window.location.href + this.response.publichash, '_blank');
             }
         }
 		
 		openViewLink() {
             if (this.response !== undefined && this.response !== null && this.response.link !== undefined && this.response.link !== null && this.response.link.length > 0) {
-                window.open(this.response.link.replace(this.response.publichash, '#' + this.response.publichash), '_blank');
+                window.open(window.location.href + '#' + this.response.publichash, '_blank');
             }
         }
 
