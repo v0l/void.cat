@@ -1,0 +1,88 @@
+$page-width: 1024px;
+$page-height: 512px;
+$page-padding: 10px;
+$page-margin-top: 20px;
+$dropzone-border-width: 2px;
+$dropzone-height: ($page-height - ($dropzone-border-width * 2)) / 2;
+$dropzone-width: ($page-width / 2) - ($dropzone-border-width * 2);
+
+$upload-progress-padding: 2px;
+$upload-progress-height: 20px;
+$upload-padding: 10px;
+$upload-border: 2px solid rgb(168, 168, 168);
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial;
+    font-size: 12px;
+    background-color: rgb(14, 14, 14);
+}
+
+.page {
+    width: $page-width;
+    min-height: $page-height;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: $page-margin-top;
+    overflow: hidden;
+    padding: $page-padding;
+    border-radius: 10px;
+    background-color: rgb(233, 252, 255);
+    box-shadow: 0px 0px 15px 5px #000;
+    user-select: none;
+}
+
+.float-left {
+    float: left;
+}
+
+.left-module {
+    height: $dropzone-height;
+    width: $dropzone-width;
+}
+
+#dropzone {
+    border: $dropzone-border-width dashed #333;
+    line-height: $dropzone-height;
+    text-align: center;
+    font-size: 50px;
+}
+
+#uploads {
+    float: left;
+    width: ($page-width / 2);
+}
+
+.upload {
+    overflow: hidden;
+    border: $upload-border;
+    margin: $upload-padding;
+    margin-top: 0;
+}
+
+.upload .upload-progress {
+    border: 0.5px solid;
+    overflow: hidden;
+    text-align: center;
+    margin: 10px;
+}
+
+.upload .status {
+    padding: 5px 5px 5px 10px;
+}
+
+.upload .file-info {
+    text-align: center;
+    padding: 5px;
+    border-bottom: $upload-border;
+    background-color: #aaa;
+}
+
+.upload .upload-progress div {
+    margin-top: -$upload-progress-height;
+    height: $upload-progress-height;
+    line-height: $upload-progress-height;
+    font-size: $upload-progress-height * 0.8;
+    background-color: rgb(10, 161, 10);
+}

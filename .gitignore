@@ -1,9 +1,4 @@
-out/
-*.xml
-src/php/config.php
-google*.html
-bower_components/
-.vs
+.vs/
 bin/
 obj/
 *.csproj.user

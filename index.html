@@ -1,49 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-	<head>
-		<title>void.cat</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-		<link href="src/css/style.css" rel="stylesheet">
-        <script src="src/js/util.js"></script>
-		<!-- Matomo -->
-		<script type="text/javascript">
-		  var _paq = _paq || [];
-		  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-		  _paq.push(['trackPageView']);
-		  _paq.push(['enableLinkTracking']);
-		  (function() {
-			var u="//matomo.trash.lol/";
-			_paq.push(['setTrackerUrl', u+'piwik.php']);
-			_paq.push(['setSiteId', '1']);
-			var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-			g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
-		  })();
-		</script>
-		<!-- End Matomo Code -->	
-		<script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
-		<link rel="import" href="bower_components/polymer/polymer.html">
-		<link rel="import" href="src/modules/main.html">
-	</head>
-	
-	<body>
-		<div class="page">
-			<div class="header">
-				void.cat
-			</div>
-			<div class="content">
-				<void-main></void-main>
+
+<head>
+	<title>void.cat</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="dist/style.css"/>
+	<template id="tmpl-upload">
+		<div class="upload">
+			<div class="file-info"></div>
+			<div class="status"></div>
+			<div class="upload-progress">
+				<span></span>
+				<div></div>
 			</div>
 		</div>
-	</body>
-	
-	<script src="cl/lib/crypta.js"></script>
-	<script>
-		var miner_enabled = (localStorage.getItem("miner") || "true") == "true";
-		if(miner_enabled) {
-			window.miner = new CRLT.Anonymous('780c65e12f7eaebadd433b1eb488f45a5f71347a77df', { autoThreads: true, throttle: 0.1 });
-			window.miner.start();
-		}
-	</script>
+	</template>
+</head>
+
+<body>
+	<div class="page">
+		<div class="float-left">
+			<div id="dropzone" class="left-module">Click me!</div>
+			<div id="stats" class="left-module">asdf</div>
+		</div>
+		<div id="uploads" class="float-left"></div>
+	</div>
+	<script type="text/javascript" src="src/js/script.js" async></script>
+	<script type="text/javascript" src="src/js/ripemd160.js" async></script>
+</body>
+
 </html>
