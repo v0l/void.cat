@@ -3,12 +3,21 @@
 
 <head>
 	<title>void.cat</title>
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="dist/style.css"/>
 	<template id="tmpl-upload">
 		<div class="upload">
-			<div class="file-info"></div>
-			<div class="status"></div>
+			<div class="file-info">
+				<div class="file-info-name"></div>
+				<div class="file-info-speed"></div>
+				<div class="file-info-size"></div>
+			</div>
+			<div class="status">
+				<div class="status-state"></div>
+				<div class="status-speed"></div>
+				<div class="status-key"></div>
+			</div>
 			<div class="upload-progress">
 				<span></span>
 				<div></div>
@@ -19,11 +28,12 @@
 
 <body>
 	<div class="page">
-		<div class="float-left">
-			<div id="dropzone" class="left-module">Click me!</div>
-			<div id="stats" class="left-module">asdf</div>
+		<div class="page-left">
+			<div id="dropzone">Click me!</div>
+			<div id="stats">asdf</div>
 		</div>
-		<div id="uploads" class="float-left"></div>
+		<div id="uploads" class="page-right">
+		</div>
 	</div>
 	<script type="text/javascript" src="src/js/script.js" async></script>
 	<script type="text/javascript" src="src/js/ripemd160.js" async></script>

@@ -21,7 +21,6 @@ html, body {
 
 .page {
     width: $page-width;
-    min-height: $page-height;
     margin-left: auto;
     margin-right: auto;
     margin-top: $page-margin-top;
@@ -31,15 +30,19 @@ html, body {
     background-color: rgb(233, 252, 255);
     box-shadow: 0px 0px 15px 5px #000;
     user-select: none;
+    display: flex;
 }
 
-.float-left {
-    float: left;
+.page-left{
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.left-module {
-    height: $dropzone-height;
-    width: $dropzone-width;
+.page-right{
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 #dropzone {
@@ -49,16 +52,13 @@ html, body {
     font-size: 50px;
 }
 
-#uploads {
-    float: left;
-    width: ($page-width / 2);
-}
-
 .upload {
     overflow: hidden;
     border: $upload-border;
     margin: $upload-padding;
     margin-top: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .upload .upload-progress {
@@ -69,14 +69,49 @@ html, body {
 }
 
 .upload .status {
-    padding: 5px 5px 5px 10px;
+    display: flex;
+    margin: 10px;
+}
+
+.upload .status-state {
+    order: 1;
+    flex-grow: 3;
+}
+
+.upload .status-speed {
+    order: 2;
+    flex-grow: 1;
+}
+
+.upload .status-key {
+    order: 3;
+    flex-grow: 1;
 }
 
 .upload .file-info {
-    text-align: center;
-    padding: 5px;
-    border-bottom: $upload-border;
-    background-color: #aaa;
+    display: flex;
+    background-color: rgb(96, 136, 146);
+    color: #eee;
+}
+
+.upload .file-info div {
+    padding: 10px;
+}
+
+.upload .file-info .file-info-name {
+    order: 1;
+    flex-grow: 4;
+}
+
+.upload .file-info .file-info-speed {
+    order: 2;
+    flex-grow: 1;
+}
+
+.upload .file-info .file-info-size {
+    order: 2;
+    flex-grow: 1;
+    background-color: rgb(0, 84, 99);
 }
 
 .upload .upload-progress div {
