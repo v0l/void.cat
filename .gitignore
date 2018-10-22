@@ -4,3 +4,4 @@ obj/
 *.csproj.user
 *.min.*
 dist/
+.vscode/

@@ -1,16 +1,27 @@
 <?php
-    //Startup
-    Config::LoadConfig();
-    StaticRedis::Connect();
-    Db::Connect();
+    define('REDIS_CONFIG', '127.0.0.1');
+    define('REDIS_PREFIX', 'vc:');
 
-    if(isset($_REQUEST["h"])) {
-        $hf = $_REQUEST["h"];
-        if(file_exists($h)){
-            $hc = new $hf();
-            if($hc instanceof RequestHandler){
-                $hc->HandleRequest();
+    spl_autoload_register(function ($class_name) {
+        include dirname(__FILE__) . '/' . strtolower($class_name) . '.php';
+    });
+
+    //Startup
+    if(StaticRedis::Connect() == True) {
+        if(isset($_REQUEST["h"])) {
+            $handler_name = $_REQUEST["h"];
+            if(file_exists($handler_name . '.php')){
+                $handler = new $handler_name();
+                if($handler instanceof RequestHandler){
+                    $handler->HandleRequest();
+                    exit();
+                }
             }
         }
+        http_response_code(400);
+        exit();
+    } else {
+        http_response_code(500);
+        exit();
     }
 ?>

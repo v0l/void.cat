@@ -1,5 +1,5 @@
 <?php
     interface RequestHandler {
-        public function HandleRequest();
+        public function HandleRequest() : void;
     }
 ?>

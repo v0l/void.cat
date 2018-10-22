@@ -4,9 +4,8 @@
         public static $Instance = NULL;
 
         public static function Connect(){
-            $cfg = Config::$Instance;
             self::$Instance = new Redis();
-            return self::$Instance->pconnect($cfg->redis);
+            return self::$Instance->pconnect(REDIS_CONFIG);
         }
     }
 ?>

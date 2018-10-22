@@ -9,18 +9,20 @@
 	<template id="tmpl-upload">
 		<div class="upload">
 			<div class="file-info">
-				<div class="file-info-name"></div>
-				<div class="file-info-speed"></div>
-				<div class="file-info-size"></div>
+				<div class="file-info-name">...</div>
+				<div class="file-info-speed">0 B/s</div>
+				<div class="file-info-size">0 B</div>
 			</div>
 			<div class="status">
-				<div class="status-state"></div>
-				<div class="status-speed"></div>
-				<div class="status-key"></div>
+				<div class="status-state">Starting...</div>
+				<div class="status-key">Key: 000000000000000000000000000000:00000000000000000000000000</div>
 			</div>
 			<div class="upload-progress">
-				<span></span>
+				<span>0%</span>
 				<div></div>
+			</div>
+			<div class="links" style="display: none">
+
 			</div>
 		</div>
 	</template>
@@ -30,13 +32,11 @@
 	<div class="page">
 		<div class="page-left">
 			<div id="dropzone">Click me!</div>
-			<div id="stats">asdf</div>
-		</div>
-		<div id="uploads" class="page-right">
-		</div>
+			<div id="stats"></div>
+		</div> 
+		<div id="uploads" class="page-right"></div>
 	</div>
 	<script type="text/javascript" src="src/js/script.js" async></script>
-	<script type="text/javascript" src="src/js/ripemd160.js" async></script>
 </body>
 
 </html>

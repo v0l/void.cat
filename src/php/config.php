@@ -1,9 +1,13 @@
 <?php
     class Config {
-        public static $Instance = NULL;
-        
-        public static function LoadConfig() {
-            self::$Instance = json_decode(file_get_contents("settings.json"));
+        public static function GetConfig($config_name) {
+            $redis = StaticRedis::$Instance;
+            return $redis->hGet(REDIS_PREFIX . 'config', $config_name);
+        }
+
+        public static function MGetConfig($config_name) {
+            $redis = StaticRedis::$Instance;
+            return $redis->hMGet(REDIS_PREFIX . 'config', $config_name);
         }
     }
 ?>

@@ -4,7 +4,6 @@ $page-padding: 10px;
 $page-margin-top: 20px;
 $dropzone-border-width: 2px;
 $dropzone-height: ($page-height - ($dropzone-border-width * 2)) / 2;
-$dropzone-width: ($page-width / 2) - ($dropzone-border-width * 2);
 
 $upload-progress-padding: 2px;
 $upload-progress-height: 20px;
@@ -30,19 +29,15 @@ html, body {
     background-color: rgb(233, 252, 255);
     box-shadow: 0px 0px 15px 5px #000;
     user-select: none;
-    display: flex;
 }
 
-.page-left{
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+.page-left { 
+    width: 50%; 
+    float:left;
 }
-
-.page-right{
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+.page-right { 
+    width: 50%; 
+    float:left;
 }
 
 #dropzone {
@@ -57,8 +52,6 @@ html, body {
     border: $upload-border;
     margin: $upload-padding;
     margin-top: 0;
-    display: flex;
-    flex-direction: column;
 }
 
 .upload .upload-progress {
@@ -69,27 +62,20 @@ html, body {
 }
 
 .upload .status {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40% 60%;
     margin: 10px;
 }
 
-.upload .status-state {
-    order: 1;
-    flex-grow: 3;
-}
-
-.upload .status-speed {
-    order: 2;
-    flex-grow: 1;
-}
-
-.upload .status-key {
-    order: 3;
-    flex-grow: 1;
+.upload .status div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .upload .file-info {
-    display: flex;
+    display: grid;
+    grid-template-columns: 60% 20% 20%;
     background-color: rgb(96, 136, 146);
     color: #eee;
 }
@@ -99,19 +85,19 @@ html, body {
 }
 
 .upload .file-info .file-info-name {
-    order: 1;
-    flex-grow: 4;
-}
-
-.upload .file-info .file-info-speed {
-    order: 2;
-    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .upload .file-info .file-info-size {
-    order: 2;
-    flex-grow: 1;
+    background-color: rgb(0, 113, 133);
+    text-align: center;
+}
+
+.upload .file-info .file-info-speed {
     background-color: rgb(0, 84, 99);
+    text-align: center;
 }
 
 .upload .upload-progress div {
@@ -120,4 +106,17 @@ html, body {
     line-height: $upload-progress-height;
     font-size: $upload-progress-height * 0.8;
     background-color: rgb(10, 161, 10);
+}
+
+.links {
+    display: grid;
+}
+
+.links a {
+    margin: 10px;
+    line-height: 40px;
+    border: 1px solid;
+    color: white;
+    text-align: center;
+    background-color: #569a59;
 }

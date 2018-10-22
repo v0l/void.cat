@@ -153,8 +153,8 @@ const XHR = function (method, url, data, headers, progress) {
                 resolve(ev.target);
             }
         };
-        x.upload.onprogress = function(ev){
-            if(typeof progress === "function"){
+        x.upload.onprogress = function (ev) {
+            if (typeof progress === "function") {
                 progress(ev);
             }
         };
@@ -164,8 +164,8 @@ const XHR = function (method, url, data, headers, progress) {
         x.open(method, url, true);
 
         //set headers if they are passed
-        if(typeof headers === "object"){
-            for(let x in headers){
+        if (typeof headers === "object") {
+            for (let x in headers) {
                 x.setRequestHeader(x, headers[x]);
             }
         }
@@ -212,6 +212,9 @@ const FileUpload = function (file) {
     this.key = null;
     this.iv = new Uint32Array(16);
 
+    /**
+     * Track uplaod stats
+     */
     this.uploadStats = {
         lastRate: 0,
         lastLoaded: 0,
@@ -219,17 +222,27 @@ const FileUpload = function (file) {
     };
 
     /**
-     * 
+     * Get the encryption key as hex
+     * @returns {Promise<string>} The encryption get in hex
      */
     this.HexKey = async () => {
         return App.Utils.ArrayToHex(await crypto.subtle.exportKey('raw', this.key));
     };
 
     /**
-     * 
+     * Get the IV as hex
+     * @returns {string} The IV for envryption has hex
      */
     this.HexIV = () => {
         return App.Utils.ArrayToHex(this.iv);
+    };
+
+    /**
+     * Returns the formatted key and iv as hex
+     * @returns {Promise<string>} The key:iv as hex
+     */
+    this.TextKey = async () => {
+        return `${await this.HexKey()}:${this.HexIV()}`;
     };
 
     /**
@@ -292,6 +305,13 @@ const FileUpload = function (file) {
     };
 
     /**
+     * Sets the speed value on the UI
+     */
+    this.SetSpeed = function (value) {
+        this.domNode.filespeed.textContent = value;
+    };
+
+    /**
      * Handles progress messages from the upload process and updates the UI
      * @param {string} type - The progress event type
      * @param {number} progress - The percentage of this progress type
@@ -341,6 +361,7 @@ const FileUpload = function (file) {
             }
             case 'state-upload-end': {
                 this.SetProgressBar(1);
+                this.SetSpeed("Done");
                 break;
             }
             case 'progress': {
@@ -368,17 +389,20 @@ const FileUpload = function (file) {
      */
     this.CreateNode = function () {
         let nelm = document.importNode(App.Templates.Upload.content, true);
+        
         nelm.filename = nelm.querySelector('.file-info .file-info-name');
         nelm.filesize = nelm.querySelector('.file-info .file-info-size');
+        nelm.filespeed = nelm.querySelector('.file-info .file-info-speed');
         nelm.progress = nelm.querySelector('.upload-progress span');
         nelm.progressBar = nelm.querySelector('.upload-progress div');
         nelm.state = nelm.querySelector('.status .status-state');
-        nelm.speed = nelm.querySelector('.status .status-speed');
         nelm.key = nelm.querySelector('.status .status-key');
+        nelm.links = nelm.querySelector('.links');
 
         nelm.filename.textContent = this.file.name;
         nelm.filesize.textContent = App.Utils.FormatBytes(this.file.size, 2);
         this.domNode = nelm;
+
         $('#uploads').appendChild(nelm);
     };
 
@@ -386,12 +410,11 @@ const FileUpload = function (file) {
      * Generates a new key to use for encrypting the file
      * @returns {Promise<CryptoKey>} The new key
      */
-    this.GerneteKey = async function () {
+    this.GenerateKey = async function () {
         this.key = await crypto.subtle.generateKey({ name: EncryptionAlgo, length: 128 }, true, ['encrypt', 'decrypt']);
         crypto.getRandomValues(this.iv);
 
-        this.domNode.key.textContent = "Key: " + await this.HexKey() + ":" + this.HexIV();
-
+        this.domNode.key.textContent = `Key: ${await this.TextKey()}`;
         return this.key;
     };
 
@@ -415,10 +438,10 @@ const FileUpload = function (file) {
      * @param {Blob|BufferSource} fileData - The encrypted file data to upload
      * @returns {Promise<object>} The json result
      */
-    this.UploadData = async function (fileData){
+    this.UploadData = async function (fileData) {
         this.uploadStats.lastProgress = new Date().getTime();
         this.HandleProgress('state-upload-start');
-        let uploadResult = await XHR("POST", "https://upload.void.cat/src/php/upload.php?filename=" + this.file.name, fileData, undefined, function(ev){
+        let uploadResult = await XHR("POST", "/upload", fileData, undefined, function (ev) {
             let now = new Date().getTime();
             let dxLoaded = ev.loaded - this.uploadStats.lastLoaded;
             let dxTime = now - this.uploadStats.lastProgress;
@@ -426,12 +449,24 @@ const FileUpload = function (file) {
             this.uploadStats.lastLoaded = ev.loaded;
             this.uploadStats.lastProgress = now;
 
-            this.domNode.speed.textContent = App.Utils.FormatBytes(dxLoaded / (dxTime / 1000.0), 2) + "/s";
+            this.SetSpeed(`${App.Utils.FormatBytes(dxLoaded / (dxTime / 1000.0), 2)}/s`);
             this.HandleProgress('progress', ev.loaded / parseFloat(ev.total));
         }.bind(this));
 
         this.HandleProgress('state-upload-end');
-        return uploadResult;
+        return JSON.parse(uploadResult.response);
+    };
+
+    /**
+     * Creates a header object to be prepended to the file for encrypting
+     * @returns {any}
+     */
+    this.CreateHeader = function() {
+        return {
+            name: this.file.name,
+            mime: this.file.type,
+            len: this.file.size
+        };
     };
 
     /**
@@ -442,22 +477,52 @@ const FileUpload = function (file) {
         Log.I(`Starting upload for ${this.file.name}`);
         this.CreateNode();
 
-        await this.GerneteKey();
+        await this.GenerateKey();
+        let header = JSON.stringify(this.CreateHeader());
         let hash_data = await this.HashFile();
         let h256 = App.Utils.ArrayToHex(hash_data.h256);
-        let h160 = CryptoJS.RIPEMD160(h256);
-        Log.I(`${this.file.name} hash is: ${h256} (${h160})`);
+        Log.I(`${this.file.name} hash is: ${h256}`);
 
         //check file params are ok
         //TODO: call to api to check file info
 
+        //create blob for encryption
+        Log.I(`Using header: ${header}`);
+        let header_data = new TextEncoder().encode(header);
+        
+        let encryption_payload = new Uint8Array(2 + header_data.byteLength + hash_data.data.byteLength);
+        let header_length_data = new Uint16Array(1);
+        header_length_data[0] = header_data.byteLength; //header length
+        encryption_payload.set(header_length_data, 0);
+        encryption_payload.set(new Uint8Array(header_data), 2); //the file info header
+        encryption_payload.set(new Uint8Array(hash_data.data), 2 + header_data.byteLength); 
+        
         //encrypt with the key
         Log.I(`Encrypting ${this.file.name} with key ${await this.HexKey()} and IV ${this.HexIV()}`)
-        let encryptedData = await this.EncryptFile(hash_data.data);
+        let encryptedData = await this.EncryptFile(encryption_payload);
 
         //upload the encrypted file data
         Log.I(`Uploading file ${this.file.name}`);
-        let uploadResult = await this.UploadData(encryptedData);
+        let upload_payload = new Uint8Array(1 + hash_data.h256.byteLength + encryptedData.byteLength);
+
+        upload_payload[0] = 1; //blob version
+        upload_payload.set(new Uint8Array(hash_data.h256), 1);
+        upload_payload.set(new Uint8Array(encryptedData), 1 + hash_data.h256.byteLength);
+
+        let uploadResult = await this.UploadData(upload_payload);
+
+        Log.I(`Got response for file ${this.file.name}: ${JSON.stringify(uploadResult)}`);
+        if (uploadResult.status === 200) {
+            this.domNode.state.parentNode.style.display = "none";
+            this.domNode.progress.parentNode.style.display = "none";
+            this.domNode.links.style.display = "";
+
+            let nl = document.createElement("a");
+            nl.target = "_blank";
+            nl.href = `${window.location.protocol}//${window.location.host}/#${uploadResult.pub_hash}:${await this.TextKey()}`;
+            nl.textContent = this.file.name;
+            this.domNode.links.appendChild(nl);
+        }
     };
 };
 App.Init();
