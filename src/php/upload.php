@@ -6,23 +6,24 @@
     }
 
     class Upload implements RequestHandler {
+        public static $UploadFolderDefault = "out";
 
         private $isMultipart = False;
         private $MaxUploadSize = 104857600; //100MiB is the default upload size
-        private $UploadPath = NULL;
+        private $UploadFolder = NULL;
         private $PublicHashAlgo = "ripemd160";
 
         public function __construct(){
-            $cfg = Config::MGetConfig(array('max_size', 'upload_path', 'public_hash_algo'));
+            $cfg = Config::MGetConfig(array('max_size', 'upload_folder', 'public_hash_algo'));
             
             if($cfg["max_size"] != False){
                 $this->MaxUploadSize = $cfg["max_size"];
             }
 
-            if($cfg["upload_path"] != False){
-                $this->UploadPath = $cfg["upload_path"];
+            if($cfg["upload_folder"] != False){
+                $this->UploadFolder = $cfg["upload_folder"];
             } else {
-                $this->UploadPath = $_SERVER["DOCUMENT_ROOT"] . "/out";
+                $this->UploadFolder = self::$UploadFolderDefault;
             }
 
             if($cfg["public_hash_algo"] != False){
@@ -37,8 +38,8 @@
             ini_set('enable_post_data_reading', 0);
 
             //check upload dir exists
-            if(!file_exists($this->UploadPath)){
-                mkdir($this->UploadPath);
+            if(!file_exists("$_SERVER[DOCUMENT_ROOT]/$this->UploadFolder")){
+                mkdir("$_SERVER[DOCUMENT_ROOT]/$this->UploadFolder");
             }
         }
 
@@ -57,6 +58,9 @@
                     //generate public hash
                     $pub_hash = hash($this->PublicHashAlgo, $bf->Hash);
 
+                    //save upload
+                    $this->SaveUpload($input, $bf->Hash, $pub_hash);
+
                     //sync to other servers 
                     $this->SyncFileUpload($input);
 
@@ -73,6 +77,25 @@
 
         function SyncFileUpload() {
 
+        }
+
+        function SaveUpload($input, $hash, $pub_hash) {
+            $fs = new FileStore();
+            $file_path = "$this->UploadFolder/$pub_hash";
+
+            $fi = new FileInfo();
+            $fi->PublicHash = $pub_hash;
+            $fi->Hash = $hash;
+            $fi->Path = $file_path;
+            $fi->Uploaded = time();
+            $fi->LastView = time();
+            $fi->Views = 0;
+
+            $fout = fopen("$_SERVER[DOCUMENT_ROOT]/$file_path", 'wb+');
+            $fi->Size = stream_copy_to_stream($input, $fout);
+            fclose($fout);
+
+            $fs->SetPublicFileInfo($fi);
         }
     }
 ?>

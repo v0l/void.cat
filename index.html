@@ -5,7 +5,7 @@
 	<title>void.cat</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="dist/style.css"/>
+	<link rel="stylesheet" href="dist/style.css" />
 	<template id="tmpl-upload">
 		<div class="upload">
 			<div class="file-info">
@@ -21,8 +21,35 @@
 				<span>0%</span>
 				<div></div>
 			</div>
-			<div class="links" style="display: none">
+			<div class="links" style="display: none"></div>
+			<div class="errors" style="display: none"></div>
+		</div>
+	</template>
+	<template id="tmpl-view-image">
 
+	</template>
+	<template id="tmpl-view-video">
+
+	</template>
+	<template id="tmpl-view-audio">
+
+	</template>
+	<template id="tmpl-view-default">
+		<div class="view-default">
+			<div>
+				<b>Public Hash:</b> <span class="view-public-hash"></span>
+			</div>
+			<div>
+				<b>Hash:</b> <span class="view-hash"></span>
+			</div>
+			<div>
+				<b>Key:</b> <span class="view-key"></span>
+			</div>
+			<div>
+				<b>IV:</b> <span class="view-iv"></span>
+			</div>
+			<div class="btn-download">
+				Download
 			</div>
 		</div>
 	</template>
@@ -30,11 +57,29 @@
 
 <body>
 	<div class="page">
-		<div class="page-left">
-			<div id="dropzone">Click me!</div>
-			<div id="stats"></div>
-		</div> 
-		<div id="uploads" class="page-right"></div>
+		<div id="page-upload">
+			<div class="page-left">
+				<div id="dropzone">Click me!</div>
+				<div id="stats"></div>
+			</div>
+			<div id="uploads" class="page-right"></div>
+		</div>
+		<div id="page-view">
+			<div class="file-info">
+				<div>
+					<b>Size:</b> <span class="file-info-size"></span>
+				</div>
+				<div>
+					<b>Views:</b> <span class="file-info-views"></span>
+				</div>
+				<div>
+					<b>Last Download:</b> <span class="file-info-last-download"></span>
+				</div>
+				<div>
+					<b>Uploaded:</b> <span class="file-info-uploaded"></span>
+				</div>
+			</div>
+		</div>
 	</div>
 	<script type="text/javascript" src="src/js/script.js" async></script>
 </body>

@@ -18,6 +18,7 @@
                 }
             }
         }
+        //var_dump($_REQUEST);
         http_response_code(400);
         exit();
     } else {

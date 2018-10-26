@@ -56,7 +56,9 @@ const App = {
 
     Elements: {
         get Dropzone() { return $('#dropzone') },
-        get Uploads() { return $('#uploads') }
+        get Uploads() { return $('#uploads') },
+        get PageView() { return $('#page-view') },
+        get PageUpload() { return $('#page-upload') }
     },
 
     Templates: {
@@ -120,7 +122,15 @@ const App = {
      * Sets up the page
      */
     Init: function () {
-        new DropzoneManager(App.Elements.Dropzone)
+        if(location.hash !== "") {
+            App.Elements.PageUpload.style.display = "none";
+            App.Elements.PageView.style.display = "block";
+            new ViewManager();
+        } else {
+            App.Elements.PageUpload.style.display = "block";
+            App.Elements.PageView.style.display = "none";
+            new DropzoneManager(App.Elements.Dropzone);
+        }
     }
 };
 
@@ -165,8 +175,8 @@ const XHR = function (method, url, data, headers, progress) {
 
         //set headers if they are passed
         if (typeof headers === "object") {
-            for (let x in headers) {
-                x.setRequestHeader(x, headers[x]);
+            for (let h in headers) {
+                x.setRequestHeader(h, headers[h]);
             }
         }
         if (method === "POST" && typeof data !== "undefined") {
@@ -175,6 +185,19 @@ const XHR = function (method, url, data, headers, progress) {
             x.send();
         }
     })
+};
+
+const Api = {
+    DoRequest: async function(req) {
+        return JSON.parse((await JsonXHR('POST', '/api', req)).response); 
+    },
+
+    GetFileInfo: async function(hash) {
+        return await Api.DoRequest({
+            cmd: 'file_info',
+            hash: hash
+        });
+    }
 };
 
 /**
@@ -198,6 +221,78 @@ const DropzoneManager = function (dz) {
     };
 
     this.dz.addEventListener('click', this.OpenFileSelect.bind(this), false);
+};
+
+/**
+ * 
+ */
+const ViewManager = function () {
+    this.hash = null;
+    this.key = null;
+    this.iv = null;
+
+    this.ParseUrlHash = function() {
+        let hs = window.location.hash.substr(1).split(':');
+        this.hash = hs[0];
+        this.key = hs[1];
+        this.iv = hs[2];
+    };
+
+    this.LoadView = async function() {
+        this.ParseUrlHash();
+
+        let fi = await Api.GetFileInfo(this.hash);
+
+        if(fi.ok === true){
+            $('#page-view .file-info-size').textContent = App.Utils.FormatBytes(fi.data.Size);
+            $('#page-view .file-info-views').textContent = fi.data.Views.toLocaleString();
+            $('#page-view .file-info-last-download').textContent = new Date(fi.data.LastView * 1000).toLocaleString();
+            $('#page-view .file-info-uploaded').textContent = new Date(fi.data.Uploaded * 1000).toLocaleString();
+
+            await this.ShowPreview(fi.data);
+        }
+    };
+
+    this.ShowPreview = async function(fileinfo) {
+        let nelm = document.importNode($("template[id='tmpl-view-default']").content, true);
+        nelm.querySelector('.view-public-hash').textContent = fileinfo.PublicHash;
+        nelm.querySelector('.view-hash').textContent = fileinfo.Hash;
+        nelm.querySelector('.view-key').textContent = this.key;
+        nelm.querySelector('.view-iv').textContent = this.iv;
+
+        $('#page-view').appendChild(nelm);
+    
+    };
+
+    this.LoadView();
+};
+
+/**
+ * File download and decryption class
+ * @class
+ * @param {object} fileinfo - The file info from the api response
+ * @param {string} key - The key to use for decryption
+ * @param {string} iv - The IV to use for decryption
+ */
+const FileDownloader = function(fileinfo, key, iv) {
+    this.fileinfo = fileinfo;
+
+    /**
+     * Track download stats
+     */
+    this.downloadStats = {
+        lastRate: 0,
+        lastLoaded: 0,
+        lastProgress: 0
+    };
+
+    /**
+     * Downloads the file
+     * @returns {Promise<File>} The loaded and decripted file
+     */
+    this.DownloadFile = async function() {
+
+    };
 };
 
 /**
@@ -398,6 +493,7 @@ const FileUpload = function (file) {
         nelm.state = nelm.querySelector('.status .status-state');
         nelm.key = nelm.querySelector('.status .status-key');
         nelm.links = nelm.querySelector('.links');
+        nelm.errors = nelm.querySelector('.errors');
 
         nelm.filename.textContent = this.file.name;
         nelm.filesize.textContent = App.Utils.FormatBytes(this.file.size, 2);
@@ -512,9 +608,10 @@ const FileUpload = function (file) {
         let uploadResult = await this.UploadData(upload_payload);
 
         Log.I(`Got response for file ${this.file.name}: ${JSON.stringify(uploadResult)}`);
+        this.domNode.state.parentNode.style.display = "none";
+        this.domNode.progress.parentNode.style.display = "none";
+        
         if (uploadResult.status === 200) {
-            this.domNode.state.parentNode.style.display = "none";
-            this.domNode.progress.parentNode.style.display = "none";
             this.domNode.links.style.display = "";
 
             let nl = document.createElement("a");
@@ -522,7 +619,10 @@ const FileUpload = function (file) {
             nl.href = `${window.location.protocol}//${window.location.host}/#${uploadResult.pub_hash}:${await this.TextKey()}`;
             nl.textContent = this.file.name;
             this.domNode.links.appendChild(nl);
+        } else {
+            this.domNode.errors.style.display = "";
+            this.domNode.errors.textContent = uploadResult.msg;
         }
     };
 };
-App.Init();
+setTimeout(App.Init);

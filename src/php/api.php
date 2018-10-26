@@ -3,6 +3,7 @@
         public $ok = false;
         public $msg;
         public $data;
+        public $cmd;
     }
 
     class Api implements RequestHandler {
@@ -14,14 +15,22 @@
             $cmd = json_decode(file_get_contents("php://input"));
 
             $rsp = new ApiResponse();
+            $rsp->cmd = $cmd;
+
+            $fs = new FileStore();
+
+            switch($cmd->cmd){
+                case "file_info":{
+                    $rsp->ok = true;
+                    $rsp->data = $fs->GetPublicFileInfo($cmd->hash); 
+                    break;
+                }
+            }
 
             header('Content-Type: application/json');
             echo json_encode($rsp);
         }
-        
-        public function GetStats() {
-            
-        }
+
     }
 
 ?>

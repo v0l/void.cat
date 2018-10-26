@@ -18,6 +18,12 @@ html, body {
     background-color: rgb(14, 14, 14);
 }
 
+@media (max-device-width: $page-width){
+    .page {
+        width: auto !important;
+    }
+}
+
 .page {
     width: $page-width;
     margin-left: auto;
@@ -29,6 +35,10 @@ html, body {
     background-color: rgb(233, 252, 255);
     box-shadow: 0px 0px 15px 5px #000;
     user-select: none;
+}
+
+#page-view {
+    display:none;
 }
 
 .page-left { 
@@ -45,6 +55,10 @@ html, body {
     line-height: $dropzone-height;
     text-align: center;
     font-size: 50px;
+}
+
+#page-upload {
+    display: none;
 }
 
 .upload {
@@ -108,15 +122,70 @@ html, body {
     background-color: rgb(10, 161, 10);
 }
 
-.links {
+.upload .links {
     display: grid;
 }
 
-.links a {
+.upload .links a {
     margin: 10px;
     line-height: 40px;
     border: 1px solid;
     color: white;
     text-align: center;
     background-color: #569a59;
+}
+
+.upload .errors {
+    margin: 10px;
+    line-height: 40px;
+    border: 1px solid;
+    color: white;
+    text-align: center;
+    background-color: #790e00;
+}
+
+#page-view .file-info {
+    display: grid;
+    grid-template-columns: 25% 25% 25% 25%;
+}
+
+.btn-download {
+    line-height: 40px;
+    margin: 10px;
+    border: 1px solid rgb(70, 70, 70);
+    color: white;
+    text-align: center;
+    background-color: #569a59;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.btn-download:hover {
+    cursor: pointer;
+}
+
+.view-default {
+    padding: 30px 10px;
+    background-color: rgb(180, 180, 180);
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+
+.view-default div:nth-child(1), div:nth-child(2), div:nth-child(3), div:nth-child(4) {
+    line-height: 20px;
+}
+
+.view-default span {
+    float: right;
+}
+
+.view-default div:nth-child(4) {
+    grid-row-start: 4;
+}
+
+.view-default .btn-download {
+    line-height: 100px;
+    grid-column-start: 2;
+    grid-row-start: 1;
+    grid-row-end: 5;
 }
