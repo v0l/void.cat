@@ -1,11 +1,19 @@
 <?php
     class Download implements RequestHandler {
-        public function HandleRequest() : void {
-            $fs = new FileStore();
-            if(isset($_REQUEST["hash"])){
-                $hash = $_REQUEST["hash"];
+        private $Config;
 
-                $file_info = $fs->GetPublicFileInfo($hash);
+        public function HandleRequest() : void {
+            $this->Config = Config::MGetConfig(array('upload_folder'));
+            
+            if($this->Config->upload_folder == FALSE){
+                $this->Config->upload_folder = Upload::$UploadFolderDefault; 
+            }
+
+            $fs = new FileStore($this->Config->upload_folder);
+            if(isset($_REQUEST["id"])){
+                $id = $_REQUEST["id"];
+
+                $file_info = $fs->GetPublicFileInfo($id);
                 if($file_info != NULL){
                     $this->StartDownload($file_info);
                 } else {
@@ -23,7 +31,7 @@
             $tracking = new Tracking();
 
             //pass to nginx to handle download
-            $this->InternalNginxRedirect($file_info->Path, 604800);
+            $this->InternalNginxRedirect($this->Config->upload_folder . '/' . $file_info->FileId, 604800);
         }
 
         function InternalNginxRedirect($location, $expire){

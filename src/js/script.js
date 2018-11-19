@@ -1,8 +1,20 @@
 
 /**
+ * @constant {string} - The hashing algo to use to verify the file
+ */
+const HashingAlgo = 'SHA-256';
+/**
  * @constant {string} - The encryption algoritm to use for file uploads
  */
-const EncryptionAlgo = 'AES-GCM';
+const EncryptionAlgo = 'AES-CBC';
+/**
+ * @constant {object} - The 'algo' argument for importing/exporting/generating keys
+ */
+const EncryptionKeyDetails = { name: EncryptionAlgo, length: 128 };
+/**
+ * @constant {object} - The 'algo' argument for importing/exporting/generating hmac keys
+ */
+const HMACKeyDetails = { name: 'HMAC', hash: HashingAlgo };
 /**
  * @constant {number} - Size of 1 kiB
  */
@@ -91,6 +103,21 @@ const App = {
         ArrayToHex: (buffer) => Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join(''),
 
         /**
+         * Converts hex to ArrayBuffer
+         * @param {string} hex - The hex to parse into ArrayBuffer
+         * @returns {ArrayBuffer} The parsed hex data
+         */
+        HexToArray: (hex) => {
+            let ret = new Uint8Array(hex.length / 2)
+
+            for (let i = 0; i < hex.length; i += 2) {
+                ret[i / 2] = parseInt(hex.substring(i, i + 2), 16)
+            }
+
+            return ret.buffer
+        },
+
+        /**
          * Formats bytes into binary notation
          * @param {number} b - The value in bytes
          * @param {number} [f=2] - The number of decimal places to use
@@ -122,7 +149,7 @@ const App = {
      * Sets up the page
      */
     Init: function () {
-        if(location.hash !== "") {
+        if (location.hash !== "") {
             App.Elements.PageUpload.style.display = "none";
             App.Elements.PageView.style.display = "block";
             new ViewManager();
@@ -153,9 +180,12 @@ const JsonXHR = async function (method, url, data) {
  * @param {string} url - Request URL
  * @param {[*]} data - Request payload (method must be post)
  * @param {[*]} headers - Headers to add to the request
+ * @param {[function]} uploadprogress - Progress function from data uploads
+ * @param {[function]} downloadprogress - Progress function for data downloads
+ * @param {[function]} editrequest - Function that can edit the request before its sent
  * @returns {Promise<XMLHttpRequest>} The completed request
  */
-const XHR = function (method, url, data, headers, progress) {
+const XHR = function (method, url, data, headers, uploadprogress, downloadprogress, editrequest) {
     return new Promise(function (resolve, reject) {
         let x = new XMLHttpRequest();
         x.onreadystatechange = function (ev) {
@@ -164,8 +194,13 @@ const XHR = function (method, url, data, headers, progress) {
             }
         };
         x.upload.onprogress = function (ev) {
-            if (typeof progress === "function") {
-                progress(ev);
+            if (typeof uploadprogress === "function") {
+                uploadprogress(ev);
+            }
+        };
+        x.onprogress = function (ev) {
+            if (typeof downloadprogress === "function") {
+                downloadprogress(ev);
             }
         };
         x.onerror = function (ev) {
@@ -173,6 +208,9 @@ const XHR = function (method, url, data, headers, progress) {
         };
         x.open(method, url, true);
 
+        if (typeof editrequest === "function") {
+            editrequest(x);
+        }
         //set headers if they are passed
         if (typeof headers === "object") {
             for (let h in headers) {
@@ -187,15 +225,18 @@ const XHR = function (method, url, data, headers, progress) {
     })
 };
 
+/**
+ * Calls api handler
+ */
 const Api = {
-    DoRequest: async function(req) {
-        return JSON.parse((await JsonXHR('POST', '/api', req)).response); 
+    DoRequest: async function (req) {
+        return JSON.parse((await JsonXHR('POST', '/api', req)).response);
     },
 
-    GetFileInfo: async function(hash) {
+    GetFileInfo: async function (id) {
         return await Api.DoRequest({
             cmd: 'file_info',
-            hash: hash
+            id: id
         });
     }
 };
@@ -227,23 +268,23 @@ const DropzoneManager = function (dz) {
  * 
  */
 const ViewManager = function () {
-    this.hash = null;
+    this.id = null;
     this.key = null;
     this.iv = null;
 
-    this.ParseUrlHash = function() {
+    this.ParseUrlHash = function () {
         let hs = window.location.hash.substr(1).split(':');
-        this.hash = hs[0];
+        this.id = hs[0];
         this.key = hs[1];
         this.iv = hs[2];
     };
 
-    this.LoadView = async function() {
+    this.LoadView = async function () {
         this.ParseUrlHash();
 
-        let fi = await Api.GetFileInfo(this.hash);
+        let fi = await Api.GetFileInfo(this.id);
 
-        if(fi.ok === true){
+        if (fi.ok === true) {
             $('#page-view .file-info-size').textContent = App.Utils.FormatBytes(fi.data.Size);
             $('#page-view .file-info-views').textContent = fi.data.Views.toLocaleString();
             $('#page-view .file-info-last-download').textContent = new Date(fi.data.LastView * 1000).toLocaleString();
@@ -253,15 +294,33 @@ const ViewManager = function () {
         }
     };
 
-    this.ShowPreview = async function(fileinfo) {
+    this.ShowPreview = async function (fileinfo) {
         let nelm = document.importNode($("template[id='tmpl-view-default']").content, true);
-        nelm.querySelector('.view-public-hash').textContent = fileinfo.PublicHash;
-        nelm.querySelector('.view-hash').textContent = fileinfo.Hash;
+        nelm.querySelector('.view-file-id').textContent = fileinfo.FileId;
         nelm.querySelector('.view-key').textContent = this.key;
         nelm.querySelector('.view-iv').textContent = this.iv;
-
+        nelm.querySelector('.btn-download').addEventListener('click', function () {
+            let fd = new FileDownloader(this.fileinfo, this.self.key, this.self.iv);
+            fd.onprogress = function(x) {
+                this.elm_bar.style.width = `${100 * x}%`;
+                this.elm_bar_label.textContent = `${(100 * x).toFixed(0)}%`;
+            }.bind({ 
+                elm_bar_label: document.querySelector('.view-download-progress div:nth-child(1)'),
+                elm_bar: document.querySelector('.view-download-progress div:nth-child(2)')
+            });
+            fd.DownloadFile().then(function (file){
+                var objurl = URL.createObjectURL(file);
+                var dl_link = document.createElement('a');
+                dl_link.href = objurl;
+                dl_link.download = file.name;
+                dl_link.click();
+            });
+        }.bind({
+            self: this,
+            fileinfo: fileinfo
+        }));
         $('#page-view').appendChild(nelm);
-    
+
     };
 
     this.LoadView();
@@ -274,8 +333,10 @@ const ViewManager = function () {
  * @param {string} key - The key to use for decryption
  * @param {string} iv - The IV to use for decryption
  */
-const FileDownloader = function(fileinfo, key, iv) {
+const FileDownloader = function (fileinfo, key, iv) {
     this.fileinfo = fileinfo;
+    this.key = key;
+    this.iv = iv;
 
     /**
      * Track download stats
@@ -286,12 +347,67 @@ const FileDownloader = function(fileinfo, key, iv) {
         lastProgress: 0
     };
 
+    this.HandleProgress = function(type, progress) {
+        switch(type){
+            case 'progress-download':{
+                if(typeof this.onprogress === 'function'){
+                    this.onprogress(progress);
+                }
+            }
+        }
+    };
+
     /**
      * Downloads the file
      * @returns {Promise<File>} The loaded and decripted file
      */
-    this.DownloadFile = async function() {
+    this.DownloadFile = async function () {
+        let link = (this.fileinfo.DownloadHost !== null ? `${window.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${this.fileinfo.FileId}`
+        Log.I(`Starting download from: ${link}`);
+        let fd = await XHR('GET', link, undefined, undefined, undefined, function (ev) {
+            this.HandleProgress('progress-download',  ev.loaded / parseFloat(ev.total));
+        }.bind(this), function (req) {
+            req.responseType = "arraybuffer";
+        });
 
+        let blob = fd.response;
+        let header = VBF.Parse(blob);
+        let hash_text = App.Utils.ArrayToHex(header.hmac);
+
+        Log.I(`${this.fileinfo.FileId} blob header version is ${header.version} and hash is ${hash_text} uploaded on ${header.uploaded}`);
+
+        //attempt decryption
+        try {
+            let key_raw = App.Utils.HexToArray(this.key);
+            let iv_raw = App.Utils.HexToArray(this.iv);
+            Log.I(`${this.fileinfo.FileId} decrypting with key ${this.key} and iv ${this.iv}`);
+
+            let key = await crypto.subtle.importKey("raw", key_raw, EncryptionKeyDetails, false, ['decrypt']);
+            let keyhmac = await crypto.subtle.importKey("raw", key_raw, HMACKeyDetails, false, ['verify']);
+
+            let decrypted_file = await crypto.subtle.decrypt({ name: EncryptionAlgo, iv: iv_raw }, key, blob.slice(VBF.HeaderSize));
+
+            //read the header 
+            let json_header_length = new Uint16Array(decrypted_file)[0];
+            let json_header_text = new TextDecoder('utf-8').decode(decrypted_file.slice(2, json_header_length + 2));
+            Log.I(`${this.fileinfo.FileId} header is ${json_header_text}`);
+
+            //hash the file to verify
+            let file_data = decrypted_file.slice(2 + json_header_length);
+            let hmac_verify = await crypto.subtle.verify("HMAC", keyhmac, header.hmac, file_data);
+            if (hmac_verify) {
+                Log.I(`${this.fileinfo.FileId} HMAC verified!`);
+
+                let header_obj = JSON.parse(json_header_text);
+                return new File([file_data], header_obj.name, {
+                    type: header_obj.mime
+                });
+            } else {
+                throw "HMAC verify failed";
+            }
+        } catch (ex) {
+            Log.E(`${this.fileinfo.FileId} error decrypting file: ${ex}`);
+        }
     };
 };
 
@@ -305,7 +421,8 @@ const FileUpload = function (file) {
     this.file = file;
     this.domNode = null;
     this.key = null;
-    this.iv = new Uint32Array(16);
+    this.hmackey = null;
+    this.iv = new Uint8Array(16);
 
     /**
      * Track uplaod stats
@@ -358,10 +475,10 @@ const FileUpload = function (file) {
 
             fr.onload = function (ev) {
                 this.HandleProgress('state-hash-start');
-                crypto.subtle.digest("SHA-256", ev.target.result).then(function (hash) {
+                crypto.subtle.sign("HMAC", this.hmackey, ev.target.result).then(function (hash) {
                     this.HandleProgress('state-hash-end');
                     resolve({
-                        h256: hash,
+                        hash: hash,
                         data: ev.target.result
                     });
                 }.bind(this));
@@ -484,7 +601,7 @@ const FileUpload = function (file) {
      */
     this.CreateNode = function () {
         let nelm = document.importNode(App.Templates.Upload.content, true);
-        
+
         nelm.filename = nelm.querySelector('.file-info .file-info-name');
         nelm.filesize = nelm.querySelector('.file-info .file-info-size');
         nelm.filespeed = nelm.querySelector('.file-info .file-info-speed');
@@ -507,7 +624,9 @@ const FileUpload = function (file) {
      * @returns {Promise<CryptoKey>} The new key
      */
     this.GenerateKey = async function () {
-        this.key = await crypto.subtle.generateKey({ name: EncryptionAlgo, length: 128 }, true, ['encrypt', 'decrypt']);
+        this.key = await crypto.subtle.generateKey(EncryptionKeyDetails, true, ['encrypt', 'decrypt']);
+        this.hmackey = await crypto.subtle.importKey("raw", await crypto.subtle.exportKey('raw', this.key), HMACKeyDetails, false, ["sign"]);
+
         crypto.getRandomValues(this.iv);
 
         this.domNode.key.textContent = `Key: ${await this.TextKey()}`;
@@ -557,7 +676,7 @@ const FileUpload = function (file) {
      * Creates a header object to be prepended to the file for encrypting
      * @returns {any}
      */
-    this.CreateHeader = function() {
+    this.CreateHeader = function () {
         return {
             name: this.file.name,
             mime: this.file.type,
@@ -576,47 +695,38 @@ const FileUpload = function (file) {
         await this.GenerateKey();
         let header = JSON.stringify(this.CreateHeader());
         let hash_data = await this.HashFile();
-        let h256 = App.Utils.ArrayToHex(hash_data.h256);
+        let h256 = App.Utils.ArrayToHex(hash_data.hash);
         Log.I(`${this.file.name} hash is: ${h256}`);
 
-        //check file params are ok
-        //TODO: call to api to check file info
-
         //create blob for encryption
-        Log.I(`Using header: ${header}`);
         let header_data = new TextEncoder().encode(header);
-        
+        Log.I(`Using header: ${header} (length=${header_data.byteLength})`);
+
         let encryption_payload = new Uint8Array(2 + header_data.byteLength + hash_data.data.byteLength);
         let header_length_data = new Uint16Array(1);
         header_length_data[0] = header_data.byteLength; //header length
         encryption_payload.set(header_length_data, 0);
         encryption_payload.set(new Uint8Array(header_data), 2); //the file info header
-        encryption_payload.set(new Uint8Array(hash_data.data), 2 + header_data.byteLength); 
-        
+        encryption_payload.set(new Uint8Array(hash_data.data), 2 + header_data.byteLength);
+
         //encrypt with the key
         Log.I(`Encrypting ${this.file.name} with key ${await this.HexKey()} and IV ${this.HexIV()}`)
         let encryptedData = await this.EncryptFile(encryption_payload);
 
-        //upload the encrypted file data
         Log.I(`Uploading file ${this.file.name}`);
-        let upload_payload = new Uint8Array(1 + hash_data.h256.byteLength + encryptedData.byteLength);
-
-        upload_payload[0] = 1; //blob version
-        upload_payload.set(new Uint8Array(hash_data.h256), 1);
-        upload_payload.set(new Uint8Array(encryptedData), 1 + hash_data.h256.byteLength);
-
+        let upload_payload = VBF.Create(hash_data.hash, encryptedData);
         let uploadResult = await this.UploadData(upload_payload);
 
         Log.I(`Got response for file ${this.file.name}: ${JSON.stringify(uploadResult)}`);
         this.domNode.state.parentNode.style.display = "none";
         this.domNode.progress.parentNode.style.display = "none";
-        
+
         if (uploadResult.status === 200) {
             this.domNode.links.style.display = "";
 
             let nl = document.createElement("a");
             nl.target = "_blank";
-            nl.href = `${window.location.protocol}//${window.location.host}/#${uploadResult.pub_hash}:${await this.TextKey()}`;
+            nl.href = `${window.location.protocol}//${window.location.host}/#${uploadResult.id}:${await this.TextKey()}`;
             nl.textContent = this.file.name;
             this.domNode.links.appendChild(nl);
         } else {
@@ -625,4 +735,42 @@ const FileUpload = function (file) {
         }
     };
 };
+
+const VBF = {
+    Version: 1,
+    HeaderSize: 37,
+
+    Create: function(hash, encryptedData) {
+        //upload the encrypted file data
+        let upload_payload = new Uint8Array(VBF.HeaderSize + encryptedData.byteLength);
+
+        let created = new ArrayBuffer(4);
+        new DataView(created).setUint32(0, parseInt(new Date().getTime() / 1000), true);
+
+        upload_payload[0] = VBF.Version; //blob version
+        upload_payload.set(new Uint8Array(hash), 1);
+        upload_payload.set(new Uint8Array(created), hash.byteLength + 1);
+        upload_payload.set(new Uint8Array(encryptedData), VBF.HeaderSize);
+
+        return upload_payload;
+    },
+
+    /**
+     * Parses the header of the raw file
+     * @param {ArrayBuffer} data - Raw data from the server
+     * @returns {*} The header 
+     */
+    Parse: function(data) {
+        let version = new Uint8Array(data)[0];
+        let hmac = data.slice(1, 33);
+        let uploaded = new DataView(data.slice(33, 37)).getUint32(0, true);
+
+        return {
+            version,
+            hmac,
+            uploaded
+        };
+    }
+};
+
 setTimeout(App.Init);

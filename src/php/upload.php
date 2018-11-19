@@ -2,32 +2,33 @@
     class UploadResponse {
         public $status = 0;
         public $msg;
-        public $pub_hash;
+        public $id;
     }
 
     class Upload implements RequestHandler {
         public static $UploadFolderDefault = "out";
 
+        private $Config;
         private $isMultipart = False;
         private $MaxUploadSize = 104857600; //100MiB is the default upload size
         private $UploadFolder = NULL;
         private $PublicHashAlgo = "ripemd160";
 
-        public function __construct(){
-            $cfg = Config::MGetConfig(array('max_size', 'upload_folder', 'public_hash_algo'));
+        public function __construct() {
+            $this->Config = Config::MGetConfig(array('max_size', 'upload_folder', 'public_hash_algo'));
             
-            if($cfg["max_size"] != False){
-                $this->MaxUploadSize = $cfg["max_size"];
+            if($this->Config->max_size !== False){
+                $this->MaxUploadSize = $this->Config->max_size;
             }
 
-            if($cfg["upload_folder"] != False){
-                $this->UploadFolder = $cfg["upload_folder"];
+            if($this->Config->upload_folder !== False){
+                $this->UploadFolder = $this->Config->upload_folder;
             } else {
                 $this->UploadFolder = self::$UploadFolderDefault;
             }
 
-            if($cfg["public_hash_algo"] != False){
-                $this->PublicHashAlgo = $cfg["public_hash_algo"];
+            if($this->Config->public_hash_algo !== False){
+                $this->PublicHashAlgo = $this->Config->public_hash_algo;
             }
 
             //set php params
@@ -51,21 +52,17 @@
                 $rsp->status = 1;
                 $rsp->msg = "File is too large";
             } else {
-                $input = fopen("php://input", "rb");
-                $bf = BlobFile::LoadHeader($input);
+                $bf = BlobFile::LoadHeader();
 
                 if($bf != null){
-                    //generate public hash
-                    $pub_hash = hash($this->PublicHashAlgo, $bf->Hash);
-
                     //save upload
-                    $this->SaveUpload($input, $bf->Hash, $pub_hash);
+                    $id = $this->SaveUpload($bf);
 
                     //sync to other servers 
-                    $this->SyncFileUpload($input);
+                    $this->SyncFileUpload($id);
 
                     $rsp->status = 200;
-                    $rsp->pub_hash = $pub_hash;
+                    $rsp->id = $id;
                 } else {
                     $rsp->status = 2;
                     $rsp->msg = "Invalid file header";
@@ -75,27 +72,30 @@
             echo json_encode($rsp);
         }
 
-        function SyncFileUpload() {
+        function SyncFileUpload($id) : void {
 
         }
 
-        function SaveUpload($input, $hash, $pub_hash) {
-            $fs = new FileStore();
-            $file_path = "$this->UploadFolder/$pub_hash";
+        function SaveUpload($bf) : string {
+            $id = gmp_strval(gmp_init("0x" . hash($this->PublicHashAlgo, $bf->Hash)), 62);
+
+            $fs = new FileStore($this->UploadFolder);
+            $file_path = "$this->UploadFolder/$id";
 
             $fi = new FileInfo();
-            $fi->PublicHash = $pub_hash;
-            $fi->Hash = $hash;
-            $fi->Path = $file_path;
-            $fi->Uploaded = time();
+            $fi->FileId = $id;
             $fi->LastView = time();
-            $fi->Views = 0;
+            $fi->Views = 1;
 
+            $input = fopen("php://input", "rb");
             $fout = fopen("$_SERVER[DOCUMENT_ROOT]/$file_path", 'wb+');
             $fi->Size = stream_copy_to_stream($input, $fout);
             fclose($fout);
+            fclose($input);
 
             $fs->SetPublicFileInfo($fi);
+
+            return $id;
         }
     }
 ?>

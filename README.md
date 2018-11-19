@@ -6,13 +6,14 @@ Setup
  * php-fpm
  * php-redis 
  * php-curl
+ * php-gmp
  * Redis
  
  Nginx handler
  ====
 ```
-location ~ "^\/([0-9a-z\.]{36,40})$" {
-	try_files $uri /src/php/handler.php?h=download&hash=$1;
+location ~* "^\/([0-9a-z]{27})$" {
+		try_files $uri /src/php/handler.php?h=download&id=$1;
 }
 ```
 
@@ -21,7 +22,8 @@ Void Binary File Format (VBF)
 | Name | Type | Description |
 |---|---|---|
 | version | uint8_t | Binary file format version |
-| hash | 32 byte hash | The hash of the unencrypted file |
+| hash | SHA256 hash | The hash of the unencrypted file |
+| uploaded | uint32_t | Timestamp of when the upload started |
 | payload | >EOF | The encrypted payload |
 
 ---

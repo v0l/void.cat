@@ -1,11 +1,11 @@
 <?php
     class FileInfo {
-        public $PublicHash;
-        public $Hash;
-        public $Path;
+        public $FileId;
         public $Views;
-        public $Uploaded;
+        public $Hash;
         public $LastView;
+        public $Uploaded;
         public $Size;
+        public $DownloadHost;
     }
 ?>

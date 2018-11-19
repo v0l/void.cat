@@ -1,44 +1,50 @@
 <?php
     class FileStore {
+        private $UploadFolder;
+
+        public function __construct($path) {
+            if($path !== FALSE){
+                $this->UploadFolder = $path;
+            } else {
+                $this->UploadFolder = Upload::$UploadFolderDefault;
+            }
+        }
+
         public function SetPublicFileInfo($info) : void {
             $redis = StaticRedis::$Instance;
-            $file_key = REDIS_PREFIX . $info->PublicHash;
+            $file_key = REDIS_PREFIX . $info->FileId;
 
             $redis->hMSet($file_key, array(
-                'path' => $info->Path,
                 'views' => $info->Views,
-                'uploaded' => $info->Uploaded,
-                'lastview' => $info->LastView,
-                'size' => $info->Size,
-                'hash' => $info->Hash
+                'lastview' => $info->LastView
             ));
         }
 
-        public function GetPublicFileInfo($public_hash) : ?FileInfo {
+        public function GetPublicFileInfo($id) : ?FileInfo {
             $redis = StaticRedis::$Instance;
-            $file_key = REDIS_PREFIX . $public_hash;
+            $file_key = REDIS_PREFIX . $id;
 
-            $public_file_info = $redis->hMGet($file_key, array('path', 'hash', 'views', 'uploaded', 'lastview', 'size'));
-            if($public_file_info['path'] != False){
+            $public_file_info = $redis->hMGet($file_key, array('views', 'lastview'));
+            if($public_file_info['views'] != False){
+                $file_stat = stat("$_SERVER[DOCUMENT_ROOT]/$this->UploadFolder/$id");
+
                 $file = new FileInfo();
-                $file->PublicHash = $public_hash;
-                $file->Hash = $public_file_info['hash'];
-                $file->Path = $public_file_info['path'];
+                $file->FileId = $id;
                 $file->Views = intval($public_file_info['views']);
-                $file->Uploaded = intval($public_file_info['uploaded']);
                 $file->LastView = intval($public_file_info['lastview']);
-                $file->Size = intval($public_file_info['size']);
-
+                $file->Size = $file_stat["size"];
+                $file->Uploaded = $file_stat["ctime"];
+                
                 return $file;
             } 
 
             return NULL;
         }
 
-        public function FileExists($public_hash) : Boolean {
+        public function FileExists($id) : Boolean {
             $redis = StaticRedis::$Instance;
-            $file_key = REDIS_PREFIX . $public_hash;
-            return $redis->hExists($file_key, 'path');
+            $file_key = REDIS_PREFIX . $id;
+            return $redis->hExists($file_key, 'views');
         }
     }
 ?>
