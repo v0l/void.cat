@@ -4,8 +4,8 @@
         public $Hash;
         public $Uploaded;
         
-        public static function LoadHeader() : ?BlobFile {
-            $input = fopen("php://input", "rb");
+        public static function LoadHeader($path) : ?BlobFile {
+            $input = fopen($path, "rb");
             $header = fread($input, 37); //1 version byte + 32 byte hash (64 hex digits) + 4 byte timestamp
             fclose($input);
 

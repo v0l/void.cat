@@ -6,6 +6,25 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="dist/style.css" />
+	<script async type="text/javascript">
+		var _paq = _paq || [];
+		_paq.push(['trackPageView']);
+		_paq.push(['enableLinkTracking']);
+		(function () {
+			var u = "//matomo.trash.lol/";
+			_paq.push(['setTrackerUrl', u + 'piwik.php']);
+			_paq.push(['setSiteId', '1']);
+			var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+			g.type = 'text/javascript'; g.async = true; g.defer = true; g.src = u + 'piwik.js'; s.parentNode.insertBefore(g, s);
+		})();
+	</script>
+	<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+	<script>
+		(adsbygoogle = window.adsbygoogle || []).push({
+			google_ad_client: "ca-pub-3289062345896209",
+			enable_page_level_ads: true
+		});
+	</script>
 	<template id="tmpl-upload">
 		<div class="upload">
 			<div class="file-info">
@@ -48,12 +67,14 @@
 			<div class="btn-download">
 				Download
 			</div>
-			<div class="view-download-progress">
-				<div>0%</div>
-				<div></div>
-			</div>
-			<div>
-				<div class="view-download-label-speed"></div>
+			<div class="view-transfer-stats">
+				<div class="view-download-progress">
+					<div>0%</div>
+					<div></div>
+				</div>
+				<div class="view-download-label-speed">
+					0 B/s
+				</div>
 			</div>
 		</div>
 	</template>
@@ -61,12 +82,17 @@
 
 <body>
 	<div class="page">
+		<div class="header">
+			void.cat
+		</div>
+		<ins class="adsbygoogle" style="display:block; margin-left: auto; margin-right: auto;" data-ad-client="ca-pub-3289062345896209"
+		 data-ad-slot="9187315106" data-ad-format="auto" data-full-width-responsive="true"></ins>
 		<div id="page-upload">
-			<div class="page-left">
+			<div class="page-left" style="width: 100%">
 				<div id="dropzone">Click me!</div>
 				<div id="stats"></div>
 			</div>
-			<div id="uploads" class="page-right"></div>
+			<div id="uploads" class="page-right" style="display: none"></div>
 		</div>
 		<div id="page-view">
 			<div class="file-info">
@@ -84,7 +110,21 @@
 				</div>
 			</div>
 		</div>
+		<div id="page-stats">
+
+		</div>
+		<div id="page-faq">
+
+		</div>
 	</div>
+	<!--<script type="text/javascript" src="src/js/Const.js" async></script>
+	<script type="text/javascript" src="src/js/Util.js" async></script>
+	<script type="text/javascript" src="src/js/DropzoneManager.js" async></script>
+	<script type="text/javascript" src="src/js/FileDownloader.js" async></script>
+	<script type="text/javascript" src="src/js/FileUpload.js" async></script>
+	<script type="text/javascript" src="src/js/VBF.js" async></script>
+	<script type="text/javascript" src="src/js/ViewManager.js" async></script>
+	<script type="text/javascript" src="src/js/App.js" async></script>-->
 	<script type="text/javascript" src="dist/script.min.js" async></script>
 </body>
 

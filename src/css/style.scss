@@ -15,7 +15,7 @@ html, body {
     padding: 0;
     font-family: Arial;
     font-size: 12px;
-    background-color: rgb(14, 14, 14);
+    background-color: #444;
 }
 
 @media (max-device-width: $page-width){
@@ -30,7 +30,6 @@ html, body {
     margin-right: auto;
     margin-top: $page-margin-top;
     overflow: hidden;
-    padding: $page-padding;
     border-radius: 10px;
     background-color: rgb(233, 252, 255);
     box-shadow: 0px 0px 15px 5px #000;
@@ -39,6 +38,8 @@ html, body {
 
 #page-view {
     display:none;
+    padding: $page-padding;
+    overflow: hidden;
 }
 
 .page-left { 
@@ -59,6 +60,8 @@ html, body {
 
 #page-upload {
     display: none;
+    padding: $page-padding;
+    overflow: hidden;
 }
 
 .upload {
@@ -147,6 +150,17 @@ html, body {
 #page-view .file-info {
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
+    line-height: 30px;
+}
+
+.header {
+    text-align: center;
+    color: #555;
+    font-size: 50px;
+    padding: 10px;
+    border-bottom: 1px solid #aaa;
+    background-color: #e4e4e4;
+    border-radius: 5px 5px 0 0;
 }
 
 .btn-download {
@@ -165,7 +179,7 @@ html, body {
 }
 
 .view-default {
-    padding: 30px 10px;
+    padding: 20px 10px;
     background-color: rgb(180, 180, 180);
     display: grid;
     grid-template-columns: 60% 40%;
@@ -178,9 +192,25 @@ html, body {
 .view-default div:nth-child(4) {
     grid-row-start: 5;
 }
-.view-default div:nth-child(5) {
-    background-color: #333;
+
+.view-default .view-transfer-stats {
+    display: grid;
+    grid-template-columns: 80% 20%;
+}
+
+.view-default .view-transfer-stats div {
+    height: 20px;
+}
+
+.view-default .view-transfer-stats div:nth-child(1) {
     color: rgb(214, 214, 214);
+}
+
+.view-default .view-transfer-stats div:nth-child(2) {
+    color: rgb(214, 214, 214);
+    text-align: center;
+    line-height: 20px;
+    background-color: #007185;
 }
 
 .view-default .btn-download {
@@ -191,14 +221,14 @@ html, body {
 }
 
 .view-default .view-download-progress div:nth-child(1) {
+    background-color: #333;
     text-align: center;
-    height: 100%;
     line-height: 20px;
 }
 
 .view-default .view-download-progress div:nth-child(2) {
     background-color: rgb(0, 146, 0);
-    height: 100%;
+    height: 20px;
     width: 0px;
     margin-top: -20px;
 }
