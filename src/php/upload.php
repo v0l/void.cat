@@ -53,7 +53,30 @@
         }
 
         function SyncFileUpload($id) : void {
+            $redis = StaticRedis::$Instance;
+            $sync_hosts = $redis->sMembers(REDIS_PREFIX . 'sync-hosts');
+            if($sync_hosts !== False) {
+                $fs = new FileStore(Config::$Instance->upload_folder);
 
+                foreach($sync_hosts as $host) {
+                    Sync::SyncFile($id, $fs->GetAbsoluteFilePath($id), $host);
+                }
+
+                /*
+                $sync_threads = array();
+                foreach($sync_hosts as $host) {
+                    $new_thread = new SyncThread($id, $fs->GetAbsoluteFilePath($id), $host);
+                    $new_thread->start();
+                    $sync_threads[] = $new_thread;
+                }
+
+                foreach($sync_threads as $thread) {
+                    while($thread->isRunning()) {
+                        usleep(100);
+                    }
+                    $thread->join();
+                }*/
+            }
         }
 
         function SaveUpload($bf) : string {
