@@ -18,12 +18,6 @@ html, body {
     background-color: #444;
 }
 
-@media (max-device-width: $page-width){
-    .page {
-        width: auto !important;
-    }
-}
-
 .page {
     width: $page-width;
     margin-left: auto;
@@ -185,12 +179,12 @@ html, body {
     grid-template-columns: 60% 40%;
 }
 
-.view-default span {
-    float: right;
+.view-default div {
+    line-height: 30px;
 }
 
-.view-default div:nth-child(4) {
-    grid-row-start: 5;
+.view-default span {
+    float: right;
 }
 
 .view-default .view-transfer-stats {
@@ -217,7 +211,7 @@ html, body {
     line-height: 100px;
     grid-column-start: 2;
     grid-row-start: 1;
-    grid-row-end: 1;
+    grid-row-end: 5;
 }
 
 .view-default .view-download-progress div:nth-child(1) {
@@ -231,4 +225,46 @@ html, body {
     height: 20px;
     width: 0px;
     margin-top: -20px;
+}
+
+@media (max-device-width: $page-width){
+    .page {
+        width: auto !important;
+        margin-top: 0;
+        border-radius: 0;
+    }
+
+    .header {
+        border-radius: 0;
+    }
+
+    .page-left { 
+        width: initial !important;
+        float: initial !important;
+    }
+
+    .page-right { 
+        width: initial !important;
+        float: initial !important;
+        margin-top: 10px;
+    }
+
+    .view-default {
+        grid-template-columns: 100%;
+    }
+
+    .view-default .btn-download {
+        line-height: 50px;
+        grid-column-start: 1;
+        grid-row-start: 5;
+        grid-row-end: initial;
+    }
+
+    #page-view .file-info {
+        grid-template-columns: none;
+    }
+
+    #page-view .file-info span {
+        float: right;
+    }
 }
