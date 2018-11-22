@@ -3,6 +3,7 @@
         public $status = 0;
         public $msg;
         public $id;
+        public $sync;
     }
 
     class Upload implements RequestHandler {
@@ -39,8 +40,7 @@
                     $id = $this->SaveUpload($bf);
 
                     //sync to other servers 
-                    $this->SyncFileUpload($id);
-
+                    $rsp->sync = $this->SyncFileUpload($id);
                     $rsp->status = 200;
                     $rsp->id = $id;
                 } else {
@@ -52,16 +52,18 @@
             echo json_encode($rsp);
         }
 
-        function SyncFileUpload($id) : void {
+        function SyncFileUpload($id) : array {
             $redis = StaticRedis::$Instance;
             $sync_hosts = $redis->sMembers(REDIS_PREFIX . 'sync-hosts');
             if($sync_hosts !== False) {
                 $fs = new FileStore(Config::$Instance->upload_folder);
 
+                $status_codes = [];
                 foreach($sync_hosts as $host) {
-                    Sync::SyncFile($id, $fs->GetAbsoluteFilePath($id), $host);
+                    $status_codes[] = Sync::SyncFile($id, $fs->GetAbsoluteFilePath($id), $host);
                 }
 
+                return $status_codes;
                 /*
                 $sync_threads = array();
                 foreach($sync_hosts as $host) {
@@ -77,6 +79,8 @@
                     $thread->join();
                 }*/
             }
+
+            return array();
         }
 
         function SaveUpload($bf) : string {

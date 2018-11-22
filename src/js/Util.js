@@ -81,6 +81,12 @@ const Api = {
         return JSON.parse((await JsonXHR('POST', '/api', req)).response);
     },
 
+    GetSiteInfo: async function (id) {
+        return await Api.DoRequest({
+            cmd: 'site_info'
+        });
+    },
+
     GetFileInfo: async function (id) {
         return await Api.DoRequest({
             cmd: 'file_info',

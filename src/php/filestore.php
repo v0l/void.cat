@@ -1,9 +1,11 @@
 <?php
     class FileStore {
         private $UploadFolder;
+        private $DocumentRoot;
 
-        public function __construct($path) {
-            $this->UploadFolder = $path;
+        public function __construct($dir, $root = null) {
+            $this->UploadFolder = $dir;
+            $this->DocumentRoot = $root === null ? $_SERVER["DOCUMENT_ROOT"] : $root;
         }
 
         public function SetFileStats($info) : void {
@@ -27,12 +29,16 @@
             );
         }
 
+        public function GetUploadDirAbsolute() : string {
+            return "$this->DocumentRoot/$this->UploadFolder";
+        }
+
         public function GetRelativeFilePath($id) : string {
             return "$this->UploadFolder/$id";
         }
 
         public function GetAbsoluteFilePath($id) : string {
-            return "$_SERVER[DOCUMENT_ROOT]/$this->UploadFolder/$id";
+            return "$this->GetUploadDirAbsolute()/$this->UploadFolder/$id";
         }
 
         public function GetFileInfo($id) : ?FileInfo {
@@ -66,6 +72,14 @@
             stream_copy_to_stream($input, $fout);
             fclose($fout);
             fclose($input);
+        }
+
+        public function GetFileSize($id) : int {
+            return filesize($this->GetAbsoluteFilePath($id));
+        }
+
+        public function ListFiles() : array {
+            return glob($this->GetUploadDirAbsolute() . "/*");
         }
     }
 ?>

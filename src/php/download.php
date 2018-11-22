@@ -29,7 +29,7 @@
             $tracking = new Tracking();
 
             $abuse->CheckDownload($id);
-            $tracking->TrackDownload($id);
+            $tracking->TrackDownload($this->Fs, $id);
 
             //allow embeded header from preflight check
             if($_SERVER["REQUEST_METHOD"] === "OPTIONS"){

@@ -9,7 +9,7 @@
     class Api implements RequestHandler {
 
         public function __construct(){
-            Config::LoadConfig(array('upload_folder', 'recaptcha_site_key', 'recaptcha_secret'));
+            Config::LoadConfig(array('max_upload_size', 'upload_folder', 'recaptcha_site_key', 'recaptcha_secret'));
 
             ini_set('enable_post_data_reading', 0);
         }
@@ -23,6 +23,14 @@
             $fs = new FileStore(Config::$Instance->upload_folder);
 
             switch($cmd->cmd){
+                case "site_info": {
+                    $rsp->ok = true;
+                    $rsp->data = array(
+                        "max_upload_size" => Config::$Instance->max_upload_size,
+                        "basic_stats" => Stats::Get()
+                    );
+                    break;
+                }
                 case "file_info": {
                     $rsp->ok = true;
                     $rsp->data = $fs->GetFileInfo($cmd->id); 

@@ -18,6 +18,10 @@ html, body {
     background-color: #444;
 }
 
+a { text-decoration: none; color: rgb(0, 9, 94); font-weight: bold; }
+a:visited { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
 .page {
     width: $page-width;
     margin-left: auto;
@@ -32,7 +36,7 @@ html, body {
 
 #page-view {
     display:none;
-    padding: $page-padding;
+    padding: 10px 10px 0px 10px;
     overflow: hidden;
 }
 
@@ -54,7 +58,7 @@ html, body {
 
 #page-upload {
     display: none;
-    padding: $page-padding;
+    padding: 10px 10px 0px 10px;
     overflow: hidden;
 }
 
@@ -141,10 +145,61 @@ html, body {
     background-color: #790e00;
 }
 
+#footer {
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+#footer-stats {
+    display: grid;
+    grid-template-columns: 33.3% 33.3% 33.3%;
+    text-align: center;
+    border: 1px solid #aaa;
+    margin: 0px 10px 10px 10px;
+    padding: 5px;
+}
+
+#page-stats {
+    display: none;
+}
+
+#page-faq {
+    display: none;
+}
+
+#page-faq .faq-section {
+    margin: 10px;
+}
+
+#page-faq .faq-section .faq-header {
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 10px;
+    overflow: hidden;
+    border: 1px solid #aaa;
+    background-color: #eee;
+}
+
+#page-faq .faq-section .faq-content {
+    display: none;
+    padding: 10px;
+    overflow: hidden;
+    border: 1px solid #eee;
+    background-color: #fff;
+}
+
+.show {
+    display: block !important;
+}
+
 #page-view .file-info {
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
-    line-height: 30px;
+    text-align: center;
+    border: 1px solid #aaa;
+    margin: 10px 0px 0px 0px;
+    padding: 5px;
 }
 
 .header {

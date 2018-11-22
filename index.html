@@ -82,7 +82,7 @@
 
 <body>
 	<div class="page">
-		<div class="header">
+		<div class="header" onclick="window.location.href = '/'">
 			void.cat
 		</div>
 		<div id="page-upload">
@@ -109,12 +109,44 @@
 			</div>
 		</div>
 		<div id="page-stats">
-
 		</div>
 		<div id="page-faq">
-
+			<div class="faq-section">
+				<div class="faq-header">
+					Are there any restrictions on what can be uploaded
+				</div>
+				<div class="faq-content">
+					No.
+				</div>
+			</div>
+			<div class="faq-section">
+				<div class="faq-header">
+					How can I embed content in my site
+				</div>
+				<div class="faq-content">
+					I have created a service worker which you can host on your site which will decrypt the links automatically, find
+					more info <a href="https://github.com/v0l/void.cat/blob/v3-b2b/examples/embed" target="_blank">here on github.</a>
+				</div>
+			</div>
+			<div class="faq-section">
+				<div class="faq-header">
+					I have more questions
+				</div>
+				<div class="faq-content">
+					Feel free to join <a href="https://discord.gg/8BkxTGs" target="_blank">Discord</a> or send a mail to <a href="mailto:admin@void.cat">admin@void.cat</a>
+				</div>
+			</div>
 		</div>
-		
+		<div id="footer-stats">
+			<div><b>Files:</b><span>0</span></div>
+			<div><b>Total Size:</b><span>0 B</span></div>
+			<div><b>24Hr Transfer:</b><span>0 B</span></div>
+		</div>
+		<div id="footer">
+			<a href="javascript:(function() { window.location.href='/#faq'; App.Init(); })()">FAQ</a> | <a href="http://rv6omygg3ksi3dys.onion/" target="_blank">Tor</a>
+			<br>
+		</div>
+
 		<ins class="adsbygoogle" style="display:block; margin-left: auto; margin-right: auto;" data-ad-client="ca-pub-3289062345896209"
 		 data-ad-slot="9187315106" data-ad-format="auto" data-full-width-responsive="true"></ins>
 		<script>
