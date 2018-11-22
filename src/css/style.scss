@@ -1,9 +1,7 @@
 $page-width: 1024px;
-$page-height: 512px;
 $page-padding: 10px;
 $page-margin-top: 20px;
 $dropzone-border-width: 2px;
-$dropzone-height: ($page-height - ($dropzone-border-width * 2)) / 2;
 
 $upload-progress-padding: 2px;
 $upload-progress-height: 20px;
@@ -51,9 +49,13 @@ a:hover { text-decoration: underline; }
 
 #dropzone {
     border: $dropzone-border-width dashed #333;
-    line-height: $dropzone-height;
+    line-height: 100px;
     text-align: center;
     font-size: 50px;
+}
+
+#dropzone small {
+    font-size: 20px;
 }
 
 #page-upload {
@@ -196,7 +198,6 @@ a:hover { text-decoration: underline; }
 #page-view .file-info {
     display: grid;
     grid-template-columns: 25% 25% 25% 25%;
-    text-align: center;
     border: 1px solid #aaa;
     margin: 10px 0px 0px 0px;
     padding: 5px;
@@ -288,7 +289,7 @@ a:hover { text-decoration: underline; }
         margin-top: 0;
         border-radius: 0;
     }
-
+    
     .header {
         border-radius: 0;
     }

@@ -17,8 +17,10 @@ const DropzoneManager = function (dz) {
         i.addEventListener('change', function (evt) {
             this.SetUI();
             let fl = evt.target.files;
+            let host = window.site_info.ok ? window.site_info.data.upload_host : window.location.host;
+
             for (let z = 0; z < fl.length; z++) {
-                new FileUpload(fl[z]).ProcessUpload();
+                new FileUpload(fl[z], host).ProcessUpload();
             }
         }.bind(this));
         i.click();

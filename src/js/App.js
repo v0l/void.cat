@@ -35,6 +35,12 @@ const App = {
      * Sets up the page
      */
     Init: async function () {
+        window.site_info = await Api.GetSiteInfo();
+
+        App.Elements.PageView.style.display = "none";
+        App.Elements.PageUpload.style.display = "none";
+        App.Elements.PageFaq.style.display = "none";
+
         if (location.hash !== "") {
             if (location.hash == "#faq") {
                 let faq_headers = document.querySelectorAll('#page-faq .faq-header');
@@ -43,26 +49,22 @@ const App = {
                         this.nextElementSibling.classList.toggle("show");
                     }.bind(faq_headers[x]));
                 }
-                App.Elements.PageUpload.style.display = "none";
                 App.Elements.PageFaq.style.display = "block";
             } else {
-                App.Elements.PageUpload.style.display = "none";
                 App.Elements.PageView.style.display = "block";
                 new ViewManager();
             }
         } else {
             App.Elements.PageUpload.style.display = "block";
-            App.Elements.PageView.style.display = "none";
+            $('#dropzone').innerHTML = `Click me!<br><small>(${Utils.FormatBytes(window.site_info.data.max_upload_size)} max)</small>`;
             new DropzoneManager(App.Elements.Dropzone);
-
         }
-        
-        let stats = await Api.GetSiteInfo();
-        if(stats.ok){
+
+        if(window.site_info.ok){
             let elms = document.querySelectorAll("#footer-stats div span");
-            elms[0].textContent = stats.data.basic_stats.Files;
-            elms[1].textContent = Utils.FormatBytes(stats.data.basic_stats.Size, 2);
-            elms[2].textContent = Utils.FormatBytes(stats.data.basic_stats.Transfer_24h, 2);
+            elms[0].textContent = window.site_info.data.basic_stats.Files;
+            elms[1].textContent = Utils.FormatBytes(window.site_info.data.basic_stats.Size, 2);
+            elms[2].textContent = Utils.FormatBytes(window.site_info.data.basic_stats.Transfer_24h, 2);
         }
     }
 };

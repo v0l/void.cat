@@ -2,10 +2,12 @@
  * File upload handler class
  * @class
  * @param {File} file - The file handle to upload
+ * @param {string} host - The hostname to upload to
  */
-const FileUpload = function (file) {
+const FileUpload = function (file, host) {
     this.hasCrypto = typeof window.crypto.subtle === "object";
     this.file = file;
+    this.host = host;
     this.domNode = null;
     this.key = null;
     this.hmackey = null;
@@ -243,7 +245,7 @@ const FileUpload = function (file) {
     this.UploadData = async function (fileData) {
         this.uploadStats.lastProgress = new Date().getTime();
         this.HandleProgress('state-upload-start');
-        let uploadResult = await XHR("POST", "/upload", fileData, undefined, function (ev) {
+        let uploadResult = await XHR("POST", `${window.location.protocol}//${this.host}/upload`, fileData, undefined, function (ev) {
             let now = new Date().getTime();
             let dxLoaded = ev.loaded - this.uploadStats.lastLoaded;
             let dxTime = now - this.uploadStats.lastProgress;

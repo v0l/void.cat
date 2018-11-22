@@ -91,5 +91,20 @@
 
             return $id;
         }
+
+        public static function GetUploadHost() : string {
+            $cont = geoip_continent_code_by_name(USER_IP);
+            if($cont === False){
+                $cont = "EU";
+            }
+
+            $redis = StaticRedis::$Instance;
+            $map = $redis->hGetAll(REDIS_PREFIX . "upload-region-mapping");
+            if($map !== False && isset($map[$cont])) {
+                return $map[$cont];
+            } else {
+                return $_SERVER["HTTP_HOST"];
+            }
+        }
     }
 ?>
