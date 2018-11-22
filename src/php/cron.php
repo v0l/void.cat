@@ -3,8 +3,9 @@
 
     StaticRedis::Connect();
     Config::LoadConfig(array("upload_folder"));
-    
-    $fs = new FileStore(Config::$Instance->upload_folder, "/usr/local/nginx/html");
+    var_dump($_SERVER);
+
+    $fs = new FileStore(Config::$Instance->upload_folder, $_SERVER["cron_root"]);
 
     echo "Loading stats for: " . $fs->GetUploadDirAbsolute() . "\n";
     //echo "\n\t" . implode("\n\t", $fs->ListFiles()) . "\n";

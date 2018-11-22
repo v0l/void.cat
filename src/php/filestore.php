@@ -38,7 +38,7 @@
         }
 
         public function GetAbsoluteFilePath($id) : string {
-            return "$this->GetUploadDirAbsolute()/$this->UploadFolder/$id";
+            return $this->GetUploadDirAbsolute() . "/" . $id;
         }
 
         public function GetFileInfo($id) : ?FileInfo {

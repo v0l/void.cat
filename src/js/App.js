@@ -55,13 +55,14 @@ const App = {
             App.Elements.PageView.style.display = "none";
             new DropzoneManager(App.Elements.Dropzone);
 
-            let stats = await Api.GetSiteInfo();
-            if(stats.ok){
-                let elms = document.querySelectorAll("#footer-stats div span");
-                elms[0].textContent = stats.data.basic_stats.Files;
-                elms[1].textContent = Utils.FormatBytes(stats.data.basic_stats.Size, 2);
-                elms[2].textContent = Utils.FormatBytes(stats.data.basic_stats.Transfer_24h, 2);
-            }
+        }
+        
+        let stats = await Api.GetSiteInfo();
+        if(stats.ok){
+            let elms = document.querySelectorAll("#footer-stats div span");
+            elms[0].textContent = stats.data.basic_stats.Files;
+            elms[1].textContent = Utils.FormatBytes(stats.data.basic_stats.Size, 2);
+            elms[2].textContent = Utils.FormatBytes(stats.data.basic_stats.Transfer_24h, 2);
         }
     }
 };
