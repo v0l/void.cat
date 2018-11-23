@@ -3,6 +3,8 @@
 
     //Startup
     if(StaticRedis::Connect() == True) {
+        Tracking::SendMatomoEvent();
+        
         if(isset($_REQUEST["h"])) {
             $handler_name = $_REQUEST["h"];
             if(file_exists($handler_name . '.php')){

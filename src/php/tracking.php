@@ -15,8 +15,6 @@
                 $range = $this->GetRequestRange($file_size);
                 Stats::TrackTransfer($id, $range->end - $range->start);
             }
-
-            $this->SendMatomoEvent();
         }
 
         function GetRequestRange($len) : ?object {
@@ -42,9 +40,9 @@
             return false;
         }
 
-        function SendMatomoEvent() : void {
+        public static function SendMatomoEvent() : void {
             $msg = "?" . http_build_query(array(
-                "idsite" => 1,
+                "idsite" => 3,
                 "rec" => 1,
                 "apiv" => 1,
                 "_id" => isset($_COOKIE["VC:UID"]) ? $_COOKIE["VC:UID"] : uniqid(),
