@@ -68,7 +68,7 @@ const ViewManager = function () {
             });
             fd.DownloadFile().then(function (file) {
                 if (file !== null) {
-                    var objurl = URL.createObjectURL(file);
+                    var objurl = URL.createObjectURL(file.blob);
                     var dl_link = document.createElement('a');
                     dl_link.href = objurl;
                     dl_link.download = file.name;

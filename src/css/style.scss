@@ -162,6 +162,15 @@ a:hover { text-decoration: underline; }
     padding: 5px;
 }
 
+#page-notice {
+    display: none;
+    margin: 10px;
+    padding: 10px;
+    border: 3px solid black;
+    background-color: #a90000;
+    color: #ffe;
+}
+
 #page-stats {
     display: none;
 }

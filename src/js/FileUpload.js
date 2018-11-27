@@ -64,7 +64,7 @@ const FileUpload = function (file, host) {
 
             fr.onload = function (ev) {
                 this.HandleProgress('state-hash-start');
-                crypto.subtle.sign("HMAC", this.hmackey, ev.target.result).then(function (hash) {
+                crypto.subtle.sign(HMACKeyDetails, this.hmackey, ev.target.result).then(function (hash) {
                     this.HandleProgress('state-hash-end');
                     resolve({
                         hash: hash,

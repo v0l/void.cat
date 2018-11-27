@@ -92,7 +92,7 @@ const FileDownloader = function (fileinfo, key, iv) {
 
     /**
      * Decrypts the raw VBF file
-     * @returns {Promise<File>} The decrypted file 
+     * @returns {Promise<*>} The decrypted file 
      */
     this.DecryptFile = async function (blob) {
         let header = VBF.Parse(blob);
@@ -116,14 +116,12 @@ const FileDownloader = function (fileinfo, key, iv) {
 
         //hash the file to verify
         let file_data = decrypted_file.slice(2 + json_header_length);
-        let hmac_verify = await crypto.subtle.verify("HMAC", keyhmac, header.hmac, file_data);
+        let hmac_verify = await crypto.subtle.verify(HMACKeyDetails, keyhmac, header.hmac, file_data);
         if (hmac_verify) {
             Log.I(`${this.fileinfo.FileId} HMAC verified!`);
 
             let header_obj = JSON.parse(json_header_text);
-            return new File([file_data], header_obj.name, {
-                type: header_obj.mime
-            });
+            return { blob: new Blob([file_data], { type: header_obj.mime }), name: header_obj.name };
         } else {
             throw "HMAC verify failed";
         }
