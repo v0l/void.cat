@@ -19,11 +19,11 @@ const App = {
     },
 
     get IsChrome() {
-        return !App.IsEdge && /Chrome/.test(navigator.userAgent);
+        return !App.IsEdge && /^Mozilla.*Chrome/.test(navigator.userAgent);
     },
 
     get IsFirefox() {
-        return !App.IsEdge && /Mozilla/.test(navigator.userAgent);
+        return !App.IsEdge && /^Mozilla.*Firefox/.test(navigator.userAgent);
     },
 
     /**
