@@ -1,7 +1,7 @@
 <?php
     class Abuse {
         public function CheckDownload($id) {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
             $key = REDIS_PREFIX . "uvc:" . USER_IP;
 
             $views = $redis->hGet($key, $id);
@@ -38,7 +38,7 @@
         }
 
         public function ResetRateLimits($id) {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
             $key = REDIS_PREFIX . "uvc:" . USER_IP;
             $redis->hSet($key, $id, 0);
         }

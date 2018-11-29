@@ -4,17 +4,21 @@
         public $Size;
         public $Transfer_24h;
 
-        private static $AllTransferStatsKey = REDIS_PREFIX . "stats-transfer-all";
+        private static $AllTransferStatsKey = REDIS_PREFIX . "stats-transfer-all:";
         private static $GeneralStatsKey = REDIS_PREFIX . "stats-general";
 
         public static function Get() : Stats {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
 
             //calculate 24hr transfer stats
-            $tx_24h_array = $redis->zRange(self::$AllTransferStatsKey, 0, 24, true); //stats are 1hr interval
             $tx_24h = 0;
-            foreach($tx_24h_array as $tx_key => $tx_bytes) {
-                $tx_24h += $tx_bytes;
+            $now = time();
+            for($x = 0; $x < 24; $x += 1) {
+                $stat_key = date("YmdH", $now - (60 * 60 * $x));
+                $val = $redis->get(self::$AllTransferStatsKey . $stat_key);
+                if($val != False){
+                    $tx_24h += intval($val);
+                }
             }
 
             //get general stats
@@ -29,18 +33,18 @@
         }
 
         public static function TrackTransfer($id, $size) : void {
-            //$redis = StaticRedis::$Instance;
             self::AddAllTransfer($size);
         }
 
         public static function AddAllTransfer($size) : void {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
             $stat_member = date("YmdH");
-            $redis->zIncrBy(self::$AllTransferStatsKey, $size, $stat_member);
+            $redis->incrBy(self::$AllTransferStatsKey . $stat_member, $size);
+            $redis->setTimeout(self::$AllTransferStatsKey . $stat_member, 2592000); //store 30 days only
         }
 
         public static function Collect($fs) : void {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
 
             $files = $fs->ListFiles();
             $total_size = 0;

@@ -3,12 +3,12 @@
         public static $Instance;
 
         public static function GetConfig($config_name) {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
             return $redis->hGet(REDIS_PREFIX . 'config', $config_name);
         }
 
         public static function MGetConfig($config_name) {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
             return (object)$redis->hMGet(REDIS_PREFIX . 'config', $config_name);
         }
 

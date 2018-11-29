@@ -11,7 +11,7 @@
                 $fs = new FileStore(Config::$Instance->upload_folder);
                 if(!$fs->FileExists($id)) {
                     //resolve the hostnames to ips
-                    $redis = StaticRedis::$Instance;
+                    $redis = StaticRedis::ReadOp();
                     $sync_hosts = $redis->sMembers(REDIS_PREFIX . 'sync-hosts');
 
                     $sync_hosts_ips = array();

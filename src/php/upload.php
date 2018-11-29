@@ -53,7 +53,7 @@
         }
 
         function SyncFileUpload($id) : array {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
             $sync_hosts = $redis->sMembers(REDIS_PREFIX . 'sync-hosts');
             if($sync_hosts !== False) {
                 $fs = new FileStore(Config::$Instance->upload_folder);
@@ -64,20 +64,6 @@
                 }
 
                 return $status_codes;
-                /*
-                $sync_threads = array();
-                foreach($sync_hosts as $host) {
-                    $new_thread = new SyncThread($id, $fs->GetAbsoluteFilePath($id), $host);
-                    $new_thread->start();
-                    $sync_threads[] = $new_thread;
-                }
-
-                foreach($sync_threads as $thread) {
-                    while($thread->isRunning()) {
-                        usleep(100);
-                    }
-                    $thread->join();
-                }*/
             }
 
             return array();
@@ -98,7 +84,7 @@
                 $cont = "EU";
             }
 
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
             $map = $redis->hGetAll(REDIS_PREFIX . "upload-region-mapping");
             if($map !== False && isset($map[$cont])) {
                 return $map[$cont];

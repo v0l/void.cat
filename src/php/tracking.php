@@ -1,7 +1,7 @@
 <?php
     class Tracking {
         public function TrackDownload($fs, $id) : void {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
             $file_key = REDIS_PREFIX . $id;
 
             $file_size = $fs->GetFileSize($id);
@@ -52,7 +52,8 @@
                 "urlref" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : ""
             ));
             
-            StaticRedis::$Instance->publish('ga-page-view-matomo', $msg);
+            //this should be sent to the slave node if we are connected on a slave
+            StaticRedis::ReadOp()->publish('ga-page-view-matomo', $msg);
         }
     }
 ?>

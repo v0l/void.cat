@@ -29,7 +29,8 @@
                         "max_upload_size" => Config::$Instance->max_upload_size,
                         "basic_stats" => Stats::Get(),
                         "upload_host" => Upload::GetUploadHost(),
-                        "geoip_info" => geoip_database_info()
+                        "geoip_info" => geoip_database_info(),
+                        "host" => gethostname()
                     );
                     break;
                 }

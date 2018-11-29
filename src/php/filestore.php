@@ -9,7 +9,7 @@
         }
 
         public function SetFileStats($info) : void {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::WriteOp();
             $file_key = REDIS_PREFIX . $info->FileId;
 
             $redis->hMSet($file_key, array(
@@ -19,7 +19,7 @@
         }
 
         public function GetFileStats($id) : object {
-            $redis = StaticRedis::$Instance;
+            $redis = StaticRedis::ReadOp();
             $file_key = REDIS_PREFIX . $id;
 
             $public_file_info = $redis->hMGet($file_key, array('views', 'lastview'));
