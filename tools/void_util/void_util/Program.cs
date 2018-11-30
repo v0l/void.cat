@@ -243,8 +243,13 @@ Modes:
 
                         if (header_dict.ContainsKey("Content-Length"))
                         {
-                            //we sent with chunked, idk why this happend
-                            throw new Exception("Expected chunked response, got non-chunked response..");
+                            using (var msb = new MemoryStream())
+                            {
+                                msb.Write(header_buff, header_end + 4, rlen - header_end - 4);
+                                await ssl_stream.CopyToAsync(msb);
+
+                                PrintUploadResult(msb.ToArray(), key, iv);
+                            }
                         }
                         else
                         {
@@ -259,23 +264,7 @@ Modes:
                                         await cr.CopyToAsync(msb);
                                     }
 
-                                    var json_data = Encoding.UTF8.GetString(msb.ToArray());
-                                    var rsp = JsonConvert.DeserializeObject<UploadResponse>(json_data);
-                                    if (rsp != null)
-                                    {
-                                        if (rsp.status == 200)
-                                        {
-                                            Console.WriteLine($"\nUpload complete!\nUrl: https://{BaseHostname}/#{rsp.id}:{ToHex(key)}:{ToHex(iv)}");
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine($"\nUpload error: {rsp.msg}");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"\nGot invalid response: {json_data}");
-                                    }
+                                    PrintUploadResult(msb.ToArray(), key, iv);
                                 }
                             }
                         }
@@ -285,6 +274,35 @@ Modes:
             else
             {
                 Console.WriteLine("\nError: file not found!");
+            }
+        }
+
+
+        private static void PrintUploadResult(byte[] data, byte[] key, byte[] iv)
+        {
+            var json_data = Encoding.UTF8.GetString(data);
+            try
+            {
+                var rsp = JsonConvert.DeserializeObject<UploadResponse>(json_data);
+                if (rsp != null)
+                {
+                    if (rsp.status == 200)
+                    {
+                        Console.WriteLine($"\nUpload complete!\nUrl: https://{BaseHostname}/#{rsp.id}:{ToHex(key)}:{ToHex(iv)}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"\nUpload error: {rsp.msg}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"\nGot invalid response: {json_data}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Got unknown response: \n{json_data}");
             }
         }
 
@@ -303,10 +321,12 @@ Modes:
             using (var rsp_stream = rsp.GetResponseStream())
             {
                 var version = rsp_stream.ReadByte();
-                var hmac = new byte[32];
+                var hmac_data = new byte[32];
                 var ts = new byte[4];
-                await rsp_stream.ReadAsync(hmac, 0, hmac.Length);
+                await rsp_stream.ReadAsync(hmac_data, 0, hmac_data.Length);
                 await rsp_stream.ReadAsync(ts, 0, ts.Length);
+
+                Console.WriteLine($"Blob version is {version}, HMAC is {ToHex(hmac_data)}");
 
                 var tmp_name = Path.GetTempFileName();
                 string real_name = null;
@@ -326,7 +346,7 @@ Modes:
                             int read_offset = 0;
                             int last_rlen = 0;
                             long t_len = 0;
-                            while(true)
+                            while (true)
                             {
                                 var rlen = await rsp_stream.ReadAsync(buf, read_offset, buf.Length - read_offset);
 
@@ -339,7 +359,7 @@ Modes:
                                 }
                                 else
                                 {
-                                    if((read_offset + rlen) % ds.InputBlockSize != 0)
+                                    if ((read_offset + rlen) % ds.InputBlockSize != 0)
                                     {
                                         read_offset += rlen;
                                         continue;
@@ -375,6 +395,22 @@ Modes:
 
                                 Console.Write($"\r{(100 * (t_len / (decimal)file_length)).ToString("000.0")}%");
                             }
+                        }
+                    }
+
+                    tmp_file.Seek(0, SeekOrigin.Begin);
+
+                    using (var hmac = HMAC.Create("HMACSHA256"))
+                    {
+                        var hmac_test = hmac.ComputeHash(tmp_file);
+
+                        if (ToHex(hmac_test) == ToHex(hmac_data))
+                        {
+                            Console.WriteLine("HMAC verified!");
+                        }
+                        else
+                        {
+                            throw new Exception($"HMAC verify failed.. {ToHex(hmac_test)} != {ToHex(hmac_data)}");
                         }
                     }
                 }

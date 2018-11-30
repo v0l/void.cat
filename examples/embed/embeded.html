@@ -5,19 +5,6 @@
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker.register('/void_auto_loader.js').then(function (registration) {
 				console.log(`ServiceWorker registration successful with scope: ${registration.scope}`);
-
-				navigator.serviceWorker.addEventListener('message', function (event) {
-                    /*	get the key + iv from the page
-						if you have multiple links on the page 
-						you need to map the id to the kev:iv
-						for the purposes of an example i will pass
-						hard coded values
-					*/
-					event.ports[0].postMessage({
-						key: "51f1ab8e9e533e2296499357cd9f001c",
-						iv: "a5528ae5a90f6e116cfb84a1e653f889"
-					});
-				});
 			}, function (err) {
 				console.error(`ServiceWorker registration failed: ${err}`);
 			});
@@ -36,7 +23,7 @@
 			for example: 
 			<img src="/void_proxy/Jet0iBptr3AyVu1tUiPTAn5y3VY" />
 		-->
-	<img src="/Jet0iBptr3AyVu1tUiPTAn5y3VY" />
+	<img src="/RiUKijQm3I4VotqaeRl81XqnISo:cf7581696fff2349391218f99ffaca50:7b19587e9a5faa2a0439044c8852f0e5" />
 </body>
 
 </html>
