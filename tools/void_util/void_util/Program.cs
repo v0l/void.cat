@@ -27,8 +27,8 @@ Modes:
     pack        Packs a file into VBF format (can be useful for uploading with curl or another program)
 
 ");
-            Console.ReadKey();
         }
+
         static Task Main(string[] args)
         {
             if (args.Length > 1)
@@ -386,7 +386,6 @@ Modes:
             }
 
             Console.WriteLine("\nDone!");
-            Console.ReadKey();
         }
     }
 
