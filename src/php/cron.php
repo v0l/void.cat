@@ -1,14 +1,15 @@
 <?php
     include_once("init.php");
 
-    StaticRedis::Connect();
-    Config::LoadConfig(array("upload_folder"));
-    var_dump($_SERVER);
+    if(StaticRedis::Connect()) {
+        echo "Connected to redis..\n";
 
-    $fs = new FileStore(Config::$Instance->upload_folder, $_SERVER["cron_root"]);
+        Config::LoadConfig(array("upload_folder"));
 
-    echo "Loading stats for: " . $fs->GetUploadDirAbsolute() . "\n";
-    //echo "\n\t" . implode("\n\t", $fs->ListFiles()) . "\n";
-
-    Stats::Collect($fs);
+        if(StaticRedis::$IsConnectedToSlave == False) {
+            echo "Runing master node tasks..\n";
+            $fs = new FileStore(Config::$Instance->upload_folder, $_SERVER["cron_root"]);
+            Stats::Collect($fs);
+        }
+    }
 ?>

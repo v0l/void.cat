@@ -49,7 +49,10 @@
                 "url" => (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]",
                 "cip" => USER_IP,
                 "ua" => isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : "",
-                "urlref" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : ""
+                "urlref" => isset($_SERVER["HTTP_REFERER"]) ? $_SERVER["HTTP_REFERER"] : "",
+                "h" => date("H"),
+                "m" => date("i"),
+                "s" => date("s")
             ));
             
             //this should be sent to the slave node if we are connected on a slave

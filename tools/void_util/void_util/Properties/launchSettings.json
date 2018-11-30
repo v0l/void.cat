@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "void_download": {
+      "commandName": "Project",
+      "commandLineArgs": "upload \"D:\\en_windows_10_consumer_edition_version_1803_updated_sep_2018_x64_dvd_69339216.iso\""
+    }
+  }
+}
