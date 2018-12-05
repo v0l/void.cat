@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace void_util
+namespace void_lib
 {
     public class ChunkStream : Stream, IDisposable
     {

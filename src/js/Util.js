@@ -81,6 +81,12 @@ const Api = {
         return JSON.parse((await JsonXHR('POST', '/api', req)).response);
     },
 
+    GetTxChart: async function (id) {
+        return await Api.DoRequest({
+            cmd: '7_day_tx_graph'
+        });
+    },
+
     GetSiteInfo: async function (id) {
         return await Api.DoRequest({
             cmd: 'site_info'

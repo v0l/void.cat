@@ -13,24 +13,27 @@ namespace ga_page_view
         static ConnectionMultiplexer c { get; set; }
         static BatchBlock<string> _queue = new BatchBlock<string>(20);
         static string Token { get; set; }
+        static string Channel { get; set; }
 
         static Task Main(string[] args)
         {
-            if (args.Length != 1)
+            if (args.Length != 2)
             {
-                Console.WriteLine("Required args: token_auth");
+                Console.WriteLine("Required args: channel token_auth");
                 return Task.CompletedTask;
             }
 
-            Token = args[0];
-            Console.WriteLine($"Token is: {Token}");
+            Channel = args[0];
+            Token = args[1];
+
+            Console.WriteLine($"Token is: {Token}\nChannel is: {Channel}");
             return startSvc();
         }
 
         private static async Task startSvc()
         {
             c = await ConnectionMultiplexer.ConnectAsync("localhost");
-            await c.GetSubscriber().SubscribeAsync("ga-page-view-matomo", queueMsg);
+            await c.GetSubscriber().SubscribeAsync(Channel, queueMsg);
 
             Console.WriteLine("Connected to redis");
 

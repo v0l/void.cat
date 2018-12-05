@@ -57,6 +57,27 @@
                     }
                     break;
                 }
+                case "7_day_tx_graph": {
+                    $stats = Stats::GetTxStats(24 * 7);
+                    $data = array();
+                    foreach($stats as $time => $bytes){
+                        $data[] = array(
+                            "t" => date_timestamp_get(date_create_from_format("YmdH", $time)) * 1000,
+                            "y" => $bytes
+                        );
+                    }
+
+                    $rsp->data = array(
+                        "datasets" => array(
+                            array(
+                                "label" => "bytes",
+                                "data" => $data
+                            )
+                        )
+                    );
+                    $rsp->ok = true;
+                    break;
+                }
             }
 
             header('Content-Type: application/json');

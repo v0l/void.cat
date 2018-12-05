@@ -115,6 +115,8 @@
 			</div>
 		</div>
 		<div id="page-stats">
+			<h3>7 days tx graph</h3>
+			<canvas id="weektxgraph" width="1024" height="200"></canvas>
 		</div>
 		<div id="page-faq">
 			<div class="faq-section">
@@ -139,7 +141,7 @@
 					I have more questions
 				</div>
 				<div class="faq-content">
-					Feel free to join <a href="https://discord.gg/8BkxTGs" target="_blank">Discord</a> or send a mail to <a href="mailto:admin@void.cat">admin@void.cat</a>
+					Feel free to join <a href="https://discord.gg/8BkxTGs" target="_blank">Discord</a> and ask there.
 				</div>
 			</div>
 		</div>
@@ -149,7 +151,9 @@
 			<div><b>24Hr Transfer:</b><span>0 B</span></div>
 		</div>
 		<div id="footer">
-			<a href="javascript:(function() { window.location.href='/#faq'; App.Init(); })()">FAQ</a> | <a href="http://rv6omygg3ksi3dys.onion/" target="_blank">Tor</a>
+				<a href="javascript:(function() { App.ShowStats(); })()">Stats</a> | 
+				<a href="javascript:(function() { App.ShowFAQ(); })()">FAQ</a> | 
+				<a href="http://rv6omygg3ksi3dys.onion/" target="_blank">Tor</a>
 			<br>
 		</div>
 
@@ -159,14 +163,6 @@
 			(adsbygoogle = window.adsbygoogle || []).push({});
 		</script>
 	</div>
-	<!--<script type="text/javascript" src="src/js/Const.js" async></script>
-	<script type="text/javascript" src="src/js/Util.js" async></script>
-	<script type="text/javascript" src="src/js/DropzoneManager.js" async></script>
-	<script type="text/javascript" src="src/js/FileDownloader.js" async></script>
-	<script type="text/javascript" src="src/js/FileUpload.js" async></script>
-	<script type="text/javascript" src="src/js/VBF.js" async></script>
-	<script type="text/javascript" src="src/js/ViewManager.js" async></script>
-	<script type="text/javascript" src="src/js/App.js" async></script>-->
 	<script type="text/javascript" src="dist/script.min.js" async></script>
 </body>
 

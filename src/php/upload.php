@@ -26,6 +26,9 @@
         }
 
         public function HandleRequest() : void {
+            header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
+            header("Access-Control-Allow-Method: POST");
+
             $rsp = new UploadResponse();
             $file_size = $_SERVER["CONTENT_LENGTH"];
 

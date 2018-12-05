@@ -1,13 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace void_util
+namespace void_lib
 {
     public static class Ext
     {
+        public static byte[] FromHex(this string hex)
+        {
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
+        }
+
+        public static string ToHex(this byte[] data)
+        {
+            return BitConverter.ToString(data).Replace("-", string.Empty).ToLower();
+        }
+
         public static async Task CopyToAsync(this Stream in_stream, Stream out_stream, Action<long> progress)
         {
             long total = 0;

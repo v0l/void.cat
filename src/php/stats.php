@@ -7,18 +7,31 @@
         private static $AllTransferStatsKey = REDIS_PREFIX . "stats-transfer-all:";
         private static $GeneralStatsKey = REDIS_PREFIX . "stats-general";
 
+        public static function GetTxStats($nHours) : array {
+            $redis = StaticRedis::ReadOp();
+            $ret = array();
+
+            $now = time();
+            for($x = 0; $x < $nHours; $x += 1) {
+                $stat_key = date("YmdH", $now - (60 * 60 * $x));
+                $val = $redis->get(self::$AllTransferStatsKey . $stat_key);
+                if($val != False){
+                    $ret[$stat_key] = intval($val);
+                } else {
+                    $ret[$stat_key] = 0;
+                }
+            }
+
+            return $ret;
+        }
+
         public static function Get() : Stats {
             $redis = StaticRedis::ReadOp();
 
             //calculate 24hr transfer stats
             $tx_24h = 0;
-            $now = time();
-            for($x = 0; $x < 24; $x += 1) {
-                $stat_key = date("YmdH", $now - (60 * 60 * $x));
-                $val = $redis->get(self::$AllTransferStatsKey . $stat_key);
-                if($val != False){
-                    $tx_24h += intval($val);
-                }
+            foreach(self::GetTxStats(24) as $time => $bytes) {
+                $tx_24h += $bytes;
             }
 
             //get general stats

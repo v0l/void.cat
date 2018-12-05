@@ -56,7 +56,7 @@
             ));
             
             //this should be sent to the slave node if we are connected on a slave
-            StaticRedis::ReadOp()->publish('ga-page-view-matomo', $msg);
+            StaticRedis::ReadOp()->publish(StaticRedis::$IsConnectedToSlave ? 'v3-matomo' : 'v3-matomo-master', $msg);
         }
     }
 ?>

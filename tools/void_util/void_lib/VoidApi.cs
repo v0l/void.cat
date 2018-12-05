@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace void_util
+namespace void_lib
 {
     public class BasicStats
     {
@@ -38,12 +36,21 @@ namespace void_util
 
     public class VoidApi
     {
-        public static async Task<string> CallApiAsync(string cmd)
+        public static string BaseHostname { get; set; }
+        public static string UserAgent { get; set; }
+
+        public VoidApi(string hostname, string ua = "VoidApi/1.0")
         {
-            var req = (HttpWebRequest)WebRequest.Create($"https://{Program.BaseHostname}/api");
+            BaseHostname = hostname;
+            UserAgent = ua;
+        }
+
+        public async Task<string> CallApiAsync(string cmd)
+        {
+            var req = (HttpWebRequest)WebRequest.Create($"https://{BaseHostname}/api");
             req.Method = "POST";
             req.ContentType = "application/json";
-            req.UserAgent = Program.UserAgent;
+            req.UserAgent = UserAgent;
 
             var cmd_data = Encoding.UTF8.GetBytes(cmd);
             await (await req.GetRequestStreamAsync()).WriteAsync(cmd_data, 0, cmd_data.Length);
@@ -55,7 +62,7 @@ namespace void_util
             }
         }
 
-        public static async Task<SiteInfo> GetUploadHostAsync()
+        public async Task<SiteInfo> GetUploadHostAsync()
         {
             return JsonConvert.DeserializeObject<ApiResponse<SiteInfo>>(await CallApiAsync(JsonConvert.SerializeObject(new Cmd()
             {
