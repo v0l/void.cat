@@ -31,11 +31,12 @@
             $abuse->CheckDownload($id);
             $tracking->TrackDownload($this->Fs, $id);
 
+            header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
+            header("Access-Control-Allow-Headers: x-void-embeded");
+            header("Access-Control-Allow-Method: GET");
+
             //allow embeded header from preflight check
-            if($_SERVER["REQUEST_METHOD"] === "OPTIONS"){
-                header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
-                header("Access-Control-Allow-Headers: x-void-embeded");
-            } else {
+            if($_SERVER["REQUEST_METHOD"] === "GET") {
                 if(isset($_SERVER['HTTP_X_VOID_EMBEDED'])) {
                     $this->SendFile($this->Fs->GetAbsoluteFilePath($id), 604800);
                 } else {
@@ -45,9 +46,6 @@
         }
 
         function SendFile($location, $expire){
-            header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
-            header("Access-Control-Allow-Headers: x-void-embeded");
-            header("Access-Control-Allow-Method: GET");
             header("Content-Type: application/octet-stream");
             header('Content-Length: ' . filesize($location));
             flush();
