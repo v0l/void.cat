@@ -1,19 +1,19 @@
 <html>
 
 <head>
-	<script>
-		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/void_auto_loader.js').then(function (registration) {
-				console.log(`ServiceWorker registration successful with scope: ${registration.scope}`);
-			}, function (err) {
-				console.error(`ServiceWorker registration failed: ${err}`);
-			});
-		}
-	</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/void_auto_loader.js').then(function (registration) {
+                console.log(`ServiceWorker registration successful with scope: ${registration.scope}`);
+            }, function (err) {
+                console.error(`ServiceWorker registration failed: ${err}`);
+            });
+        }
+    </script>
 </head>
 
 <body>
-	<!-- 
+    <!-- 
 			Path must be to the current host, the service worker will pick this up and redirect the request to the correct server
 			Keep in mind that the entire file is loaded and decrypted into memory, so it can look like nothing is happening while the file is loading.
 			Currently its not advised to use this example for anything other than images that can be downloaded fast
@@ -23,7 +23,7 @@
 			for example: 
 			<img src="/void_proxy/Jet0iBptr3AyVu1tUiPTAn5y3VY" />
 		-->
-	<img src="/RiUKijQm3I4VotqaeRl81XqnISo:cf7581696fff2349391218f99ffaca50:7b19587e9a5faa2a0439044c8852f0e5" />
+    <img src="/RiUKijQm3I4VotqaeRl81XqnISo:cf7581696fff2349391218f99ffaca50:7b19587e9a5faa2a0439044c8852f0e5" />
 </body>
 
 </html>

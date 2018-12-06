@@ -7,8 +7,9 @@ namespace void_lib
     public abstract class VoidProgress
     {
         public Guid Id { get; set; }
+        public long Size { get; set; }
 
-        public static VoidProgress Create(Guid id, string label = null, string log = null, decimal? percentage = null)
+        public static VoidProgress Create(Guid id, string label = null, string log = null, decimal? percentage = null, long? size = null)
         {
             if (label != null)
             {
@@ -31,7 +32,8 @@ namespace void_lib
                 return new PercentageVoidProgress()
                 {
                     Id = id,
-                    Percentage = percentage.Value
+                    Percentage = percentage.Value,
+                    Size = size ?? 0
                 };
             }
             return null;

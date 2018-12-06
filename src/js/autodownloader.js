@@ -15,10 +15,7 @@ const VoidFetch = function (event) {
                 FileId: id
             }, key, iv);
             let rsp = await fetch(`https://v3.void.cat/${id}`, {
-                mode: 'cors',
-                headers: {
-                    'X-Void-Embeded': '1' //this is needed to detect allow cross origin requests
-                }
+                mode: 'cors'
             });
             let blob = await rsp.arrayBuffer();
             if (blob.byteLength > 0) {

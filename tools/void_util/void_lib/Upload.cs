@@ -118,8 +118,8 @@ namespace void_lib
 
                             using (var ds = aes.CreateEncryptor(key, iv))
                             {
-                                var buf = new byte[ds.InputBlockSize * 1000];
-                                var out_buf = new byte[ds.OutputBlockSize * 1000];
+                                var buf = new byte[ds.InputBlockSize * 64];
+                                var out_buf = new byte[ds.OutputBlockSize * 64];
 
                                 var header_bytes = Encoding.UTF8.GetBytes(header);
                                 var hlb = BitConverter.GetBytes((UInt16)header_bytes.Length);
@@ -150,7 +150,7 @@ namespace void_lib
                                         init_offset = 0;
                                     }
                                     tlen += frlen;
-                                    base.OnReport(VoidProgress.Create(Id, percentage: tlen / (decimal)file_length));
+                                    base.OnReport(VoidProgress.Create(Id, percentage: tlen / (decimal)file_length, size: file_length));
                                 }
                             }
                         }

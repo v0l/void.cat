@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
@@ -16,8 +17,12 @@ namespace void_lib
 
     public class Download : Progress<VoidProgress>
     {
-        private Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; private set; } = Guid.NewGuid();
+        public FileHeader Header { get; private set; }
         private string UserAgent { get; set; }
+        private Stopwatch Timer { get; set; }
+
+        public decimal CalculatedSpeed { get; private set; }
 
         public Download(string ua = "VoidUtil/1.0")
         {
@@ -31,6 +36,8 @@ namespace void_lib
         /// <returns></returns>
         public async Task<DownloadResult> DownloadFileAsync(string url)
         {
+            Timer = Stopwatch.StartNew();
+
             var url_base = new Uri(url);
             var hash_frag = url_base.Fragment.Substring(1).Split(':');
             var key = hash_frag[1].FromHex();
@@ -55,7 +62,6 @@ namespace void_lib
                 base.OnReport(VoidProgress.Create(Id, log: $"Blob version is {version}, HMAC is {hmac_data.ToHex()}"));
 
                 var tmp_name = Path.GetTempFileName();
-                FileHeader header_obj = null;
                 using (var tmp_file = new FileStream(tmp_name, FileMode.Open, FileAccess.ReadWrite))
                 {
                     using (var aes = new AesManaged())
@@ -104,7 +110,7 @@ namespace void_lib
                                     var header = Encoding.UTF8.GetString(out_buf, 2, hlen);
                                     base.OnReport(VoidProgress.Create(Id, log: $"Header is: {header}"));
 
-                                    header_obj = JsonConvert.DeserializeObject<FileHeader>(header);
+                                    Header = JsonConvert.DeserializeObject<FileHeader>(header);
 
                                     var file_start = 2 + hlen;
                                     await tmp_file.WriteAsync(out_buf, file_start, clen - file_start);
@@ -116,10 +122,12 @@ namespace void_lib
 
                                 t_len += rlen;
 
-                                base.OnReport(VoidProgress.Create(Id, percentage: t_len / (decimal)file_length));
+                                base.OnReport(VoidProgress.Create(Id, percentage: t_len / (decimal)file_length, size: file_length));
+                                CalculatedSpeed = (decimal)(t_len / Timer.Elapsed.TotalSeconds);
                             }
                         }
                     }
+                    base.OnReport(VoidProgress.Create(Id, percentage: 1));
 
                     tmp_file.Seek(0, SeekOrigin.Begin);
 
@@ -144,7 +152,7 @@ namespace void_lib
                 return new DownloadResult()
                 {
                     Filepath = tmp_name,
-                    Header = header_obj
+                    Header = Header
                 };
             }
         }
