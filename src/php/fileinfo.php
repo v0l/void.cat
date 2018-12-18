@@ -7,5 +7,9 @@
         public $Uploaded;
         public $Size;
         public $DownloadHost;
+        
+        public $IsLegacyUpload;
+        public $LegacyFilename;
+        public $LegacyMime;
     }
 ?>

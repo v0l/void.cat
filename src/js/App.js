@@ -184,7 +184,7 @@ const App = {
     CheckBrowserSupport: function () {
         if (!App.IsFirefox) {
             if (App.IsChrome) {
-                App.AddNoticeItem("Uploads bigger then 100MiB usually crash Chrome when uploading. Please upload with Firefox. Or check <a target=\"_blank\" href=\"https://github.com/v0l/void.cat/tree/v3-b2b/tools\">GitHub</a> for tools.");
+                App.AddNoticeItem("Uploads bigger then 100MiB usually crash Chrome when uploading. Please upload with Firefox. Or check <a target=\"_blank\" href=\"https://github.com/v0l/void.cat/releases\">GitHub</a> for tools.");
             }
             if (App.IsEdge) {
                 let edge_version = /Edge\/([0-9]{1,3}\.[0-9]{1,5})/.exec(navigator.userAgent)[1];

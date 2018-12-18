@@ -37,7 +37,7 @@
                 case "file_info": {
                     $rsp->ok = true;
                     $rsp->data = $fs->GetFileInfo($cmd->id);
-                    $rsp->data->DownloadHost = Upload::GetUploadHost(); //bypass CF proxy for downloads (slow..)
+                    //$rsp->data->DownloadHost = Upload::GetUploadHost(); //bypass CF proxy for downloads (slow..)
                     break;
                 }
                 case 'captcha_info': {

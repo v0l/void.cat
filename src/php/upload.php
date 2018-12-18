@@ -7,7 +7,7 @@
     }
 
     class Upload implements RequestHandler {
-        private $isMultipart = False;
+        private $IsMultipart = False;
 
         public function __construct() {
             Config::LoadConfig(array('max_upload_size', 'upload_folder', 'public_hash_algo'));
@@ -26,8 +26,10 @@
         }
 
         public function HandleRequest() : void {
-            header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
-            header("Access-Control-Allow-Method: POST");
+            if(isset($_SERVER["HTTP_ORIGIN"])) {
+                header("Access-Control-Allow-Origin: " . $_SERVER["HTTP_ORIGIN"]);
+                header("Access-Control-Allow-Method: POST");
+            }
 
             $rsp = new UploadResponse();
             $file_size = $_SERVER["CONTENT_LENGTH"];
@@ -36,19 +38,41 @@
                 $rsp->status = 1;
                 $rsp->msg = "File is too large";
             } else {
-                $bf = BlobFile::LoadHeader("php://input");
+                $auth = new Auth();
+                $token = $auth->GetBearerToken();
 
-                if($bf != null){
-                    //save upload
-                    $id = $this->SaveUpload($bf);
+                if($token !== null) {
+                    if($auth->CheckApiToken($token)) {
+                        $id = $this->SaveLegacyUpload();
 
-                    //sync to other servers 
-                    $rsp->sync = $this->SyncFileUpload($id);
-                    $rsp->status = 200;
-                    $rsp->id = $id;
+                        //sync to other servers 
+                        if($id !== null) {
+                            $rsp->sync = $this->SyncFileUpload($id);
+                            $rsp->status = 200;
+                            $rsp->id = $id;
+                        } else {
+                            $rsp->status = 3;
+                            $rsp->msg = "Legacy upload error";
+                        }
+                    } else {
+                        http_response_code(403);
+                        exit();
+                    }
                 } else {
-                    $rsp->status = 2;
-                    $rsp->msg = "Invalid file header";
+                    $bf = BlobFile::LoadHeader("php://input");
+
+                    if($bf != null){
+                        //save upload
+                        $id = $this->SaveUpload($bf);
+
+                        //sync to other servers 
+                        $rsp->sync = $this->SyncFileUpload($id);
+                        $rsp->status = 200;
+                        $rsp->id = $id;
+                    } else {
+                        $rsp->status = 2;
+                        $rsp->msg = "Invalid file header";
+                    }
                 }
             }
             header('Content-Type: application/json');
@@ -79,6 +103,25 @@
             $fs->StoreFile("php://input", $id);
 
             return $id;
+        }
+
+        function SaveLegacyUpload() : ?string {
+            if(isset($_SERVER["HTTP_X_LEGACY_FILENAME"])){
+                $hash = hash_file("sha256", "php://input");
+                $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $hash)), 62);
+
+                $fs = new FileStore(Config::$Instance->upload_folder);
+                $fs->StoreFile("php://input", $id);
+
+                $info = new FileInfo();
+                $info->FileId = $id;
+                $info->LegacyFilename = $_SERVER["HTTP_X_LEGACY_FILENAME"];
+                $info->LegacyMime = isset($_SERVER["CONTENT_TYPE"]) ? $_SERVER["CONTENT_TYPE"] : "application/octet-stream";
+
+                $fs->SetAsLegacyFile($info);
+                return $id;
+            }
+            return null;
         }
 
         public static function GetUploadHost() : string {

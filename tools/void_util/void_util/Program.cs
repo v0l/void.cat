@@ -9,7 +9,7 @@ namespace void_util
     class Program
     {
         public static string BaseHostname => "v3.void.cat";
-        public static string UserAgent => "VoidUtil/1.0";
+        public static string UserAgent => "VoidUtil/1.1";
 
         static void PrintHelp()
         {

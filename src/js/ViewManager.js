@@ -33,8 +33,16 @@ const ViewManager = function () {
 
         let nelm = document.importNode($("template[id='tmpl-view-default']").content, true);
         nelm.querySelector('.view-file-id').textContent = fileinfo.FileId;
-        nelm.querySelector('.view-key').textContent = this.key;
-        nelm.querySelector('.view-iv').textContent = this.iv;
+        if (fileinfo.IsLegacyUpload) {
+            let keyrow = nelm.querySelector('.view-key');
+            keyrow.textContent = fileinfo.LegacyFilename;
+            keyrow.previousElementSibling.textContent = "Filename:";
+            nelm.querySelector('.view-iv').parentNode.style.display = "none";
+            nelm.querySelector('.view-transfer-stats').style.display = "none";
+        } else {
+            nelm.querySelector('.view-key').textContent = this.key;
+            nelm.querySelector('.view-iv').textContent = this.iv;
+        }
         nelm.querySelector('.btn-download').addEventListener('click', function () {
             let fd = new FileDownloader(this.fileinfo, this.self.key, this.self.iv);
             fd.onprogress = function (x) {
@@ -59,7 +67,7 @@ const ViewManager = function () {
                             alert('Captcha check failed, are you a robot?');
                         }
                     }.bind({ id: this.id }));
-                }else {
+                } else {
                     Log.E('No recaptcha config set');
                 }
             }.bind({
@@ -68,7 +76,7 @@ const ViewManager = function () {
             });
             fd.DownloadFile().then(function (file) {
                 if (file !== null) {
-                    var objurl = URL.createObjectURL(file.blob);
+                    var objurl = file.isLegacy !== undefined ? file.url : URL.createObjectURL(file.blob);
                     var dl_link = document.createElement('a');
                     dl_link.href = objurl;
                     dl_link.download = file.name;

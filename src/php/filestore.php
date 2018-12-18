@@ -22,11 +22,24 @@
             $redis = StaticRedis::ReadOp();
             $file_key = REDIS_PREFIX . $id;
 
-            $public_file_info = $redis->hMGet($file_key, array('views', 'lastview'));
+            $public_file_info = $redis->hMGet($file_key, array('views', 'lastview', 'islegacy', 'filename', 'mime'));
             return (object)array(
                 "views" => ($public_file_info["views"] !== False ? $public_file_info["views"] : 0),
-                "lastview" => ($public_file_info["lastview"] !== False ? $public_file_info["lastview"] : 0)
+                "lastview" => ($public_file_info["lastview"] !== False ? $public_file_info["lastview"] : 0),
+                "islegacy" => ($public_file_info["islegacy"] !== False ? $public_file_info["islegacy"] === "1" : false),
+                "filename" => ($public_file_info["filename"] !== False ? $public_file_info["filename"] : ""),
+                "mime" => ($public_file_info["mime"] !== False ? $public_file_info["mime"] : ""),
             );
+        }
+
+        public function SetAsLegacyFile($info) : void {
+            $redis = StaticRedis::WriteOp();
+            $file_key = REDIS_PREFIX . $info->FileId;
+            $redis->hMSet($file_key, array(
+                'islegacy' => true,
+                'filename' => $info->LegacyFilename,
+                'mime' => $info->LegacyMime
+            ));
         }
 
         public function GetUploadDirAbsolute() : string {
@@ -53,6 +66,10 @@
                 $file->LastView = intval($stats->lastview);
                 $file->Size = $file_stat["size"];
                 $file->Uploaded = $file_stat["ctime"];
+
+                $file->IsLegacyUpload = $stats->islegacy;
+                $file->LegacyFilename = $stats->filename;
+                $file->LegacyMime = $stats->mime;
                 
                 return $file;
             }

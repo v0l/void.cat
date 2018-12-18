@@ -62,29 +62,38 @@ const FileDownloader = function (fileinfo, key, iv) {
      * @returns {Promise<File>} The loaded and decripted file
      */
     this.DownloadFile = async function () {
-        let link = (this.fileinfo.DownloadHost !== null ? `${window.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${this.fileinfo.FileId}`
+        let link = (this.fileinfo.DownloadHost !== null ? `${window.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${this.fileinfo.FileId}`;
         Log.I(`Starting download from: ${link}`);
-        let rsp = await XHR('GET', link, undefined, undefined, undefined, function (ev) {
-            let now = new Date().getTime();
-            let dxLoaded = ev.loaded - this.downloadStats.lastLoaded;
-            let dxTime = now - this.downloadStats.lastProgress;
+        if(this.fileinfo.IsLegacyUpload) {
+            return {
+                isLegacy: true,
+                name: this.fileinfo.LegacyFilename,
+                mime: this.fileinfo.LegacyMime,
+                url: link
+            };
+        } else {
+            let rsp = await XHR('GET', link, undefined, undefined, undefined, function (ev) {
+                let now = new Date().getTime();
+                let dxLoaded = ev.loaded - this.downloadStats.lastLoaded;
+                let dxTime = now - this.downloadStats.lastProgress;
 
-            this.downloadStats.lastLoaded = ev.loaded;
-            this.downloadStats.lastProgress = now;
+                this.downloadStats.lastLoaded = ev.loaded;
+                this.downloadStats.lastProgress = now;
 
-            this.HandleProgress('progress-speed', `${Utils.FormatBytes(dxLoaded / (dxTime / 1000.0), 2)}/s`);
-            this.HandleProgress('progress-download', ev.loaded / (ev.lengthComputable ? parseFloat(ev.total) : this.fileinfo.Size));
-        }.bind(this), function (req) {
-            req.responseType = "arraybuffer";
-        });
+                this.HandleProgress('progress-speed', `${Utils.FormatBytes(dxLoaded / (dxTime / 1000.0), 2)}/s`);
+                this.HandleProgress('progress-download', ev.loaded / (ev.lengthComputable ? parseFloat(ev.total) : this.fileinfo.Size));
+            }.bind(this), function (req) {
+                req.responseType = "arraybuffer";
+            });
 
-        if (rsp.status === 200) {
-            this.HandleProgress('decrypt-start');
-            let fd_decrypted = await this.DecryptFile(rsp.response);
-            this.HandleProgress('download-complete');
-            return fd_decrypted;
-        } else if (rsp.status === 429) {
-            this.HandleProgress('rate-limited');
+            if (rsp.status === 200) {
+                this.HandleProgress('decrypt-start');
+                let fd_decrypted = await this.DecryptFile(rsp.response);
+                this.HandleProgress('download-complete');
+                return fd_decrypted;
+            } else if (rsp.status === 429) {
+                this.HandleProgress('rate-limited');
+            }
         }
 
         return null;
