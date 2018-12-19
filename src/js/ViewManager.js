@@ -79,7 +79,9 @@ const ViewManager = function () {
                     var objurl = file.isLegacy !== undefined ? file.url : URL.createObjectURL(file.blob);
                     var dl_link = document.createElement('a');
                     dl_link.href = objurl;
-                    dl_link.download = file.name;
+                    if (file.isLegacy === undefined) {
+                        dl_link.download = file.name;
+                    }
                     dl_link.style.display = "none";
                     let lnk = document.body.appendChild(dl_link);
                     lnk.click();
