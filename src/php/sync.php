@@ -1,7 +1,12 @@
 <?php
     class Sync implements RequestHandler {
         public function __construct(){
-            Config::LoadConfig(array("upload_folder"));
+            Config::LoadConfig(array('max_upload_size', 'upload_folder'));
+
+            set_time_limit(1200);
+            ini_set('post_max_size', Config::$Instance->max_upload_size);
+            ini_set('upload_max_filesize', Config::$Instance->max_upload_size);
+            ini_set('memory_limit', Config::$Instance->max_upload_size);
             ini_set('enable_post_data_reading', 0);
         }
 
