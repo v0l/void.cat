@@ -11,7 +11,8 @@ const App = {
         get PageView() { return $('#page-view') },
         get PageUpload() { return $('#page-upload') },
         get PageFaq() { return $('#page-faq') },
-        get PageStats() { return $('#page-stats') }
+        get PageStats() { return $('#page-stats') },
+        get PageDonate() { return $('#page-donate') }
     },
 
     Templates: {
@@ -52,6 +53,7 @@ const App = {
         App.Elements.PageUpload.style.display = "none";
         App.Elements.PageFaq.style.display = "none";
         App.Elements.PageStats.style.display = "none";
+        App.Elements.PageDonate.style.display = "none";
     },
 
     ShowStats: async function () {
@@ -102,6 +104,12 @@ const App = {
         App.Elements.PageFaq.style.display = "block";
     },
 
+    ShowDonate: function () {
+        location.hash = "#donate";
+        App.ResetView();
+        App.Elements.PageDonate.style.display = "block";
+    },
+
     /**
      * Sets up the page
      */
@@ -116,6 +124,8 @@ const App = {
                 App.ShowFAQ();
             } else if (location.hash == "#stats") {
                 App.ShowStats();
+            } else if (location.hash == "#donate") {
+                App.ShowDonate();
             } else {
                 App.Elements.PageView.style.display = "block";
                 new ViewManager();

@@ -18,6 +18,21 @@
 			g.type = 'text/javascript'; g.async = true; g.defer = true; g.src = u + 'piwik.js'; s.parentNode.insertBefore(g, s);
 		})();
 	</script>
+	<!-- Fathom - simple website analytics - https://github.com/usefathom/fathom -->
+	<script>
+		(function(f, a, t, h, o, m){
+			a[h]=a[h]||function(){
+				(a[h].q=a[h].q||[]).push(arguments)
+			};
+			o=f.createElement('script'),
+			m=f.getElementsByTagName('script')[0];
+			o.async=1; o.src=t; o.id='fathom-script';
+			m.parentNode.insertBefore(o,m)
+		})(document, window, '//fathom.void.cat/tracker.js', 'fathom');
+		fathom('set', 'siteId', 'ACJOO');
+		fathom('trackPageview');
+	</script>
+	<!-- / Fathom -->
 	<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 	<script>
 		(adsbygoogle = window.adsbygoogle || []).push({
@@ -145,6 +160,14 @@
 				</div>
 			</div>
 		</div>
+		<div id="page-donate">
+			<form method="POST" action="https://btc-pay.noinput.xyz/api/v1/invoices">
+				<input type="hidden" name="storeId" value="EveZSjtijFkn3UXKjq69AxhHxksjHcsHA23WHFFQWbzH" />
+				<label for="price">USD: </label><input type="number" name="price" value="10" style="width: 50px"/><br>
+				<input type="hidden" name="currency" value="USD" />
+				<input type="image" src="https://btc-pay.noinput.xyz/img/paybutton/pay.png" name="submit" style="width:209px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
+			</form>
+		</div>
 		<div id="footer-stats">
 			<div><b>Files:</b><span>0</span></div>
 			<div><b>Total Size:</b><span>0 B</span></div>
@@ -153,6 +176,7 @@
 		<div id="footer">
 				<a href="javascript:(function() { App.ShowStats(); })()">Stats</a> | 
 				<a href="javascript:(function() { App.ShowFAQ(); })()">FAQ</a> | 
+				<a href="javascript:(function() { App.ShowDonate(); })()">Donate</a> | 
 				<a href="http://rv6omygg3ksi3dys.onion/" target="_blank">Tor</a>
 			<br>
 		</div>
