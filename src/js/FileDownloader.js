@@ -107,7 +107,7 @@ const FileDownloader = function (fileinfo, key, iv) {
         let header = VBF.Parse(blob);
         let hash_text = Utils.ArrayToHex(header.hmac);
 
-        Log.I(`${this.fileinfo.FileId} blob header version is ${header.version} and hash is ${hash_text} uploaded on ${header.uploaded}`);
+        Log.I(`${this.fileinfo.FileId} blob header version is ${header.version} and hash is ${hash_text} uploaded on ${header.uploaded} (Magic: ${Utils.ArrayToHex(header.magic)})`);
 
         let key_raw = Utils.HexToArray(this.key);
         let iv_raw = Utils.HexToArray(this.iv);
@@ -116,7 +116,8 @@ const FileDownloader = function (fileinfo, key, iv) {
         let key = await crypto.subtle.importKey("raw", key_raw, EncryptionKeyDetails, false, ['decrypt']);
         let keyhmac = await crypto.subtle.importKey("raw", key_raw, HMACKeyDetails, false, ['verify']);
 
-        let decrypted_file = await crypto.subtle.decrypt({ name: EncryptionAlgo, iv: iv_raw }, key, blob.slice(VBF.HeaderSize));
+        let enc_data = VBF.GetEncryptedPart(header.version, blob);
+        let decrypted_file = await crypto.subtle.decrypt({ name: EncryptionAlgo, iv: iv_raw }, key, enc_data);
 
         //read the header 
         let json_header_length = new Uint16Array(decrypted_file.slice(0, 2))[0];

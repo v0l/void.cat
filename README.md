@@ -17,20 +17,23 @@ location ~* "^\/([0-9a-z]{27})$" {
 }
 ```
 
-Void Binary File Format (VBF)
+Void Binary File Format (VBF2)
 ===
-| Name | Type | Description |
+*All numbers are little endian*
+| Name | Size | Description |
 |---|---|---|
-| version | uint8_t | Binary file format version |
-| hash | SHA256 hash | The hash of the unencrypted file |
-| uploaded | uint32_t | Timestamp of when the upload started |
-| payload | >EOF | The encrypted payload |
+| version | 1 byte unsigned number | Binary file format version |
+| magic | 4 bytes | "VOID" encoded to UTF8 string
+| uploaded | 4 byte unsigned number | Unix timestamp of when the upload started |
+| payload | EOF - 32 bytes | The encrypted payload |
+| hash | 32 bytes HMAC-SHA265 | The HMAC of the unencrypted file* |
 
----
+*\* Using the encryption key as the HMAC key*
+
 VBF Payload Format
-
-| Name | Type | Description |
+====
+| Name | Size | Description |
 |---|---|---|
-| header_length | uint16_t | Length of the header section |
-| header | string | The header json |
+| header_length | 2 byte unsigned number | Length of the header section |
+| header | {header_length} UTF8 String | The header json |
 | file | >EOF | The file |

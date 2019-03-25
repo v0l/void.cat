@@ -81,14 +81,47 @@
             return file_exists($file_path);
         }
 
-        public function StoreFile($file, $id) {
+        public function StoreFile($file, $id) : bool {
             $file_path = $this->GetAbsoluteFilePath($id);
+            
+            if(!file_exists($file_path)) {
+                $fout = fopen($file_path, 'wb+');
+                stream_copy_to_stream($file, $fout);
+                fclose($fout);
+                return true;
+            }
+            return false;
+        }
+
+        public function StoreV1File($bf, $file) : ?string {
+            $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $bf->Hash)), 62);
 
             $input = fopen($file, "rb");
-            $fout = fopen($file_path, 'wb+');
-            stream_copy_to_stream($input, $fout);
-            fclose($fout);
+            $res = $this->StoreFile($input, $id);
             fclose($input);
+
+            return $res ? $id : null;
+        }
+
+        public function StoreV2File($bf, $file) : ?string {
+            //we need to seek to the end before finding the id, do that first
+            $input = fopen($file, "rb");
+            $temp_name = tempnam($this->GetUploadDirAbsolute(), "VTMP_");
+            $input_temp = fopen($temp_name, "wb+");
+            stream_copy_to_stream($input, $input_temp);
+            fclose($input);
+
+            fseek($input_temp, -32, SEEK_END);
+            $hash = unpack("H64hash256", fread($input_temp, 32));
+            fclose($input_temp);
+
+            $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $hash["hash256"])), 62);
+            $file_path = $this->GetAbsoluteFilePath($id);
+            if(!file_exists($file_path)){
+                rename($temp_name, $file_path);
+                return $id;
+            }
+            return null;
         }
 
         public function GetFileSize($id) : int {

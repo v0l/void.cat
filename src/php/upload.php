@@ -66,9 +66,14 @@
                         $id = $this->SaveUpload($bf);
 
                         //sync to other servers 
-                        $rsp->sync = $this->SyncFileUpload($id);
-                        $rsp->status = 200;
-                        $rsp->id = $id;
+                        if($id == null) {
+                            $rsp->status = 4;
+                            $rsp->msg = "Invalid VBF or file already exists";
+                        } else {
+                            $rsp->sync = $this->SyncFileUpload($id);
+                            $rsp->status = 200;
+                            $rsp->id = $id;
+                        }
                     } else {
                         $rsp->status = 2;
                         $rsp->msg = "Invalid file header";
@@ -96,13 +101,15 @@
             return array();
         }
 
-        function SaveUpload($bf) : string {
-            $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $bf->Hash)), 62);
-
+        function SaveUpload($bf) : ?string {
             $fs = new FileStore(Config::$Instance->upload_folder);
-            $fs->StoreFile("php://input", $id);
-
-            return $id;
+            switch($bf->Version) {
+                case 1:
+                    return $fs->StoreV1File($bf, "php://input");
+                case 2:
+                    return $fs->StoreV2File($bf, "php://input");
+            }
+            return null;
         }
 
         function SaveLegacyUpload() : ?string {
@@ -111,7 +118,7 @@
                 $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $hash)), 62);
 
                 $fs = new FileStore(Config::$Instance->upload_folder);
-                $fs->StoreFile("php://input", $id);
+                $fs->StoreFile(fopen("php://input", "rb"), $id);
 
                 $info = new FileInfo();
                 $info->FileId = $id;

@@ -6,16 +6,32 @@
         
         public static function LoadHeader($path) : ?BlobFile {
             $input = fopen($path, "rb");
-            $header = fread($input, 37); //1 version byte + 32 byte hash (64 hex digits) + 4 byte timestamp
-            fclose($input);
+            $version = ord(fread($input, 1));
+            error_log($version);
 
-            $header_data = unpack("C1version/H64hash256/Vuploaded", $header);
-            if($header_data["version"] == 1){
-                $bf = new BlobFile();
-                $bf->Version = $header_data["version"];
+            $bf = new BlobFile();
+            if($version == 1) {
+                $header = fread($input, 36); //+32 byte hash (64 hex digits) + 4 byte timestamp
+                fclose($input);
+                $header_data = unpack("H64hash256/Vuploaded", $header);
+
+                $bf->Version = 1;
                 $bf->Hash = $header_data["hash256"];
                 $bf->Uploaded = $header_data["uploaded"];
                 return $bf;
+            } elseif($version == 2) {
+                $header = fread($input, 8); //+4 magic bytes + 4 byte timestamp
+                $header_data = unpack("H8magic/Vuploaded", $header);
+                fclose($input);
+
+                error_log("Magic is: " . $header_data["magic"]);
+                if($header_data["magic"] == "564f4944") { //VOID as hex (UTF-8)
+                    $bf->Version = 2;
+                    $bf->Uploaded = $header_data["uploaded"];
+                    return $bf;
+                }
+            } else {
+                fclose($input);
             }
 
             return null;

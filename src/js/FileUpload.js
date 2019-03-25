@@ -245,7 +245,7 @@ const FileUpload = function (file, host) {
     this.UploadData = async function (fileData) {
         this.uploadStats.lastProgress = new Date().getTime();
         this.HandleProgress('state-upload-start');
-        let uploadResult = await XHR("POST", `${window.location.protocol}//${this.host}/upload`, fileData, undefined, function (ev) {
+        let uploadResult = await XHR("POST", `${window.location.protocol}//${this.host}/upload`, fileData, { "Content-Type": "application/octet-stream" }, function (ev) {
             let now = new Date().getTime();
             let dxLoaded = ev.loaded - this.uploadStats.lastLoaded;
             let dxTime = now - this.uploadStats.lastProgress;
