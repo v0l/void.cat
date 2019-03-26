@@ -1,17 +1,19 @@
 #include <ctime>
 
-#include <cryptopp\osrng.h>
-#include <cryptopp\hmac.h>
-#include <cryptopp\sha.h>
-#include <cryptopp\aes.h>
-#include <cryptopp\ccm.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/hmac.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/aes.h>
+#include <cryptopp/ccm.h>
 
 #include <cxxopts.hpp>
 #include <curl/curl.h>
-#include <nlohmann\json.hpp>
+#include <nlohmann/json.hpp>
 
 #define HMAC_DGST CryptoPP::HMAC<CryptoPP::SHA256>
 #define ENC_ALGO CryptoPP::AES
+
+#pragma warning(disable:4996)
 
 const char MAGIC[] = "VOID";
 
@@ -67,14 +69,14 @@ int init_upload_state(upload_state* st) {
 
 static int curl_write(void *ptr, size_t size, size_t nmemb, void *stream) {
 	upload_state* state = (upload_state*)stream;
-	
+
 	std::string json;
 	json.assign((char*)ptr, size * nmemb);
 
 	fprintf(stdout, "Got response for file %s: %s\n", state->filename, json.c_str());
 	nlohmann::json json_parsed = nlohmann::json::parse(json);
 	if (json_parsed["status"].get<int>() == 200) {
-		std::cout << "https://mnl.test/#" << json_parsed["id"].get<std::string>() << ":" << to_hex(state->key, ENC_ALGO::DEFAULT_KEYLENGTH) << ":" << to_hex(state->iv, ENC_ALGO::BLOCKSIZE) << std::endl;
+		std::cout << "https://v3.void.cat/#" << json_parsed["id"].get<std::string>() << ":" << to_hex(state->key, ENC_ALGO::DEFAULT_KEYLENGTH) << ":" << to_hex(state->iv, ENC_ALGO::BLOCKSIZE) << std::endl;
 	}
 	return size * nmemb;
 }
@@ -109,7 +111,7 @@ static int curl_read(void *ptr, size_t size, size_t nmemb, void *stream) {
 		state->headerSent = true;
 		int target_size = (size * nmemb) - 9;
 		int actual_size = target_size - (target_size % ENC_ALGO::BLOCKSIZE);
-			
+
 		uint16_t header_len = header_json.size();
 		unsigned char* enc_buffer = (unsigned char*)malloc(actual_size + ENC_ALGO::BLOCKSIZE);
 		memset(enc_buffer, 0, actual_size);
@@ -148,7 +150,7 @@ static int curl_read(void *ptr, size_t size, size_t nmemb, void *stream) {
 				//Finalize the hmac
 				state->hmac_ctx->Update(enc_buffer, nread);
 				state->hmac_ctx->Final(state->hmac);
-										
+
 				//Add PKCS#7 Padding
 				int padding = (ENC_ALGO::BLOCKSIZE - (nread % ENC_ALGO::BLOCKSIZE));
 				int finalLen = nread + padding;
@@ -193,7 +195,8 @@ int uploadFile(std::string file, bool verbose = false) {
 	if (init_upload_state(ustate) != 0) {
 		return 1;
 	}
-	if (fopen_s(&ustate->file, file.c_str(), "rb") != 0) {
+	ustate->file = fopen(file.c_str(), "rb");
+	if (!ustate->file) {
 		print_sys_error();
 		return 1;
 	}
@@ -206,7 +209,8 @@ int uploadFile(std::string file, bool verbose = false) {
 	std::string filename = file.substr(lpos + 1);
 	ustate->filename = filename.c_str();
 
-	if (fopen_s(&ustate->vbf_dump, file.append(".vbf").c_str(), "wb+") != 0) {
+	ustate->vbf_dump = fopen(file.append(".vbf").c_str(), "wb+");
+	if (!ustate->vbf_dump) {
 		print_sys_error();
 		return 1;
 	}
@@ -220,7 +224,7 @@ int uploadFile(std::string file, bool verbose = false) {
 	curl = curl_easy_init();
 	if (curl) {
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-		curl_easy_setopt(curl, CURLOPT_URL, "https://mnl.test/upload");
+		curl_easy_setopt(curl, CURLOPT_URL, "https://v3.void.cat/upload");
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, curl_read);
 		curl_easy_setopt(curl, CURLOPT_READDATA, ustate);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write);
@@ -247,7 +251,7 @@ int main(int argc, char* argv[]) {
 		("v,verbose", "Verbose logs");
 	try {
 		auto args_res = options.parse(argc, argv);
-		
+
 		if (args_res.count("file") > 0) {
 			uploadFile(args_res["file"].as<std::string>(), args_res["verbose"].as<bool>());
 		}
@@ -256,11 +260,11 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	catch (cxxopts::OptionException ex) {
-		fprintf(stderr, ex.what());
+		fprintf(stderr, "%s\n", ex.what());
 		return 1;
 	}
 	catch (std::exception ex) {
-		fprintf(stderr, ex.what());
+		fprintf(stderr, "%s\n", ex.what());
 		return 1;
 	}
 

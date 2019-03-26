@@ -2,6 +2,9 @@
 bin/
 obj/
 *.csproj.user
+*.vcxproj.user
 *.min.*
 dist/
 .vscode/
+Debug/
+Release/
