@@ -59,11 +59,12 @@
                         exit();
                     }
                 } else {
-                    $bf = BlobFile::LoadHeader("php://input");
+                    $read_from = "php://input";
+                    $bf = BlobFile::LoadHeader($read_from);
 
                     if($bf != null){
                         //save upload
-                        $id = $this->SaveUpload($bf);
+                        $id = $this->SaveUpload($bf, $read_from);
 
                         //sync to other servers 
                         if($id == null) {
@@ -101,13 +102,13 @@
             return array();
         }
 
-        function SaveUpload($bf) : ?string {
+        function SaveUpload($bf, $rf) : ?string {
             $fs = new FileStore(Config::$Instance->upload_folder);
             switch($bf->Version) {
                 case 1:
-                    return $fs->StoreV1File($bf, "php://input");
+                    return $fs->StoreV1File($bf, $rf);
                 case 2:
-                    return $fs->StoreV2File($bf, "php://input");
+                    return $fs->StoreV2File($bf, $rf);
             }
             return null;
         }

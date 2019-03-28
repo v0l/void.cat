@@ -26,16 +26,16 @@ const VBF = {
     },
 
     CreateV2: function (hash, encryptedData) {
-        let upload_payload = new Uint8Array(9 + encryptedData.byteLength + hash.byteLength);
+        let header_len = 12;
+        let upload_payload = new Uint8Array(header_len + encryptedData.byteLength + hash.byteLength);
 
         let created = new ArrayBuffer(4);
         new DataView(created).setUint32(0, parseInt(new Date().getTime() / 1000), true);
 
-        upload_payload[0] = 2; //blob version
-        upload_payload.set(new TextEncoder().encode("VOID"), 1);
-        upload_payload.set(new Uint8Array(created), 5);
-        upload_payload.set(new Uint8Array(encryptedData), 9);
-        upload_payload.set(new Uint8Array(hash), 9 + encryptedData.byteLength);
+        upload_payload.set(new Uint8Array([0x02, 0x4f, 0x49, 0x44, 0xf0, 0x9f, 0x90, 0xb1]), 0);
+        upload_payload.set(new Uint8Array(created), 8);
+        upload_payload.set(new Uint8Array(encryptedData), header_len);
+        upload_payload.set(new Uint8Array(hash), header_len + encryptedData.byteLength);
 
         return upload_payload;
     },
@@ -50,7 +50,7 @@ const VBF = {
             case 1:
                 return blob.slice(37);
             case 2:
-                return blob.slice(9, blob.byteLength - 32);
+                return blob.slice(12, blob.byteLength - 32);
         }
     },
 
@@ -72,9 +72,9 @@ const VBF = {
                 magic: null
             };
         } else if (version === 2) {
-            let magic = data.slice(1, 5);
+            let magic = data.slice(1, 8);
             let hmac = data.slice(data.byteLength - 32);
-            let uploaded = new DataView(data.slice(5, 9)).getUint32(0, true);
+            let uploaded = new DataView(data.slice(8, 12)).getUint32(0, true);
 
             return {
                 version,

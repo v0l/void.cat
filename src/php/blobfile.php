@@ -20,12 +20,12 @@
                 $bf->Uploaded = $header_data["uploaded"];
                 return $bf;
             } elseif($version == 2) {
-                $header = fread($input, 8); //+4 magic bytes + 4 byte timestamp
-                $header_data = unpack("H8magic/Vuploaded", $header);
+                $header = fread($input, 11); //+7 magic bytes + 4 byte timestamp
+                $header_data = unpack("H14magic/Vuploaded", $header);
                 fclose($input);
 
                 error_log("Magic is: " . $header_data["magic"]);
-                if($header_data["magic"] == "564f4944") { //VOID as hex (UTF-8)
+                if($header_data["magic"] == "4f4944f09f90b1") { //OID🐱 as hex (UTF-8)
                     $bf->Version = 2;
                     $bf->Uploaded = $header_data["uploaded"];
                     return $bf;

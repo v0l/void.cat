@@ -78,6 +78,7 @@
       <ConformanceMode>true</ConformanceMode>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
+      <PreprocessorDefinitions>TEST_KEYS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +120,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="void_util.cpp" />
+    <ClCompile Include="Upload.cxx" />
+    <ClCompile Include="util.cxx" />
+    <ClCompile Include="VBF.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Upload.h" />
+    <ClInclude Include="Util.h" />
+    <ClInclude Include="VBF.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
