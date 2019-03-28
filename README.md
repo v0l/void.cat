@@ -24,7 +24,7 @@ Void Binary File Format (VBF2)
 | Name | Size | Description |
 |---|---|---|
 | version | 1 byte unsigned number | Binary file format version |
-| magic | 4 bytes | "VOID" encoded to UTF8 string |
+| magic | 7 bytes | "OID🐱" encoded to UTF8 string |
 | uploaded | 4 byte unsigned number | Unix timestamp of when the upload started |
 | payload | EOF - 32 bytes | The encrypted payload |
 | hash | 32 bytes HMAC-SHA265 | The HMAC of the unencrypted file* |
