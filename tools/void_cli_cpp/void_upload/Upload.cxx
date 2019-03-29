@@ -16,10 +16,6 @@ static int init_upload_state(upload_state* st) {
 	st->bi->buf = (unsigned char*)malloc(st->bi->len);
 
 	vbf_init(st->ctx);
-
-#ifdef TEST_KEYS
-	vbf_set_key(st->ctx, (unsigned char*)"\x4c\x09\xec\x97\x66\x3f\x14\xa2\xc2\x73\x2f\xff\xa9\xfb\x76\x05", (unsigned char*)"\x88\xb3\x9b\x85\x95\x43\xef\x71\x26\x1e\x9e\xa9\xc6\xf7\x92\x4c");
-#endif
 	return 1;
 }
 
@@ -41,8 +37,7 @@ static int curl_upload_write(void *ptr, size_t size, size_t nmemb, void *stream)
 	if (json_parsed["status"].get<int>() == 200) {
 		unsigned char* kh = to_hex(state->ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH);
 		unsigned char* ih = to_hex(state->ctx->iv, ENC_ALGO::BLOCKSIZE);
-
-		std::cout << "https://v3.void.cat/#" << json_parsed["id"].get<std::string>() << ":" << kh << ":" << ih << std::endl;
+		fprintf(stdout, "https://%s/#%s:%s:%s\n", state->upload_host, json_parsed["id"].get<std::string>().c_str(), kh, ih);
 		free(kh);
 		free(ih);
 	}
@@ -78,158 +73,58 @@ static int curl_upload_read(void *ptr, size_t size, size_t nmemb, void *stream) 
 
 			VBFPayloadHeader h;
 			h.len = flen;
-			h.mime = "application/octet-stream";
+			h.mime = "application/x-msdownload";
 			h.filename = state->filename;
 
-			state->bi->len -= ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader); //reduce by 1 block to allow space for header
+			state->bo->len = state->bi->len -= ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader); //reduce by 1 block to allow space for header
 			vbf_start_buffer(state->ctx, &h, state->bi, offset);
 
 			fprintf(stdout, "Using header: %s\n", state->bi->buf + sizeof(VBFHeader) + sizeof(uint16_t));
+			unsigned char* kh = to_hex(state->ctx->key, 16);
+			unsigned char* ih = to_hex(state->ctx->iv, 16);
+			fprintf(stdout, "Encrypting %s with key %s and iv %s\n", state->filename, kh, ih);
+			free(kh);
+			free(ih);
 		}
 
 		int nread = fread(state->bi->buf + offset, 1, state->bi->len - offset, state->file);
 		if (nread != state->bi->len - offset) {
-			//end
 			if (start) {
-				state->bi->len = nread - sizeof(VBFHeader);
+				offset -= sizeof(VBFHeader);
 				state->bi->buf += sizeof(VBFHeader);
-				state->bi->buf += sizeof(VBFHeader);
+				state->bo->buf += sizeof(VBFHeader);
 			}
-			else {
-				state->bi->len = nread;
-			}
+			state->bi->len = offset + nread;
 
 			vbf_encrypt_na_end(state->ctx, state->bi, offset, state->bo);
+
+			if (start) {
+				offset += sizeof(VBFHeader);
+				state->bi->buf -= sizeof(VBFHeader);
+				state->bo->buf -= sizeof(VBFHeader);
+				state->bo->len += sizeof(VBFHeader);
+				memcpy(state->bo->buf, state->bi->buf, sizeof(VBFHeader));
+			}
 
 			unsigned char* hh = to_hex(state->bo->buf + (state->bo->len - HMAC_DGST::DIGESTSIZE), HMAC_DGST::DIGESTSIZE);
 			fprintf(stdout, "HMAC is: %s\n", hh);
 			free(hh);
-
-			if (start) {
-				state->bi->buf -= sizeof(VBFHeader);
-				state->bo->buf -= sizeof(VBFHeader);
-				memcpy(state->bo->buf, state->bi->buf, sizeof(VBFHeader));
-			}
 		}
 		else {
 			if (start) {
-				offset -= sizeof(VBFHeader);
-				state->bi->len -= sizeof(VBFHeader);
-				state->bi->buf += sizeof(VBFHeader);
-				state->bo->buf += sizeof(VBFHeader);
-			}
-
-			vbf_encrypt_na(state->ctx, state->bi, offset, state->bo);
-
-			if (start) {
-				state->bi->buf -= sizeof(VBFHeader);
-				state->bo->buf -= sizeof(VBFHeader);
-				state->bi->len += sizeof(VBFHeader);
-				memcpy(state->bo->buf, state->bi->buf, sizeof(VBFHeader));
-			}
-		}
-
-		if (start) {
-			state->bi->len += ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader);
-		}
-		return state->bo->len;
-	}
-
-	/*//if its the start of the file create our header and send that first
-	if (fpos == 0) {
-		fseek(state->file, 0, SEEK_END);
-		long flen = ftell(state->file);
-		rewind(state->file);
-
-		VBFPayloadHeader h;
-		h.filename = state->filename;
-		h.len = flen;
-		h.mime = "application/octet-stream";
-
-		int target_size = (size * nmemb) - sizeof(VBFHeader);
-		int actual_size = sizeof(VBFHeader) + (target_size - (target_size % ENC_ALGO::BLOCKSIZE));
-
-		unsigned int offset;
-		vbf_buf i;
-		i.len = actual_size;
-		i.buf = (unsigned char*)malloc(i.len);
-
-		vbf_buf o;
-		o.buf = (unsigned char*)ptr;
-		o.len = i.len;
-
-		vbf_start_buffer(state->ctx, &h, &i, offset);
-
-		char* json = (char*)i.buf + sizeof(VBFHeader) + sizeof(uint16_t);
-		fprintf(stdout, "Using header: %s\n", json);
-
-		int rlen = fread(i.buf + offset, 1, i.len - offset, state->file);
-		if (rlen != i.len - offset) {
-			//file size is less than first buffer size..
-			//we need to move the pointer for this buffer forward to avoid encrypting the header
-			//same goes for the output buffer, we will copy the header from the input to the output (which is normally done by vbf_encrypt_start)
-			i.len = rlen - sizeof(VBFHeader);
-			i.buf += sizeof(VBFHeader);
-			o.buf += sizeof(VBFHeader);
-
-			vbf_encrypt_na_end(state->ctx, &i, offset, &o);
-
-			i.buf -= sizeof(VBFHeader);
-			o.buf -= sizeof(VBFHeader);
-
-			//copy the header
-			memcpy(i.buf, o.buf, sizeof(VBFHeader));
-			free(i.buf); //after we copy the header this isnt needed anymore
-
-			//adjust the output len
-			int padding = (ENC_ALGO::BLOCKSIZE - (i.len % ENC_ALGO::BLOCKSIZE));
-			o.len = i.len + padding + HMAC_DGST::DIGESTSIZE;
-			return o.len;
-		}
-		else {
-			vbf_encrypt_na_start(state->ctx, &i, offset, &o);
-			free(i.buf);
-		}
-
-		unsigned char* kh = to_hex(state->ctx->key, 16);
-		unsigned char* ih = to_hex(state->ctx->iv, 16);
-		fprintf(stdout, "Encrypting %s with key %s and iv %s\n", state->filename, kh, ih);
-		free(kh);
-		free(ih);
-
-		return o.len;
-	}
-	else {
-		if (feof(state->file)) {
-			return 0;
-		}
-		else {
-			int target_size = size * nmemb;
-			int actual_size = target_size - (target_size % ENC_ALGO::BLOCKSIZE);
-			int bsize = actual_size + ENC_ALGO::BLOCKSIZE + HMAC_DGST::DIGESTSIZE;
-
-			vbf_buf i;
-			i.len = actual_size;
-			i.buf = (unsigned char*)malloc(bsize);
-
-			vbf_buf o;
-			o.buf = (unsigned char*)ptr;
-			o.len = i.len;
-
-			int nread = fread(i.buf, 1, actual_size, state->file);
-			if (nread != actual_size) {
-				i.len = nread;
-				vbf_encrypt_na_end(state->ctx, &i, 0, &o);
-				free(i.buf);
-				return o.len;
+				vbf_encrypt_na_start(state->ctx, state->bi, offset, state->bo);
 			}
 			else {
-				vbf_encrypt(state->ctx, &i, 0, &o);
-				free(i.buf);
-				return o.len;
+				vbf_encrypt_na(state->ctx, state->bi, offset, state->bo);
 			}
 		}
-	}*/
+
+		int rlen = state->bo->len;
+		if (start) {
+			state->bo->len = state->bi->len += ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader);
+		}
+		return rlen;
+	}
 
 	return 0;
 }

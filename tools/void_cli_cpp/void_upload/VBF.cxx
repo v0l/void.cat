@@ -11,8 +11,8 @@ int vbf_init(VBF_CTX* ctx) {
 	CryptoPP::AutoSeededRandomPool prng;
 	prng.GenerateBlock(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH);
 	prng.GenerateBlock(ctx->iv, ENC_ALGO::BLOCKSIZE);
-	ctx->hmac_ctx->SetKey(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH);
 
+	ctx->hmac_ctx->SetKey(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH);
 	if(ctx->mode == VBFMODE::ENCRYPT) {
 		ctx->aes_enc_ctx = new CryptoPP::CBC_Mode<ENC_ALGO>::Encryption();
 		ctx->aes_enc_ctx->SetKeyWithIV(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH, ctx->iv);
@@ -20,13 +20,21 @@ int vbf_init(VBF_CTX* ctx) {
 		ctx->aes_dec_ctx = new CryptoPP::CBC_Mode<ENC_ALGO>::Decryption();
 		ctx->aes_dec_ctx->SetKeyWithIV(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH, ctx->iv);
 	}
+
+#ifdef TEST_KEYS
+	vbf_set_key(ctx, (unsigned char*)"\x4c\x2f\x44\xac\xda\xbd\x0f\xf3\x6a\x74\xa4\xbb\xa0\x2a\x8e\x7d", (unsigned char*)"\xa3\x2b\xc6\x6c\xa2\x63\x70\xf0\x32\xed\xdb\x99\x84\xcf\xc2\x61");
+#endif
 	return 1;
 }
 
 VBFHeader vbf_make_header() {
 	VBFHeader vheader;
 	memcpy(vheader.magic, VOID_MAGIC, MAGIC_LEN);
+#ifdef TEST_KEYS
+	vheader.uploaded = 1553867425;
+#else
 	vheader.uploaded = (uint32_t)std::time(0);
+#endif
 
 	return vheader;
 }
@@ -35,6 +43,7 @@ int vbf_set_key(VBF_CTX* ctx, unsigned char* key, unsigned char* iv) {
 	memcpy(ctx->key, key, ENC_ALGO::DEFAULT_KEYLENGTH);
 	memcpy(ctx->iv, iv, ENC_ALGO::BLOCKSIZE);
 
+	ctx->hmac_ctx->SetKey(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH);
 	if (ctx->mode == VBFMODE::ENCRYPT) {
 		ctx->aes_enc_ctx->SetKeyWithIV(ctx->key, ENC_ALGO::DEFAULT_KEYLENGTH, ctx->iv);
 	}
@@ -78,7 +87,7 @@ int vbf_encrypt_file(VBF_CTX* ctx, const char* filename, FILE* in, FILE* out) {
 
 				VBFPayloadHeader h;
 				h.len = flen;
-				h.mime = "application/x-msdownload";
+				h.mime = "text/plain";
 				h.filename = filename;
 
 				o.len = i.len -= ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader); //reduce by 1 block to allow space for header
@@ -89,27 +98,26 @@ int vbf_encrypt_file(VBF_CTX* ctx, const char* filename, FILE* in, FILE* out) {
 
 			int nread = fread(i.buf + offset, 1, i.len - offset, in);
 			if (nread != i.len - offset) {
-				//end
 				if (start) {
-					i.len = nread - sizeof(VBFHeader);
+					offset -= sizeof(VBFHeader);
 					i.buf += sizeof(VBFHeader);
 					o.buf += sizeof(VBFHeader);
 				}
-				else {
-					i.len = nread;
-				}
+				i.len = offset + nread;
 
 				vbf_encrypt_na_end(ctx, &i, offset, &o);
+
+				if (start) {
+					offset += sizeof(VBFHeader);
+					i.buf -= sizeof(VBFHeader);
+					o.buf -= sizeof(VBFHeader);
+					o.len += sizeof(VBFHeader);
+					memcpy(o.buf, i.buf, sizeof(VBFHeader));
+				}
 
 				unsigned char* hh = to_hex(o.buf + (o.len - HMAC_DGST::DIGESTSIZE), HMAC_DGST::DIGESTSIZE);
 				fprintf(stdout, "HMAC is: %s\n", hh);
 				free(hh);
-
-				if (start) {
-					i.buf -= sizeof(VBFHeader);
-					o.buf -= sizeof(VBFHeader);
-					memcpy(i.buf, o.buf, sizeof(VBFHeader));
-				}
 			}
 			else {
 				if (start) {
@@ -209,8 +217,11 @@ int vbf_encrypt_end(VBF_CTX* ctx, vbf_buf* in, size_t offset, vbf_buf* out) {
 
 int vbf_encrypt_na_end(VBF_CTX* ctx, vbf_buf* in, size_t offset, vbf_buf* out) {
 	//Add PKCS#7 Padding
-	int padding = (ENC_ALGO::BLOCKSIZE - (in->len % ENC_ALGO::BLOCKSIZE));
-	memset(in->buf + in->len, padding, padding);
+	int padding = 0;
+	if (in->len % ENC_ALGO::BLOCKSIZE != 0) {
+		padding = (ENC_ALGO::BLOCKSIZE - (in->len % ENC_ALGO::BLOCKSIZE));
+		memset(in->buf + in->len, padding, padding);
+	}
 
 	ctx->aes_enc_ctx->ProcessData(out->buf, in->buf, in->len + padding);
 	ctx->hmac_ctx->Update(in->buf + offset, in->len - offset);

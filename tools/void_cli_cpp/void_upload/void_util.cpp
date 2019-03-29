@@ -6,10 +6,6 @@
 
 #define CLI_VERSION "void_util v0.1"
 
-#ifdef _MSC_VER 
-#define WIN32
-#endif
-
 struct arg_lit *verb, *help;
 struct arg_file *upload, *pack;
 struct arg_str *download, *host;
@@ -56,11 +52,7 @@ int main(int argc, char* argv[]) {
 		VBF_CTX* ctx = (VBF_CTX*)malloc(sizeof(VBF_CTX));
 		ctx->mode = VBFMODE::ENCRYPT;
 		vbf_init(ctx);
-		
-#ifdef TEST_KEYS
-		vbf_set_key(ctx, (unsigned char*)"\xfa\xd3\xbf\x6e\x95\x19\x18\xa1\x80\x8a\x01\x74\xa6\x73\xc1\xe9", (unsigned char*)"\xfe\x06\x43\x9b\x3b\x62\xfc\xed\x87\x14\x7d\x23\x22\xfd\xe9\xe4");
-#endif
-
+	
 		FILE *ffi, *ffo;
 		ffi = fopen(fn, "rb");
 		ffo = fopen(fo, "wb+");
@@ -69,7 +61,7 @@ int main(int argc, char* argv[]) {
 			fprintf(stderr, "IO error\n");
 		}
 		else {
-#ifdef WIN32 
+#ifdef _MSC_VER 
 			const char* fname = strrchr(fn, '\\') + 1;
 #else
 			const char* fname = strrchr(fn, '//') + 1;
@@ -85,15 +77,6 @@ int main(int argc, char* argv[]) {
 		free(fo);
 		free(ctx);
 	}
-
-	/*if (args_res.count("file") > 0) {
-		std::string hostname = args_res.count("host") > 0 ? args_res["host"].as<std::string>() : "https://void.cat/upload";
-		uploadFile(args_res["file"].as<std::string>(), hostname, args_res["verbose"].as<bool>());
-	}
-	else {
-		fprintf(stderr, "file/url must be specified\n");
-	}*/
-
 exit:
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 	return 0;
