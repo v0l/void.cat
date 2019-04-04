@@ -5,6 +5,8 @@
 #include <argtable2.h>
 
 #define CLI_VERSION "void_util v0.1"
+#define DEFAULT_MIME "application/octet-stream"
+#define DEFAULT_HOST "v3.void.cat"
 
 struct arg_lit *verb, *help;
 struct arg_file *upload, *pack;

@@ -73,7 +73,7 @@ static int curl_upload_read(void *ptr, size_t size, size_t nmemb, void *stream) 
 
 			VBFPayloadHeader h;
 			h.len = flen;
-			h.mime = "application/x-msdownload";
+			h.mime = DEFAULT_MIME;
 			h.filename = state->filename;
 
 			state->bo->len = state->bi->len -= ENC_ALGO::BLOCKSIZE - sizeof(VBFHeader); //reduce by 1 block to allow space for header

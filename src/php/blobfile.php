@@ -7,7 +7,7 @@
         public static function LoadHeader($path) : ?BlobFile {
             $input = fopen($path, "rb");
             $version = ord(fread($input, 1));
-            error_log($version);
+            //error_log($version);
 
             $bf = new BlobFile();
             if($version == 1) {
@@ -24,7 +24,7 @@
                 $header_data = unpack("H14magic/Vuploaded", $header);
                 fclose($input);
 
-                error_log("Magic is: " . $header_data["magic"]);
+                //error_log("Magic is: " . $header_data["magic"]);
                 if($header_data["magic"] == "4f4944f09f90b1") { //OID🐱 as hex (UTF-8)
                     $bf->Version = 2;
                     $bf->Uploaded = $header_data["uploaded"];
