@@ -40,6 +40,7 @@
                 $rsp->msg = "File is too large";
             } else {
                 $auth = new Auth();
+                $tracking = new Tracking();
                 $token = $auth->GetBearerToken();
 
                 if($token !== null) {
@@ -51,6 +52,9 @@
                             $rsp->sync = $this->SyncFileUpload($id);
                             $rsp->status = 200;
                             $rsp->id = $id;
+
+                            //finally set the last view to now
+                            $tracking->TrackView($id);
                         } else {
                             $rsp->status = 3;
                             $rsp->msg = "Legacy upload error";
@@ -75,6 +79,9 @@
                             $rsp->sync = $this->SyncFileUpload($id);
                             $rsp->status = 200;
                             $rsp->id = $id;
+
+                            //finally set the last view to now
+                            $tracking->TrackView($id);
                         }
                     } else {
                         $rsp->status = 2;

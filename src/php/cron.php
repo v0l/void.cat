@@ -26,11 +26,11 @@
                     $lv = $file_header->Uploaded;
                 } else {
                     //cant read file header or upload timestamp is invalid, mark as old
-                    $lv = 0;
+                    $lv = $file_header !== null ? $file_header->Uploaded : 0;
                 }
             }
 
-            if($lv !== false && intval($lv) < $expire) {
+            if($lv !== false && (intval($lv) < $expire) || intval($lv) > time()) {
                 $nmsg = "Deleting expired file: " . $id . " (lastview=" . date("Y-m-d h:i:s", intval($lv)) . ")\n";
                 if(strlen($pmsg) + strlen($nmsg) >= 2000){
                     //send to discord public hook

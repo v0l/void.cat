@@ -2,8 +2,8 @@
     class Sync implements RequestHandler {
         public function __construct(){
             Config::LoadConfig(array('max_upload_size', 'upload_folder'));
-
-            set_time_limit(1200);
+			
+			set_time_limit(1200);
             ini_set('post_max_size', Config::$Instance->max_upload_size);
             ini_set('upload_max_filesize', Config::$Instance->max_upload_size);
             ini_set('memory_limit', Config::$Instance->max_upload_size);
@@ -26,7 +26,7 @@
 
                     //check the ip of the host submitting the file for sync
                     if(in_array(USER_IP, $sync_hosts_ips)) {
-                        $fs->StoreFile("php://input", $id);
+                        $fs->StoreFile(fopen("php://input", "rb"), $id);
                         http_response_code(201);
                     } else {
                         http_response_code(401);

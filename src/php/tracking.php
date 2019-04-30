@@ -1,15 +1,10 @@
 <?php
     class Tracking {
         public function TrackDownload($fs, $id) : void {
-            $redis = StaticRedis::WriteOp();
-            $file_key = REDIS_PREFIX . $id;
-
             $file_size = $fs->GetFileSize($id);
 
             if(!$this->IsRangeRequest()) {
-                $redis->hIncrBy($file_key, 'views', 1);
-                $redis->hSet($file_key, 'lastview', time());
-
+                $this->TrackView($id);
                 Stats::TrackTransfer($id, $file_size);
             } else {
                 $range = $this->GetRequestRange($file_size);
@@ -17,6 +12,13 @@
             }
         }
 
+        public function TrackView($id) : void {
+            $redis = StaticRedis::WriteOp();
+            $file_key = REDIS_PREFIX . $id;
+            $redis->hIncrBy($file_key, 'views', 1);
+            $redis->hSet($file_key, 'lastview', time());
+        }
+        
         function GetRequestRange($len) : ?object {
             if(isset($_SERVER['HTTP_RANGE'])) {
                 $rby = explode('=', $_SERVER['HTTP_RANGE']);
