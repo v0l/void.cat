@@ -10,3 +10,4 @@ Debug/
 Release/
 node_modules/
 package-lock.json
+out/

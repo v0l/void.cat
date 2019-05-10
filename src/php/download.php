@@ -12,7 +12,7 @@
             $id = isset($_REQUEST["id"]) ? $_REQUEST["id"] : null;
 
             if($ref === null && $id !== null) {
-                header("location: /#$id");
+                header("location: /");
             } else if($id !== null) {
                 $this->Fs = new FileStore(Config::$Instance->upload_folder);
                 if($this->Fs->FileExists($id)) {

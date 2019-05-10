@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/v0l/void.cat#readme",
   "dependencies": {
-    "asmcrypto.js": "^2.3.2"
+    "asmcrypto.js": "^2.3.2",
+    "webpack": "^4.31.0"
   },
   "devDependencies": {
     "saas": "^1.0.0",
