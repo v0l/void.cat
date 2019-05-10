@@ -1,10 +1,16 @@
+import * as Const from './Const.js';
+import { Templates } from './App.js';
+import { XHR, Utils, Log, $ } from './Util.js';
+import { VBF } from './VBF.js';
+import { bytes_to_base64 } from 'asmcrypto.js';
+
 /**
  * File upload handler class
  * @class
  * @param {File} file - The file handle to upload
  * @param {string} host - The hostname to upload to
  */
-const FileUpload = function (file, host) {
+function FileUpload(file, host) {
     this.hasCrypto = typeof window.crypto.subtle === "object";
     this.file = file;
     this.host = host;
@@ -47,6 +53,23 @@ const FileUpload = function (file, host) {
     };
 
     /**
+     * Retruns the formatted hash fragment for this upload
+     * @returns {Promise<string>} The id:key:iv concatenated and converted to base64
+     */
+    this.FormatUrl = async (id) => {
+        let id_hex = new Uint8Array(Utils.HexToArray(id));
+        let key = new Uint8Array(await crypto.subtle.exportKey('raw', this.key));
+        let iv = new Uint8Array(this.iv);
+
+        let ret = new Uint8Array(id_hex.byteLength + key.byteLength + iv.byteLength);
+        ret.set(id_hex, 0);
+        ret.set(key, id_hex.byteLength);
+        ret.set(iv, id_hex.byteLength + key.byteLength);
+
+        return bytes_to_base64(ret);
+    };
+
+    /**
      * Loads the file and SHA256 hashes it
      * @return {Promise<ArrayBuffer>}
      */
@@ -64,7 +87,7 @@ const FileUpload = function (file, host) {
 
             fr.onload = function (ev) {
                 this.HandleProgress('state-hash-start');
-                crypto.subtle.sign(HMACKeyDetails, this.hmackey, ev.target.result).then(function (hash) {
+                crypto.subtle.sign(Const.HMACKeyDetails, this.hmackey, ev.target.result).then(function (hash) {
                     this.HandleProgress('state-hash-end');
                     resolve({
                         hash: hash,
@@ -189,7 +212,7 @@ const FileUpload = function (file, host) {
      * Creates a template for the upload to show progress
      */
     this.CreateNode = function () {
-        let nelm = document.importNode(App.Templates.Upload.content, true);
+        let nelm = document.importNode(Templates.Upload.content, true);
 
         nelm.filename = nelm.querySelector('.file-info .file-info-name');
         nelm.filesize = nelm.querySelector('.file-info .file-info-size');
@@ -213,8 +236,8 @@ const FileUpload = function (file, host) {
      * @returns {Promise<CryptoKey>} The new key
      */
     this.GenerateKey = async function () {
-        this.key = await crypto.subtle.generateKey(EncryptionKeyDetails, true, ['encrypt', 'decrypt']);
-        this.hmackey = await crypto.subtle.importKey("raw", await crypto.subtle.exportKey('raw', this.key), HMACKeyDetails, false, ["sign"]);
+        this.key = await crypto.subtle.generateKey(Const.EncryptionKeyDetails, true, ['encrypt', 'decrypt']);
+        this.hmackey = await crypto.subtle.importKey("raw", await crypto.subtle.exportKey('raw', this.key), Const.HMACKeyDetails, false, ["sign"]);
 
         crypto.getRandomValues(this.iv);
 
@@ -230,7 +253,7 @@ const FileUpload = function (file, host) {
     this.EncryptFile = async function (fileData) {
         this.HandleProgress('state-encrypt-start');
         let encryptedData = await crypto.subtle.encrypt({
-            name: EncryptionAlgo,
+            name: Const.EncryptionAlgo,
             iv: this.iv
         }, this.key, fileData);
         this.HandleProgress('state-encrypt-end');
@@ -288,7 +311,7 @@ const FileUpload = function (file, host) {
         Log.I(`${this.file.name} hash is: ${h256}`);
 
         //create blob for encryption
-        let header_data = new TextEncoder().encode(header);
+        let header_data = new TextEncoder('utf-8').encode(header);
         Log.I(`Using header: ${header} (length=${header_data.byteLength})`);
 
         let encryption_payload = new Uint8Array(2 + header_data.byteLength + hash_data.data.byteLength);
@@ -315,7 +338,7 @@ const FileUpload = function (file, host) {
 
             let nl = document.createElement("a");
             nl.target = "_blank";
-            nl.href = `${window.location.protocol}//${window.location.host}/#${uploadResult.id}:${await this.TextKey()}`;
+            nl.href = `${window.location.protocol}//${window.location.host}/#${await this.FormatUrl(uploadResult.id)}`;
             nl.textContent = this.file.name;
             this.domNode.links.appendChild(nl);
         } else {
@@ -324,3 +347,5 @@ const FileUpload = function (file, host) {
         }
     };
 };
+
+export { FileUpload };

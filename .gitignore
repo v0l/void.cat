@@ -8,3 +8,5 @@ dist/
 .vscode/
 Debug/
 Release/
+node_modules/
+package-lock.json

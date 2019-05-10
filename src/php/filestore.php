@@ -46,10 +46,16 @@
             return "$this->DocumentRoot/$this->UploadFolder";
         }
 
+        /**
+         * $id should be the ripemd160(hmac-sha256(file, key)) as hex
+         */
         public function GetRelativeFilePath($id) : string {
-            return "$this->UploadFolder/$id";
+            return $this->UploadFolder . "/" . $id;
         }
 
+        /**
+         * $id should be the ripemd160(hmac-sha256(file, key)) as hex
+         */
         public function GetAbsoluteFilePath($id) : string {
             return $this->GetUploadDirAbsolute() . "/" . $id;
         }
@@ -94,7 +100,7 @@
         }
 
         public function StoreV1File($bf, $file) : ?string {
-            $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $bf->Hash)), 62);
+            $id = hash(Config::$Instance->public_hash_algo, $bf->Hash);
 
             $input = fopen($file, "rb");
             $res = $this->StoreFile($input, $id);
@@ -115,7 +121,7 @@
             $hash = unpack("H64hash256", fread($input_temp, 32));
             fclose($input_temp);
 
-            $id = gmp_strval(gmp_init("0x" . hash(Config::$Instance->public_hash_algo, $hash["hash256"])), 62);
+            $id = hash(Config::$Instance->public_hash_algo, $hash["hash256"]);
             $file_path = $this->GetAbsoluteFilePath($id);
             if(!file_exists($file_path)){
                 rename($temp_name, $file_path);
@@ -124,6 +130,9 @@
             return null;
         }
 
+        /**
+         * $id should be formatted base62 filename
+         */
         public function GetFileSize($id) : int {
             return filesize($this->GetAbsoluteFilePath($id));
         }

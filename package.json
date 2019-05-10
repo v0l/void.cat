@@ -1,0 +1,31 @@
+{
+  "name": "void.cat",
+  "version": "1.2.0-beta1",
+  "description": "Free file hosting website",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v0l/void.cat.git"
+  },
+  "scripts": {
+    "build": "sass src/css/style.scss dist/style.css && webpack-cli --entry ./src/js/index.js --mode production --output ./dist/bundle.js"
+  },
+  "keywords": [
+    "upload",
+    "host",
+    "files",
+    "pomf"
+  ],
+  "author": "v0l",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/v0l/void.cat/issues"
+  },
+  "homepage": "https://github.com/v0l/void.cat#readme",
+  "dependencies": {
+    "asmcrypto.js": "^2.3.2"
+  },
+  "devDependencies": {
+    "saas": "^1.0.0",
+    "webpack-cli": "^3.3.2"
+  }
+}

@@ -1,14 +1,16 @@
+import * as Const from './Const.js';
+
 /**
  * @constant {function} - Helper function for document.querySelector
  * @param {string} selector - The selector to use in the query
  * @returns {HTMLElement} The first selected element
  */
-const $ = (selector) => document.querySelector(selector);
+export const $ = (selector) => document.querySelector(selector);
 
-const Log = {
-    I: (msg) => console.log(`[App_v ${AppVersion}][I]: ${msg}`),
-    W: (msg) => console.warn(`[App_v ${AppVersion}][W]: ${msg}`),
-    E: (msg) => console.error(`[App_v ${AppVersion}][E]: ${msg}`)
+export const Log = {
+    I: (msg) => console.log(`[App_v ${Const.AppVersion}][I]: ${msg}`),
+    W: (msg) => console.warn(`[App_v ${Const.AppVersion}][W]: ${msg}`),
+    E: (msg) => console.error(`[App_v ${Const.AppVersion}][E]: ${msg}`)
 };
 
 /**
@@ -18,7 +20,7 @@ const Log = {
  * @param {[object]} data - Request payload (method must be post)
  * @returns {Promise<XMLHttpRequest>} The completed request
  */
-const JsonXHR = async function (method, url, data) {
+export async function JsonXHR(method, url, data) {
     return await XHR(method, url, JSON.stringify(data), {
         'Content-Type': 'application/json'
     });
@@ -35,7 +37,7 @@ const JsonXHR = async function (method, url, data) {
  * @param {[function]} editrequest - Function that can edit the request before its sent
  * @returns {Promise<XMLHttpRequest>} The completed request
  */
-const XHR = function (method, url, data, headers, uploadprogress, downloadprogress, editrequest) {
+export function XHR(method, url, data, headers, uploadprogress, downloadprogress, editrequest) {
     return new Promise(function (resolve, reject) {
         let x = new XMLHttpRequest();
         x.onreadystatechange = function (ev) {
@@ -76,7 +78,7 @@ const XHR = function (method, url, data, headers, uploadprogress, downloadprogre
 /**
  * Calls api handler
  */
-const Api = {
+export const Api = {
     DoRequest: async function (req) {
         return JSON.parse((await JsonXHR('POST', '/api', req)).response);
     },
@@ -118,7 +120,7 @@ const Api = {
 /**
  * Generic util functions
  */
-const Utils = {
+export const Utils = {
     /**
      * Formats an ArrayBuffer to hex
      * @param {ArrayBuffer} buffer - Input data to convert to hex
@@ -149,22 +151,22 @@ const Utils = {
      */
     FormatBytes: (b, f) => {
         f = typeof f === 'number' ? 2 : f;
-        if (b >= YiB)
-            return (b / YiB).toFixed(f) + ' YiB';
-        if (b >= ZiB)
-            return (b / ZiB).toFixed(f) + ' ZiB';
-        if (b >= EiB)
-            return (b / EiB).toFixed(f) + ' EiB';
-        if (b >= PiB)
-            return (b / PiB).toFixed(f) + ' PiB';
-        if (b >= TiB)
-            return (b / TiB).toFixed(f) + ' TiB';
-        if (b >= GiB)
-            return (b / GiB).toFixed(f) + ' GiB';
-        if (b >= MiB)
-            return (b / MiB).toFixed(f) + ' MiB';
-        if (b >= kiB)
-            return (b / kiB).toFixed(f) + ' KiB';
+        if (b >= Const.YiB)
+            return (b / Const.YiB).toFixed(f) + ' YiB';
+        if (b >= Const.ZiB)
+            return (b / Const.ZiB).toFixed(f) + ' ZiB';
+        if (b >= Const.EiB)
+            return (b / Const.EiB).toFixed(f) + ' EiB';
+        if (b >= Const.PiB)
+            return (b / Const.PiB).toFixed(f) + ' PiB';
+        if (b >= Const.TiB)
+            return (b / Const.TiB).toFixed(f) + ' TiB';
+        if (b >= Const.GiB)
+            return (b / Const.GiB).toFixed(f) + ' GiB';
+        if (b >= Const.MiB)
+            return (b / Const.MiB).toFixed(f) + ' MiB';
+        if (b >= Const.kiB)
+            return (b / Const.kiB).toFixed(f) + ' KiB';
         return b.toFixed(f) + ' B'
     }
 };

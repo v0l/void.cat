@@ -1,3 +1,7 @@
+import * as Const from './Const.js';
+import { VBF } from './VBF.js';
+import { XHR, Utils, Log } from './Util.js';
+
 /**
  * File download and decryption class
  * @class
@@ -5,7 +9,7 @@
  * @param {string} key - The key to use for decryption
  * @param {string} iv - The IV to use for decryption
  */
-const FileDownloader = function (fileinfo, key, iv) {
+function FileDownloader(fileinfo, key, iv) {
     this.fileinfo = fileinfo;
     this.key = key;
     this.iv = iv;
@@ -113,11 +117,11 @@ const FileDownloader = function (fileinfo, key, iv) {
         let iv_raw = Utils.HexToArray(this.iv);
         Log.I(`${this.fileinfo.FileId} decrypting with key ${this.key} and iv ${this.iv}`);
 
-        let key = await crypto.subtle.importKey("raw", key_raw, EncryptionKeyDetails, false, ['decrypt']);
-        let keyhmac = await crypto.subtle.importKey("raw", key_raw, HMACKeyDetails, false, ['verify']);
+        let key = await crypto.subtle.importKey("raw", key_raw, Const.EncryptionKeyDetails, false, ['decrypt']);
+        let keyhmac = await crypto.subtle.importKey("raw", key_raw, Const.HMACKeyDetails, false, ['verify']);
 
         let enc_data = VBF.GetEncryptedPart(header.version, blob);
-        let decrypted_file = await crypto.subtle.decrypt({ name: EncryptionAlgo, iv: iv_raw }, key, enc_data);
+        let decrypted_file = await crypto.subtle.decrypt({ name: Const.EncryptionAlgo, iv: iv_raw }, key, enc_data);
 
         //read the header 
         let json_header_length = new Uint16Array(decrypted_file.slice(0, 2))[0];
@@ -126,7 +130,7 @@ const FileDownloader = function (fileinfo, key, iv) {
 
         //hash the file to verify
         let file_data = decrypted_file.slice(2 + json_header_length);
-        let hmac_verify = await crypto.subtle.verify(HMACKeyDetails, keyhmac, header.hmac, file_data);
+        let hmac_verify = await crypto.subtle.verify(Const.HMACKeyDetails, keyhmac, header.hmac, file_data);
         if (hmac_verify) {
             Log.I(`${this.fileinfo.FileId} HMAC verified!`);
 
@@ -137,3 +141,5 @@ const FileDownloader = function (fileinfo, key, iv) {
         }
     };
 };
+
+export { FileDownloader };

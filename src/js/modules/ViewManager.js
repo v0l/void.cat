@@ -1,16 +1,27 @@
+import { Api, Utils, Log, $ } from './Util.js';
+import { FileDownloader } from './FileDownloader.js';
+import { base64_to_bytes } from 'asmcrypto.js';
+
 /**
 * @constructor Creates an instance of the ViewManager
 */
-const ViewManager = function () {
+export function ViewManager() {
     this.id = null;
     this.key = null;
     this.iv = null;
 
     this.ParseUrlHash = function () {
-        let hs = window.location.hash.substr(1).split(':');
-        this.id = hs[0];
-        this.key = hs[1];
-        this.iv = hs[2];
+        if (window.location.hash.indexOf(':') !== -1) {
+            let hs = window.location.hash.substr(1).split(':');
+            this.id = hs[0];
+            this.key = hs[1];
+            this.iv = hs[2];
+        } else if (window.location.hash.length === 73) { //base64 encoded #id:key:iv
+            let hs = base64_to_bytes(window.location.hash.substr(1));
+            this.id = Utils.ArrayToHex(hs.slice(0, 20));
+            this.key = Utils.ArrayToHex(hs.slice(20, 36));
+            this.iv = Utils.ArrayToHex(hs.slice(36));
+        }
     };
 
     this.LoadView = async function () {
@@ -104,6 +115,4 @@ const ViewManager = function () {
             document.body.appendChild(st);
         }
     };
-
-    this.LoadView();
 };

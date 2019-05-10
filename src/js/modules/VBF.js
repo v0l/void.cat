@@ -85,3 +85,5 @@ const VBF = {
         }
     }
 };
+
+export { VBF };

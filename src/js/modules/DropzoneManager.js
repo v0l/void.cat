@@ -1,11 +1,13 @@
+import { FileUpload } from './FileUpload.js';
+
 /**
 * @constructor Creates an instance of the DropzoneManager
 * @param {HTMLElement} dz - Dropzone element 
 */
-const DropzoneManager = function (dz) {
+function DropzoneManager(dz) {
     this.dz = dz;
 
-    this.SetUI = function() {
+    this.SetUI = function () {
         document.querySelector('#page-upload div:nth-child(1)').removeAttribute("style");
         document.querySelector('#uploads').removeAttribute("style");
     };
@@ -28,3 +30,5 @@ const DropzoneManager = function (dz) {
 
     this.dz.addEventListener('click', this.OpenFileSelect.bind(this), false);
 };
+
+export { DropzoneManager };
