@@ -168,5 +168,11 @@ export const Utils = {
         if (b >= Const.kiB)
             return (b / Const.kiB).toFixed(f) + ' KiB';
         return b.toFixed(f) + ' B'
-    }
+    },
+
+    /**
+     * Gets the text length of x bytes as base64 (including padding)
+     * @param {number} x - N bytes
+     */
+    Base64Len: (x) => Math.ceil(x / 3) * 4
 };

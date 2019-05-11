@@ -16,7 +16,7 @@ export function ViewManager() {
             this.id = hs[0];
             this.key = hs[1];
             this.iv = hs[2];
-        } else if (window.location.hash.length === 73) { //base64 encoded #id:key:iv
+        } else if (window.location.hash.length === Utils.Base64Len(52) + 1) { //base64 encoded #id:key:iv
             let hs = base64_to_bytes(window.location.hash.substr(1));
             this.id = Utils.ArrayToHex(hs.slice(0, 20));
             this.key = Utils.ArrayToHex(hs.slice(20, 36));

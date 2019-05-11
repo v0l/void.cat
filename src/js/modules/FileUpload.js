@@ -2,7 +2,7 @@ import * as Const from './Const.js';
 import { Templates } from './App.js';
 import { XHR, Utils, Log, $ } from './Util.js';
 import { VBF } from './VBF.js';
-import { bytes_to_base64 } from 'asmcrypto.js';
+import { bytes_to_base64, HmacSha256, AES_CBC } from 'asmcrypto.js';
 
 /**
  * File upload handler class
@@ -15,8 +15,7 @@ function FileUpload(file, host) {
     this.file = file;
     this.host = host;
     this.domNode = null;
-    this.key = null;
-    this.hmackey = null;
+    this.key = new Uint8Array(16);
     this.iv = new Uint8Array(16);
 
     /**
@@ -54,6 +53,7 @@ function FileUpload(file, host) {
 
     /**
      * Retruns the formatted hash fragment for this upload
+     * @param {string} id - The id returned from upload result
      * @returns {Promise<string>} The id:key:iv concatenated and converted to base64
      */
     this.FormatUrl = async (id) => {
@@ -65,6 +65,22 @@ function FileUpload(file, host) {
         ret.set(id_hex, 0);
         ret.set(key, id_hex.byteLength);
         ret.set(iv, id_hex.byteLength + key.byteLength);
+
+        return bytes_to_base64(ret);
+    };
+
+    /**
+     * Retruns the formatted hash fragment for this upload
+     * @param {string} id - The id returned from upload result
+     * @returns {Promise<string>} The id:key:iv concatenated and converted to base64
+     */
+    this.FormatRawUrl = async (id) => {
+        let id_hex = new Uint8Array(Utils.HexToArray(id));
+
+        let ret = new Uint8Array(id_hex.byteLength + this.key.byteLength + this.iv.byteLength);
+        ret.set(id_hex, 0);
+        ret.set(this.key, id_hex.byteLength);
+        ret.set(this.iv, id_hex.byteLength + this.key.byteLength);
 
         return bytes_to_base64(ret);
     };
@@ -233,6 +249,18 @@ function FileUpload(file, host) {
 
     /**
      * Generates a new key to use for encrypting the file
+     * @returns {Uint8Array} The new key
+     */
+    this.GenerateRawKey = function () {
+        crypto.getRandomValues(this.key);
+        crypto.getRandomValues(this.iv);
+
+        this.domNode.key.textContent = `Key: ${this.TextKey()}`;
+        return this.key;
+    };
+
+    /**
+     * Generates a new key to use for encrypting the file
      * @returns {Promise<CryptoKey>} The new key
      */
     this.GenerateKey = async function () {
@@ -262,12 +290,31 @@ function FileUpload(file, host) {
 
     /**
      * Uploads Blob data to site
+     * @param {ReadableStream} fileData - The encrypted file data to upload
+     * @returns {Promise<object>} The json result
+     */
+    this.UploadDataStream = async function (fileData) {
+        this.uploadStats.lastProgress = new Date().getTime();
+        this.HandleProgress('state-upload-start');
+
+        let request = new Request(`${window.location.protocol}//${this.host}/upload`, {
+            method: "POST",
+            body: fileData,
+            headers: { "Content-Type": "application/octet-stream" }
+        })
+        let response = await fetch(request);
+        return await response.json();
+    };
+
+    /**
+     * Uploads Blob data to site
      * @param {Blob|BufferSource} fileData - The encrypted file data to upload
      * @returns {Promise<object>} The json result
      */
     this.UploadData = async function (fileData) {
         this.uploadStats.lastProgress = new Date().getTime();
         this.HandleProgress('state-upload-start');
+        
         let uploadResult = await XHR("POST", `${window.location.protocol}//${this.host}/upload`, fileData, { "Content-Type": "application/octet-stream" }, function (ev) {
             let now = new Date().getTime();
             let dxLoaded = ev.loaded - this.uploadStats.lastLoaded;
@@ -339,6 +386,103 @@ function FileUpload(file, host) {
             let nl = document.createElement("a");
             nl.target = "_blank";
             nl.href = `${window.location.protocol}//${window.location.host}/#${await this.FormatUrl(uploadResult.id)}`;
+            nl.textContent = this.file.name;
+            this.domNode.links.appendChild(nl);
+        } else {
+            this.domNode.errors.style.display = "";
+            this.domNode.errors.textContent = uploadResult.msg;
+        }
+    };
+
+    /**
+     * Stream the file upload
+     * @return {Promise}
+     */
+    this.StreamUpload = async function () {
+        Log.I(`Starting upload for ${this.file.name}`);
+        this.CreateNode();
+
+        this.GenerateRawKey();
+        let header = JSON.stringify(this.CreateHeader());
+
+        let vbf_stream = {
+            type: "bytes",
+            autoAllocateChunkSize: 16 * 1024,
+            start(controller) {
+                this.self.HandleProgress('state-load-start');
+                this.offset = 0;
+                this.chunkSize = 16 * 1024;
+                this.aes = new AES_CBC(this.self.key, this.self.iv);
+                this.hmac = new HmacSha256(this.self.key);
+
+                //encode the header to bytes for encryption
+                this.header_data = new TextEncoder('utf-8').encode(this.header);
+                Log.I(`Using header: ${this.header} (length=${this.header_data.byteLength})`);
+            },
+            pull(controller) {
+                let read_now = this.chunkSize;
+                if(this.offset === 0) {
+                    controller.enqueue(VBF.CreateV2Start());
+                    read_now -= this.header_data.byteLength;
+                } else if(this.offset === this.self.file.size) {
+                    //done, send last encrypted part and hmac
+                    controller.enqueue(this.self.aes.AES_Encrypt_finish());
+                    this.self.hmac.finish();
+                    controller.enqueue(this.self.hmac.hash);
+                    controller.close();
+                }
+
+                //read file slice
+                return new Promise((resolve, reject) => {
+                    let file_to_read = this.self.file.slice(this.offset, this.offset + read_now);
+                    let fr = new FileReader();
+                    fr.onload = function(ev) {
+                        let buf = null;
+                        if(ev.target.self.offset === 0){
+                            buf = new Uint8Array(ev.target.self.header_data.byteLength + ev.target.result.byteLength);
+                            buf.set(ev.target.self.header_data, 0);
+                            buf.set(ev.target.result, ev.target.self.header_data.byteLength);
+                        } else {
+                            buf = ev.target.result;
+                        }
+
+                        //hash the buffer
+                        ev.target.self.hmac.process(buf);
+
+                        //encrypt the buffer
+                        controller.enqueue(ev.target.self.aes.AES_Encrypt_process(buf));
+
+                        ev.target.self.offset += buf.byteLength;
+                        resolve();
+                    }
+                    fr.onerror = function(ev) { reject(); }
+
+                    fr.self = this;
+                    fr.readAsArrayBuffer(file_to_read);
+                });
+            },
+            cancel() {
+
+            },
+            self: this,
+            header
+        };
+
+        let file_stream = new ReadableStream(vbf_stream);
+
+        Log.I(`Uploading file ${this.file.name}`);
+        let uploadResult = await this.UploadData(file_stream);
+
+        Log.I(`Got response for file ${this.file.name}: ${JSON.stringify(uploadResult)}`);
+        this.domNode.state.parentNode.style.display = "none";
+        this.domNode.progress.parentNode.style.display = "none";
+
+        if (uploadResult.status === 200) {
+            this.domNode.links.style.display = "";
+
+            let nl = document.createElement("a");
+            nl.target = "_blank";
+            nl.href = `${window.location.protocol}//${window.location.host}/#${await this.FormatRawUrl(uploadResult.id)}`;
             nl.textContent = this.file.name;
             this.domNode.links.appendChild(nl);
         } else {

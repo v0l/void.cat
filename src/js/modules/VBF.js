@@ -1,6 +1,16 @@
+/**
+ * @constant {object} - Creates and decodes VBF file format
+ */
 const VBF = {
     Version: 2,
 
+    /**
+     * Creates a VBF file with the specified encryptedData using the current version
+     * @param {BufferSource} hash
+     * @param {BufferSource} encryptedData 
+     * @param {number} version 
+     * @returns {Uint8Array} VBF formatted file 
+     */
     Create: function (hash, encryptedData, version) {
         version = typeof version === "number" ? version : VBF.Version;
         switch (version) {
@@ -11,6 +21,13 @@ const VBF = {
         }
     },
 
+    /**
+     * Creates a VBF1 file with the specified encryptedData
+     * @param {BufferSource} hash
+     * @param {BufferSource} encryptedData
+     * @param {number} version
+     * @returns {Uint8Array} VBF formatted file
+     */
     CreateV1: function (hash, encryptedData) {
         let upload_payload = new Uint8Array(37 + encryptedData.byteLength);
 
@@ -24,7 +41,14 @@ const VBF = {
 
         return upload_payload;
     },
-
+    
+    /**
+     * Creates a VBF2 file with the specified encryptedData
+     * @param {BufferSource} hash
+     * @param {BufferSource} encryptedData
+     * @param {number} version
+     * @returns {Uint8Array} VBF formatted file
+     */
     CreateV2: function (hash, encryptedData) {
         let header_len = 12;
         let upload_payload = new Uint8Array(header_len + encryptedData.byteLength + hash.byteLength);
@@ -38,6 +62,26 @@ const VBF = {
         upload_payload.set(new Uint8Array(hash), header_len + encryptedData.byteLength);
 
         return upload_payload;
+    },
+
+    /**
+     * Creates the header part of VBF_V2
+     * @param {BufferSource} hash
+     * @param {BufferSource} encryptedData
+     * @param {number} version
+     * @returns {Uint8Array} VBF2 header
+     */
+    CreateV2Start: function () {
+        let header_len = 12;
+        let start = new Uint8Array(header_len);
+
+        let created = new ArrayBuffer(4);
+        new DataView(created).setUint32(0, parseInt(new Date().getTime() / 1000), true);
+
+        start.set(new Uint8Array([0x02, 0x4f, 0x49, 0x44, 0xf0, 0x9f, 0x90, 0xb1]), 0);
+        start.set(new Uint8Array(created), 8);
+
+        return start;
     },
 
     /**
