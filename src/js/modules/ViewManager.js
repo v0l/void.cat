@@ -94,7 +94,7 @@ function ViewManager() {
             if ('serviceWorker' in navigator) {
                 let swreg = await navigator.serviceWorker.getRegistration();
                 if (swreg !== null) {
-                    Log.I(`Service worker detected, using ${swreg.scope} for download..`);
+                    Log.I(`Service worker detected, using it for download..`);
                     let elm_bar_label = document.querySelector('.view-download-progress div:nth-child(1)');
                     let elm_bar = document.querySelector('.view-download-progress div:nth-child(2)');
                     navigator.serviceWorker.addEventListener('message', event => {

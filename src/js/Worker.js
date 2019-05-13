@@ -15,7 +15,18 @@ const VoidFetch = function (event) {
             let fi = await Api.GetFileInfo(hs.id);
             if (fi.ok) {
                 let fd = new FileDownloader(fi.data, hs.key, hs.iv);
-                return await fd.StreamResponse();
+                fd.onprogress = function(x) {
+                    if(client !== null && client !== undefined){
+                        client.postMessage({
+                            type: 'progress',
+                            x
+                        });
+                    }
+                };
+                let resp = await fd.StreamResponse();
+                resp.headers.set("Content-Type", fd.fileHeader.mime != "" ? fd.fileHeader.mime : "application/octet-stream");
+                resp.headers.set("Content-Disposition", `inline; filename="${fd.fileHeader.name}"`);
+                return resp;
             } else {
                 return Response.error();
             }

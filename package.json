@@ -7,7 +7,7 @@
     "url": "git+https://github.com/v0l/void.cat.git"
   },
   "scripts": {
-    "build": "sass src/css/style.scss dist/style.css && webpack-cli --entry ./src/js/index.js --mode production --output ./dist/bundle.js",
+    "build": "sass src/css/style.scss dist/style.css && webpack-cli --entry ./src/js/index.js --mode production --output ./dist/bundle.js && webpack-cli --entry ./src/js/Worker.js --mode production --output ./sw.js",
     "debug": "webpack-cli --entry ./src/js/index.js --mode development --watch --output ./dist/bundle.js",
     "debug-worker": "webpack-cli --entry ./src/js/Worker.js --mode development --watch --output ./sw.js"
   },
