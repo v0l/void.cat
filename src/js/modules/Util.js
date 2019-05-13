@@ -21,9 +21,22 @@ export const Log = {
  * @returns {Promise<XMLHttpRequest>} The completed request
  */
 export async function JsonXHR(method, url, data) {
-    return await XHR(method, url, JSON.stringify(data), {
-        'Content-Type': 'application/json'
-    });
+    if ('fetch' in self) {
+        let resp = await fetch(url, {
+            method: method,
+            body: JSON.stringify(data),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        return {
+            response: await resp.text()
+        };
+    } else {
+        return await XHR(method, url, JSON.stringify(data), {
+            'Content-Type': 'application/json'
+        });
+    }
 };
 
 /**

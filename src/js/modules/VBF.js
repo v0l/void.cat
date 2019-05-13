@@ -41,7 +41,7 @@ const VBF = {
 
         return upload_payload;
     },
-    
+
     /**
      * Creates a VBF2 file with the specified encryptedData
      * @param {BufferSource} hash
@@ -99,6 +99,21 @@ const VBF = {
     },
 
     /**
+     * Returns a position to slice from for the start of encrypted data
+     * @param {number} version 
+     * @param {ArrayBuffer} blob 
+     * @returns {number} The position to slice from
+     */
+    SliceToEncryptedPart: function (version, blob) {
+        switch (version) {
+            case 1:
+                return 37;
+            case 2:
+                return 12;
+        }
+    },
+
+    /**
      * Parses the header of the raw file
      * @param {ArrayBuffer} data - Raw data from the server
      * @returns {*} The header 
@@ -127,6 +142,38 @@ const VBF = {
                 magic
             };
         }
+    },
+
+    /**
+     * Parses a buffer as the start of a VBF file
+     * @param {ArrayBuffer} data - The start of a VBF file
+     * @returns {*} VBF info object
+     */
+    ParseStart: function (data) {
+        let version = new Uint8Array(data)[0];
+        if (version === 1 && data.byteLength >= 37) {
+            let hmac = data.slice(1, 33);
+            let uploaded = new DataView(data.slice(33, 37)).getUint32(0, true);
+
+            return {
+                version,
+                hmac,
+                uploaded,
+                magic: null
+            };
+        } else if (version === 2 && data.byteLength >= 12) {
+            let magic = data.slice(1, 8);
+            let uploaded = new DataView(data.slice(8, 12)).getUint32(0, true);
+
+            return {
+                version,
+                hmac: null,
+                uploaded,
+                magic
+            };
+        }
+
+        return null;
     }
 };
 

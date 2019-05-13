@@ -1,6 +1,7 @@
 import * as Const from './Const.js';
 import { VBF } from './VBF.js';
 import { XHR, Utils, Log } from './Util.js';
+import { bytes_to_base64, HmacSha256, AES_CBC } from 'asmcrypto.js';
 
 /**
  * File download and decryption class
@@ -21,6 +22,14 @@ function FileDownloader(fileinfo, key, iv) {
         lastRate: 0,
         lastLoaded: 0,
         lastProgress: 0
+    };
+
+    /**
+     * Gets the url for downloading
+     * @returns {string} URL to download from 
+     */
+    this.GetLink = function () {
+        return (this.fileinfo.DownloadHost !== null ? `${self.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${this.fileinfo.FileId}`;
     };
 
     /**
@@ -62,13 +71,146 @@ function FileDownloader(fileinfo, key, iv) {
     };
 
     /**
+     * Streams the file download response
+     * @returns {Promise<Response>} The response object to decrypt the download
+     */
+    this.StreamResponse = async function () {
+        let link = this.GetLink();
+        let response = await fetch(link, {
+            mode: 'cors'
+        });
+
+        let void_download = {
+            body: response.body,
+            fileinfo: this.fileinfo,
+            aes: new AES_CBC(new Uint8Array(Utils.HexToArray(this.key)), new Uint8Array(Utils.HexToArray(this.iv)), true),
+            hmac: new HmacSha256(new Uint8Array(Utils.HexToArray(this.key))),
+            buff: new Uint8Array(),
+            pull(controller) {
+                if (this.reader === undefined) {
+                    this.reader = this.body.getReader();
+                }
+                return (async function () {
+                    Log.I(`${this.fileinfo.FileId} Starting..`);
+                    var isStart = true;
+                    var decOffset = 0;
+                    var headerLen = 0;
+                    var fileHeader = null;
+                    var hmacBytes = null;
+                    while (true) {
+                        let { done, value } = await this.reader.read();
+                        if (done) {
+                            if (this.buff.byteLength > 0) {
+                                //pad the remaining data with PKCS#7
+                                var toDecrypt = null;
+                                let padding = 16 - (this.buff.byteLength % 16);
+                                if(padding !== 0){
+                                    let tmpBuff = new Uint8Array(this.buff.byteLength + padding);
+                                    tmpBuff.fill(padding);
+                                    tmpBuff.set(this.buff, 0);
+                                    this.buff = null;
+                                    this.buff = tmpBuff;
+                                }
+                                let decBytes = this.aes.AES_Decrypt_process(this.buff);
+                                this.hmac.process(decBytes);
+                                controller.enqueue(decBytes);
+                                this.buff = null;
+                            }
+                            let last = this.aes.AES_Decrypt_finish();
+                            this.hmac.process(last);
+                            this.hmac.finish();
+                            controller.enqueue(last);
+
+                            //check hmac
+                            let h1 = Utils.ArrayToHex(hmacBytes);
+                            let h2 = Utils.ArrayToHex(this.hmac.result)
+                            if (h1 === h2) {
+                                Log.I(`HMAC verify ok!`);
+                            } else {
+                                Log.E(`HMAC verify failed (${h1} !== ${h2})`);
+                                //controller.cancel();
+                                //return;
+                            }
+                            Log.I(`${this.fileinfo.FileId} Download complete!`);
+                            controller.close();
+                            return;
+                        }
+
+                        var sliceStart = 0;
+                        var sliceEnd = value.byteLength;
+
+                        //!Slice this only once!!
+                        var toDecrypt = value;
+                        if (isStart) {
+                            let header = VBF.ParseStart(value.buffer);
+                            if (header !== null) {
+                                Log.I(`${this.fileinfo.FileId} blob header version is ${header.version} uploaded on ${header.uploaded} (Magic: ${Utils.ArrayToHex(header.magic)})`);
+                                sliceStart = VBF.SliceToEncryptedPart(header.version, value);
+                            } else {
+                                throw "Invalid VBF header";
+                            }
+                        } else if (fileHeader != null && decOffset + toDecrypt.byteLength + headerLen + 2 >= fileHeader.len) {
+                            sliceEnd -= 32; //hash is on the end (un-encrypted)
+                            hmacBytes = toDecrypt.slice(sliceEnd);
+                        }
+
+                        const GetAdjustedLen = function () {
+                            return sliceEnd - sliceStart;
+                        };
+
+                        //decrypt
+                        //append last remaining buffer if any
+                        if (this.buff.byteLength > 0) {
+                            let tmpd = new Uint8Array(this.buff.byteLength + GetAdjustedLen());
+                            tmpd.set(this.buff, 0);
+                            tmpd.set(toDecrypt.slice(sliceStart, sliceEnd), this.buff.byteLength);
+                            sliceEnd += this.buff.byteLength;
+                            toDecrypt = tmpd;
+                            this.buff = new Uint8Array();
+                        }
+
+                        let blkRem = GetAdjustedLen() % 16;
+                        if (blkRem !== 0) {
+                            //save any remaining data into our buffer
+                            this.buff = toDecrypt.slice(sliceEnd - blkRem, sliceEnd);
+                            sliceEnd -= blkRem;
+                        }
+
+                        let encBytes = toDecrypt.slice(sliceStart, sliceEnd);
+                        let decBytes = this.aes.AES_Decrypt_process(encBytes);
+                        decOffset += decBytes.byteLength;
+
+                        //read header
+                        if (isStart) {
+                            headerLen = new Uint16Array(decBytes.slice(0, 2))[0];
+                            let header = new TextDecoder('utf-8').decode(decBytes.slice(2, 2 + headerLen));
+                            Log.I(`${this.fileinfo.FileId} got header ${header}`);
+                            fileHeader = JSON.parse(header);
+                            decBytes = decBytes.slice(2 + headerLen);
+                        }
+
+                        //Log.I(`${this.fileinfo.FileId} Decrypting ${toDecrypt.byteLength} bytes, got ${decBytes.byteLength} bytes`);
+                        this.hmac.process(decBytes);
+                        controller.enqueue(decBytes);
+
+                        isStart = false;
+                    }
+                }.bind(this))();
+            }
+        }
+
+        let sr = new ReadableStream(void_download);
+        return new Response(sr);
+    };
+
+    /**
      * Downloads the file
      * @returns {Promise<File>} The loaded and decripted file
      */
     this.DownloadFile = async function () {
-        let link = (this.fileinfo.DownloadHost !== null ? `${window.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${this.fileinfo.FileId}`;
+        let link = this.GetLink();
         Log.I(`Starting download from: ${link}`);
-        if(this.fileinfo.IsLegacyUpload) {
+        if (this.fileinfo.IsLegacyUpload) {
             return {
                 isLegacy: true,
                 name: this.fileinfo.LegacyFilename,

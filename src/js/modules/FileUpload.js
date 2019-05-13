@@ -412,7 +412,7 @@ function FileUpload(file, host) {
                 this.self.HandleProgress('state-load-start');
                 this.offset = 0;
                 this.chunkSize = 16 * 1024;
-                this.aes = new AES_CBC(this.self.key, this.self.iv);
+                this.aes = new AES_CBC(this.self.key, this.self.iv, true);
                 this.hmac = new HmacSha256(this.self.key);
 
                 //encode the header to bytes for encryption

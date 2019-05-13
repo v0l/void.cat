@@ -5,27 +5,45 @@ import { base64_to_bytes } from 'asmcrypto.js';
 /**
 * @constructor Creates an instance of the ViewManager
 */
-export function ViewManager() {
+function ViewManager() {
     this.id = null;
     this.key = null;
     this.iv = null;
 
-    this.ParseUrlHash = function () {
-        if (window.location.hash.indexOf(':') !== -1) {
-            let hs = window.location.hash.substr(1).split(':');
-            this.id = hs[0];
-            this.key = hs[1];
-            this.iv = hs[2];
-        } else if (window.location.hash.length === Utils.Base64Len(52) + 1) { //base64 encoded #id:key:iv
-            let hs = base64_to_bytes(window.location.hash.substr(1));
-            this.id = Utils.ArrayToHex(hs.slice(0, 20));
-            this.key = Utils.ArrayToHex(hs.slice(20, 36));
-            this.iv = Utils.ArrayToHex(hs.slice(36));
+    /**
+     * Parse URL hash fragment and return its components
+     * @param {string} frag - The Url hash fragment excluding the #
+     * @returns {*} - The details decoded from the hash
+     */
+    this.ParseFrag = function (frag) {
+        if (frag.indexOf(':') !== -1) {
+            let hs = frag.split(':');
+            return {
+                id: hs[0],
+                key: hs[1],
+                iv: hs[2]
+            }
+        } else if (frag.length === Utils.Base64Len(52)) { //base64 encoded id:key:iv
+            let hs = base64_to_bytes(frag);
+            return {
+                id: Utils.ArrayToHex(hs.slice(0, 20)),
+                key: Utils.ArrayToHex(hs.slice(20, 36)),
+                iv: Utils.ArrayToHex(hs.slice(36))
+            };
         }
+        return null;
     };
 
+    /**
+     * Loads the view for downloading files
+     */
     this.LoadView = async function () {
-        this.ParseUrlHash();
+        let uh = this.ParseFrag(window.location.hash.substr(1));
+        if (uh !== null) {
+            this.id = uh.id;
+            this.key = uh.key;
+            this.iv = uh.iv;
+        }
 
         let fi = await Api.GetFileInfo(this.id);
 
@@ -37,6 +55,23 @@ export function ViewManager() {
 
             await this.ShowPreview(fi.data);
         }
+    };
+
+    /**
+     * Starts the browser download action
+     * @param {string} url - The url to download
+     * @param {string?} name - The filename to donwload
+     */
+    this.DownloadLink = function(url, name) {
+        var dl_link = document.createElement('a');
+        dl_link.href = url;
+        if (name !== undefined) {
+            dl_link.download = name;
+        }
+        dl_link.style.display = "none";
+        let lnk = document.body.appendChild(dl_link);
+        lnk.click();
+        document.body.removeChild(lnk);
     };
 
     this.ShowPreview = async function (fileinfo) {
@@ -54,7 +89,35 @@ export function ViewManager() {
             nelm.querySelector('.view-key').textContent = this.key;
             nelm.querySelector('.view-iv').textContent = this.iv;
         }
-        nelm.querySelector('.btn-download').addEventListener('click', function () {
+        nelm.querySelector('.btn-download').addEventListener('click', async function () {
+            //detect if the service worker is installed
+            if ('serviceWorker' in navigator) {
+                let swreg = await navigator.serviceWorker.getRegistration();
+                if (swreg !== null) {
+                    Log.I(`Service worker detected, using ${swreg.scope} for download..`);
+                    let elm_bar_label = document.querySelector('.view-download-progress div:nth-child(1)');
+                    let elm_bar = document.querySelector('.view-download-progress div:nth-child(2)');
+                    navigator.serviceWorker.addEventListener('message', event => {
+                        let msg = event.data;
+                        switch(msg.type) {
+                            case "progress": {
+                                elm_bar.style.width = `${100 * msg.value}%`;
+                                elm_bar_label.textContent = `${(100 * msg.value).toFixed(0)}%`;
+                                break;
+                            }
+                            case "info": {
+                                document.querySelector('.view-download-label-speed').textContent = msg.value;
+                                break;
+                            }
+                        }
+                    });
+
+                    let link = (this.fileinfo.DownloadHost !== null ? `${window.location.protocol}//${this.fileinfo.DownloadHost}` : '') + `/${window.location.hash.substr(1)}`;
+                    this.self.DownloadLink(link);
+                    return;
+                }
+            }
+
             let fd = new FileDownloader(this.fileinfo, this.self.key, this.self.iv);
             fd.onprogress = function (x) {
                 this.elm_bar.style.width = `${100 * x}%`;
@@ -88,15 +151,7 @@ export function ViewManager() {
             fd.DownloadFile().then(function (file) {
                 if (file !== null) {
                     var objurl = file.isLegacy !== undefined ? file.url : URL.createObjectURL(file.blob);
-                    var dl_link = document.createElement('a');
-                    dl_link.href = objurl;
-                    if (file.isLegacy === undefined) {
-                        dl_link.download = file.name;
-                    }
-                    dl_link.style.display = "none";
-                    let lnk = document.body.appendChild(dl_link);
-                    lnk.click();
-                    document.body.removeChild(lnk);
+                    DownloadLink(objurl, file.isLegacy === undefined ? file.name : undefined);
                 }
             }).catch(function (err) {
                 alert(err);
@@ -116,3 +171,5 @@ export function ViewManager() {
         }
     };
 };
+
+export { ViewManager };

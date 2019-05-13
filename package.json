@@ -1,6 +1,6 @@
 {
   "name": "void.cat",
-  "version": "1.2.0-beta1",
+  "version": "3.2.0-beta1",
   "description": "Free file hosting website",
   "repository": {
     "type": "git",
@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "sass src/css/style.scss dist/style.css && webpack-cli --entry ./src/js/index.js --mode production --output ./dist/bundle.js",
-    "debug": "webpack-cli --entry ./src/js/index.js --mode development --watch --output ./dist/bundle.js"
+    "debug": "webpack-cli --entry ./src/js/index.js --mode development --watch --output ./dist/bundle.js",
+    "debug-worker": "webpack-cli --entry ./src/js/Worker.js --mode development --watch --output ./sw.js"
   },
   "keywords": [
     "upload",
