@@ -29,6 +29,9 @@
                     return $con && $mcon;
                 }
             }
+            if(REDIS_DB !== 0 && $con){
+                self::$Instance->select(REDIS_DB);
+            }
             return $con;
         }
     }

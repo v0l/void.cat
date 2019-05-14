@@ -1,5 +1,6 @@
 <?php
     define('REDIS_CONFIG', 'redis-host');
+    define('REDIS_DB', 0);
     define('REDIS_PREFIX', 'vc:');
     define('USER_IP', isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : "127.0.0.1"));
 

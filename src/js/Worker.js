@@ -4,8 +4,10 @@ import { FileDownloader } from './modules/FileDownloader.js';
 
 const VoidFetch = function (event) {
     let vm = new ViewManager();
+    let url = new URL(event.request.url);
+    let path = url.pathname;
 
-    let hs = vm.ParseFrag(new URL(event.request.url).pathname.substr(1));
+    let hs = vm.ParseFrag(path.substr(1));
     if (hs !== null) {
         Log.I(`Worker taking request: ${hs.id}`);
 
@@ -15,8 +17,8 @@ const VoidFetch = function (event) {
             let fi = await Api.GetFileInfo(hs.id);
             if (fi.ok) {
                 let fd = new FileDownloader(fi.data, hs.key, hs.iv);
-                fd.onprogress = function(x) {
-                    if(client !== null && client !== undefined){
+                fd.onprogress = function (x) {
+                    if (client !== null && client !== undefined) {
                         client.postMessage({
                             type: 'progress',
                             x

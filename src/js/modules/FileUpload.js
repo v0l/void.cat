@@ -255,7 +255,7 @@ function FileUpload(file, host) {
         crypto.getRandomValues(this.key);
         crypto.getRandomValues(this.iv);
 
-        this.domNode.key.textContent = `Key: ${this.TextKey()}`;
+        this.domNode.key.textContent = `Key: ${Utils.ArrayToHex(this.key)}`;
         return this.key;
     };
 
@@ -314,7 +314,7 @@ function FileUpload(file, host) {
     this.UploadData = async function (fileData) {
         this.uploadStats.lastProgress = new Date().getTime();
         this.HandleProgress('state-upload-start');
-        
+
         let uploadResult = await XHR("POST", `${window.location.protocol}//${this.host}/upload`, fileData, { "Content-Type": "application/octet-stream" }, function (ev) {
             let now = new Date().getTime();
             let dxLoaded = ev.loaded - this.uploadStats.lastLoaded;
@@ -406,12 +406,12 @@ function FileUpload(file, host) {
         let header = JSON.stringify(this.CreateHeader());
 
         let vbf_stream = {
-            type: "bytes",
-            autoAllocateChunkSize: 16 * 1024,
+            self: this,
+            header,
             start(controller) {
                 this.self.HandleProgress('state-load-start');
                 this.offset = 0;
-                this.chunkSize = 16 * 1024;
+                this.chunkSize = 32 * 1024;
                 this.aes = new AES_CBC(this.self.key, this.self.iv, true);
                 this.hmac = new HmacSha256(this.self.key);
 
@@ -420,52 +420,62 @@ function FileUpload(file, host) {
                 Log.I(`Using header: ${this.header} (length=${this.header_data.byteLength})`);
             },
             pull(controller) {
-                let read_now = this.chunkSize;
-                if(this.offset === 0) {
-                    controller.enqueue(VBF.CreateV2Start());
-                    read_now -= this.header_data.byteLength;
-                } else if(this.offset === this.self.file.size) {
-                    //done, send last encrypted part and hmac
-                    controller.enqueue(this.self.aes.AES_Encrypt_finish());
-                    this.self.hmac.finish();
-                    controller.enqueue(this.self.hmac.hash);
-                    controller.close();
-                }
+                return (async function () {
+                    debugger;
+                    while (true) {
+                        let read_now = this.chunkSize;
+                        if (this.offset === 0) {
+                            controller.enqueue(VBF.CreateV2Start());
+                            read_now -= this.header_data.byteLength;
+                        }
 
-                //read file slice
-                return new Promise((resolve, reject) => {
-                    let file_to_read = this.self.file.slice(this.offset, this.offset + read_now);
-                    let fr = new FileReader();
-                    fr.onload = function(ev) {
-                        let buf = null;
-                        if(ev.target.self.offset === 0){
-                            buf = new Uint8Array(ev.target.self.header_data.byteLength + ev.target.result.byteLength);
-                            buf.set(ev.target.self.header_data, 0);
-                            buf.set(ev.target.result, ev.target.self.header_data.byteLength);
+                        let file_to_read = this.self.file.slice(this.offset, this.offset + read_now);
+                        let data = await new Promise(function (resolve, reject) {
+                            let fr = new FileReader();
+                            fr.onload = function (ev) {
+                                resolve(ev.target.result);
+                            }
+                            fr.onerror = function (ev) { reject(); }
+                            fr.readAsArrayBuffer(file_to_read);
+                        });
+
+                        //check is eof
+                        if (this.offset + data.byteLength === this.self.file.size) {
+                            //done, send last encrypted part and hmac
+                            this.hmac.process(data);
+                            controller.enqueue(this.aes.AES_Encrypt_process(data));
+
+                            controller.enqueue(this.aes.AES_Encrypt_finish());
+                            this.hmac.finish();
+                            controller.enqueue(this.hmac.result);
+                            controller.close();
+                            return;
+                        }
+
+                        var buf = null;
+                        if (this.offset === 0) {
+                            buf = new Uint8Array(2 + this.header_data.byteLength + data.byteLength);
+                            let hlen = new Uint16Array(1);
+                            hlen[0] = this.header_data.byteLength;
+
+                            buf.set(hlen, 0)
+                            buf.set(this.header_data, hlen.byteLength);
+                            buf.set(data, hlen.byteLength + this.header_data.byteLength);
                         } else {
-                            buf = ev.target.result;
+                            buf = new Uint8Array(data);
                         }
 
                         //hash the buffer
-                        ev.target.self.hmac.process(buf);
+                        this.hmac.process(buf);
 
                         //encrypt the buffer
-                        controller.enqueue(ev.target.self.aes.AES_Encrypt_process(buf));
+                        controller.enqueue(this.aes.AES_Encrypt_process(buf));
 
-                        ev.target.self.offset += buf.byteLength;
-                        resolve();
+                        //add offset bytes to fileread
+                        this.offset += data.byteLength;
                     }
-                    fr.onerror = function(ev) { reject(); }
-
-                    fr.self = this;
-                    fr.readAsArrayBuffer(file_to_read);
-                });
-            },
-            cancel() {
-
-            },
-            self: this,
-            header
+                }.bind(this))();
+            }
         };
 
         let file_stream = new ReadableStream(vbf_stream);
