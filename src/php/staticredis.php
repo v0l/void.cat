@@ -21,6 +21,7 @@
             self::$Instance = new Redis();
             $con = self::$Instance->pconnect(REDIS_CONFIG);
             if($con){
+                self::$Instance->select(REDIS_DB);
                 $rep = self::$Instance->info();
                 if($rep["role"] == "slave"){
                     self::$IsConnectedToSlave = true;
@@ -28,9 +29,6 @@
                     $mcon = self::$MasterInstance->pconnect($rep["master_host"], $rep["master_port"]);
                     return $con && $mcon;
                 }
-            }
-            if(REDIS_DB !== 0 && $con){
-                self::$Instance->select(REDIS_DB);
             }
             return $con;
         }

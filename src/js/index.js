@@ -1,4 +1,5 @@
 import * as App from './modules/App.js';
+import '../scss/style.scss';
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').then(function (registration) {

@@ -26,8 +26,9 @@ const VoidFetch = function (event) {
                     }
                 };
                 let resp = await fd.StreamResponse();
-                resp.headers.set("Content-Type", fd.fileHeader.mime != "" ? fd.fileHeader.mime : "application/octet-stream");
-                resp.headers.set("Content-Disposition", `inline; filename="${fd.fileHeader.name}"`);
+                let head = await fd.waitForHeader;
+                resp.headers.set("Content-Type", head.mime != "" ? head.mime : "application/octet-stream");
+                resp.headers.set("Content-Disposition", `inline; filename="${head.name}"`);
                 return resp;
             } else {
                 return Response.error();

@@ -1,7 +1,7 @@
 import * as Const from './Const.js';
 import { VBF } from './VBF.js';
 import { XHR, Utils, Log } from './Util.js';
-import { bytes_to_base64, HmacSha256, AES_CBC } from 'asmcrypto.js';
+import { HmacSha256, AES_CBC } from 'asmcrypto.js';
 
 /**
  * File download and decryption class
@@ -80,8 +80,14 @@ function FileDownloader(fileinfo, key, iv) {
             mode: 'cors'
         });
 
+        //hack
+        var completeHeader;
+        this.waitForHeader = new Promise((resolve, reject) => {
+            completeHeader = resolve;
+        });
+
         let void_download = {
-            SetFileHeader: function (fh) { this.fileHeader = fh; }.bind(this),
+            SetFileHeader: function (fh) { completeHeader(fh); }.bind({ completeHeader }),
             HandleProgress: this.HandleProgress.bind(this),
             downloadStats: this.downloadStats,
             isStart: true,
