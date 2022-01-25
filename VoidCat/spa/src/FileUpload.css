@@ -1,0 +1,20 @@
+.upload {
+    display: flex;
+    padding: 10px;
+    border: 1px solid grey;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.upload .info {
+    flex: 2;
+}
+
+.upload .status {
+    flex: 1;
+}
+
+.upload dt {
+    font-size: 12px;
+    color: grey;
+}

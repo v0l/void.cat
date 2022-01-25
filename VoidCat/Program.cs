@@ -5,8 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var services = builder.Services;
 services.AddRouting();
-services.AddControllers();
-services.AddScoped<IFileIngressFactory, LocalDiskFileIngressFactory>();
+services.AddControllers().AddNewtonsoftJson();
+services.AddScoped<IFileStorage, LocalDiskFileIngressFactory>();
 services.AddScoped<IStatsCollector, InMemoryStatsCollector>();
 
 var configuration = builder.Configuration;

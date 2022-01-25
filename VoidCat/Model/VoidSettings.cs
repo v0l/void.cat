@@ -2,6 +2,6 @@
 {
     public class VoidSettings
     {
-        public string FilePath { get; init; } = "./data";
+        public string DataDirectory { get; init; } = "./data";
     }
 }
