@@ -12,3 +12,5 @@ node_modules/
 package-lock.json
 out/
 sw.js
+.DS_Store
+.idea/

@@ -1,10 +1,13 @@
-using VoidCat;
+using VoidCat.Model;
+using VoidCat.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var services = builder.Services;
 services.AddRouting();
 services.AddControllers();
+services.AddScoped<IFileIngressFactory, LocalDiskFileIngressFactory>();
+services.AddScoped<IStatsCollector, InMemoryStatsCollector>();
 
 var configuration = builder.Configuration;
 var voidSettings = configuration.GetSection("Settings").Get<VoidSettings>();
