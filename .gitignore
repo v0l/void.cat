@@ -1,6 +1,7 @@
 .vs/
 bin/
 obj/
+data/
 *.csproj.user
 *.vcxproj.user
 *.min.*

@@ -16,7 +16,7 @@ export function FilePreview(props) {
     }, []);
     
     return (
-      <div>
+      <div className={"preview"}>
           {info ? <a href={`/d/${info.id}`}>{info.metadata?.name ?? info.id}</a> : "Not Found"}
       </div>  
     );
