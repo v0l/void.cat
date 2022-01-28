@@ -8,11 +8,8 @@ var configuration = builder.Configuration;
 var voidSettings = configuration.GetSection("Settings").Get<VoidSettings>();
 services.AddSingleton(voidSettings);
 
-// config logging
-if (voidSettings?.SeqHost != default)
-{
-    builder.Logging.AddSeq(voidSettings.SeqHost.ToString(), voidSettings.SeqApiKey);
-}
+var seqSettings = configuration.GetSection("Seq");
+builder.Logging.AddSeq(seqSettings);
 
 services.AddRouting();
 services.AddControllers().AddNewtonsoftJson();
