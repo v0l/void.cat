@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services;
@@ -17,6 +19,7 @@ namespace VoidCat.Controllers
 
         [HttpPost]
         [DisableRequestSizeLimit]
+        [DisableFormValueModelBinding]
         public Task<InternalVoidFile> UploadFile()
         {
             return Request.HasFormContentType ?
@@ -47,5 +50,21 @@ namespace VoidCat.Controllers
         }
 
         public record UpdateFileInfoRequest([JsonConverter(typeof(Base58GuidConverter))] Guid EditSecret, VoidFileMeta Metadata);
+    }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    public class DisableFormValueModelBindingAttribute : Attribute, IResourceFilter
+    {
+        public void OnResourceExecuting(ResourceExecutingContext context)
+        {
+            var factories = context.ValueProviderFactories;
+            factories.RemoveType<FormValueProviderFactory>();
+            factories.RemoveType<FormFileValueProviderFactory>();
+            factories.RemoveType<JQueryFormValueProviderFactory>();
+        }
+
+        public void OnResourceExecuted(ResourceExecutedContext context)
+        {
+        }
     }
 }
