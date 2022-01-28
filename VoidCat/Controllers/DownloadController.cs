@@ -14,6 +14,7 @@ public class DownloadController : Controller
         _storage = storage;
     }
 
+    [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 86400)]
     [HttpGet]
     [Route("{id}")]
     public async Task DownloadFile([FromRoute] string id)

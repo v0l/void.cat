@@ -1,3 +1,16 @@
 .preview {
     text-align: center;
+    margin-top: 2vh;
 }
+
+    .preview > a {
+        margin-bottom: 1vh;
+    }
+
+    .preview img {
+        width: 100%;
+    }
+
+    .preview video {
+        width: 100%;
+    }

@@ -1,7 +1,7 @@
 import {Fragment, useState} from "react";
 import {FileUpload} from "./FileUpload";
 
-export function Uploader(props) {
+export function Dropzone(props) {
     let [files, setFiles] = useState([]);
 
     function selectFiles(e) {
@@ -34,9 +34,5 @@ export function Uploader(props) {
         );
     }
 
-    return (
-        <div className="app">
-            {files.length === 0 ? renderDrop() : renderUploads()}
-        </div>
-    );
+    return files.length === 0 ? renderDrop() : renderUploads();
 }

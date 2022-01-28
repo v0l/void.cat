@@ -23,6 +23,28 @@ export function FileUpload(props) {
             setResult(rsp);
         }
     }
+
+    async function updateMetadata(result) {
+        let metaReq = {
+            editSecret: result.editSecret,
+            metadata: {
+                name: props.file.name,
+                mimeType: props.file.type
+            }
+        };
+
+        let req = await fetch(`/upload/${result.id}`, {
+            method: "PATCH",
+            body: JSON.stringify(metaReq),
+            headers: {
+                "content-type": "application/json"
+            }
+        });
+
+        if (req.ok) {
+            // nothing
+        }
+    }
     
     function renderStatus() {
         if(result) {
@@ -43,11 +65,18 @@ export function FileUpload(props) {
             );
         }
     }
+
     useEffect(() => {
         console.log(props.file);
         doUpload();
     }, []);
-    
+
+    useEffect(() => {
+        if (result) {
+            updateMetadata(result);
+        }
+    }, [result]);
+
     return (
         <div className="upload">
             <div className="info">

@@ -17,3 +17,17 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+.btn {
+    display: inline-block;
+    line-height: 1.3;
+    font-size: large;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-radius: 20px;
+    background-color: white;
+    color: black;
+    padding: 10px 30px;
+    user-select: none;
+    cursor: pointer;
+}
