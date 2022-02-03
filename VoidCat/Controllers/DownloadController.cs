@@ -27,6 +27,8 @@ public class DownloadController : Controller
             return;
         }
 
+        Response.Headers.XFrameOptions = "SAMEORIGIN";
+        Response.Headers.ContentDisposition = $"inline; filename=\"{meta?.Metadata?.Name}\"";
         Response.ContentType = meta?.Metadata?.MimeType ?? "application/octet-stream";
         await _storage.Egress(gid, Response.Body, HttpContext.RequestAborted);
     }

@@ -2,18 +2,57 @@ import {useEffect, useState} from "react";
 
 import "./FileUpload.css";
 import {FormatBytes} from "./Util";
+import {RateCalculator} from "./RateCalculator";
 
 export function FileUpload(props) {
     let [speed, setSpeed] = useState(0);
     let [progress, setProgress] = useState(0);
     let [result, setResult] = useState();
+    let calc = new RateCalculator();
     
-    async function doUpload() {
+    function handleProgress(e) {
+        console.log(e);
+        if(e instanceof ProgressEvent) {
+            let newProgress = e.loaded / e.total;
+            
+            calc.ReportLoaded(e.loaded);
+            setSpeed(calc.RateWindow(5));
+            setProgress(newProgress);
+        }
+    }
+    
+    async function doStreamUpload() {
+        let offset = 0;
+        let rs = new ReadableStream({
+            start: (controller) => {
+                
+            },
+            pull: async (controller) => {
+                if(offset > props.file.size) {
+                    controller.cancel();
+                }
+                
+                let requestedSize = props.file.size / controller.desiredSize;
+                console.log(`Reading ${requestedSize} Bytes`);
+                
+                let end = Math.min(offset + requestedSize, props.file.size);
+                let blob = props.file.slice(offset, end, props.file.type);
+                controller.enqueue(await blob.arrayBuffer());
+                offset += blob.size;
+            },
+            cancel: (reason) => {
+                
+            }
+        }, {
+            highWaterMark: 100
+        });
+        
         let req = await fetch("/upload", {
             method: "POST",
-            body: props.file,
+            body: rs,
             headers: {
-                "content-type": "application/octet-stream"
+                "Content-Type": props.file.type,
+                "X-Filename": props.file.name
             }
         });
         
@@ -24,26 +63,23 @@ export function FileUpload(props) {
         }
     }
 
-    async function updateMetadata(result) {
-        let metaReq = {
-            editSecret: result.editSecret,
-            metadata: {
-                name: props.file.name,
-                mimeType: props.file.type
-            }
-        };
-
-        let req = await fetch(`/upload/${result.id}`, {
-            method: "PATCH",
-            body: JSON.stringify(metaReq),
-            headers: {
-                "content-type": "application/json"
-            }
+    async function doXHRUpload() {
+        let xhr = await new Promise((resolve, reject) => {
+            let req = new XMLHttpRequest();
+            req.onreadystatechange = (ev) => {
+                if(req.readyState === XMLHttpRequest.DONE && req.status === 200) {
+                    let rsp = JSON.parse(req.responseText);
+                    resolve(rsp);
+                }
+            };
+            req.upload.onprogress = handleProgress;
+            req.open("POST", "/upload");
+            req.setRequestHeader("Content-Type", props.file.type);
+            req.setRequestHeader("X-Filename", props.file.name);
+            req.send(props.file);
         });
-
-        if (req.ok) {
-            // nothing
-        }
+       
+        setResult(xhr);
     }
     
     function renderStatus() {
@@ -68,14 +104,8 @@ export function FileUpload(props) {
 
     useEffect(() => {
         console.log(props.file);
-        doUpload();
+        doXHRUpload();
     }, []);
-
-    useEffect(() => {
-        if (result) {
-            updateMetadata(result);
-        }
-    }, [result]);
 
     return (
         <div className="upload">

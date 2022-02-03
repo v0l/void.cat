@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 
 import "./FilePreview.css";
+import {TextPreview} from "./TextPreview";
 
 export function FilePreview(props) {
     let [info, setInfo] = useState();
@@ -12,7 +13,7 @@ export function FilePreview(props) {
             setInfo(info);
         }
     }
-
+    
     function renderTypes() {
         let link = `/d/${info.id}`;
         if (info.metadata) {
@@ -27,6 +28,12 @@ export function FilePreview(props) {
                 case "video/x-matroska":
                 case "video/webm": {
                     return <video src={link} controls />;
+                }
+                case "text/plain":{
+                    return <TextPreview link={link}></TextPreview>;
+                }
+                case "application/pdf": {
+                    return <object data={link}/>;
                 }
             }
         }

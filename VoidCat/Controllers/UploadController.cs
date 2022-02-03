@@ -22,8 +22,14 @@ namespace VoidCat.Controllers
         [DisableFormValueModelBinding]
         public Task<InternalVoidFile> UploadFile()
         {
+            var meta = new VoidFileMeta()
+            {
+                MimeType = Request.ContentType,
+                Name = Request.Headers
+                    .FirstOrDefault(a => a.Key.Equals("X-Filename", StringComparison.InvariantCultureIgnoreCase)).Value.ToString()
+            };
             return Request.HasFormContentType ?
-                saveFromForm() : _storage.Ingress(Request.Body, HttpContext.RequestAborted);
+                saveFromForm() : _storage.Ingress(Request.Body, meta, HttpContext.RequestAborted);
         }
 
         [HttpGet]

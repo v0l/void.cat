@@ -1,0 +1,6 @@
+.text-preview {
+    border: 1px dashed;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: initial;
+}

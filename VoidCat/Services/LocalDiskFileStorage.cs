@@ -45,7 +45,7 @@ public class LocalDiskFileIngressFactory : IFileStorage
         }
     }
 
-    public async Task<InternalVoidFile> Ingress(Stream inStream, CancellationToken cts)
+    public async Task<InternalVoidFile> Ingress(Stream inStream, VoidFileMeta meta, CancellationToken cts)
     {
         var id = Guid.NewGuid();
         var fPath = MapPath(id);
@@ -65,6 +65,7 @@ public class LocalDiskFileIngressFactory : IFileStorage
         {
             Id = id,
             Size = total,
+            Metadata = meta,
             Uploaded = DateTimeOffset.UtcNow,
             EditSecret = Guid.NewGuid()
         };

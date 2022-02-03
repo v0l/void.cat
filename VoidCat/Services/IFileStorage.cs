@@ -6,7 +6,7 @@ namespace VoidCat.Services
     {
         Task<VoidFile?> Get(Guid id);
         
-        Task<InternalVoidFile> Ingress(Stream inStream, CancellationToken cts);
+        Task<InternalVoidFile> Ingress(Stream inStream, VoidFileMeta meta, CancellationToken cts);
 
         Task Egress(Guid id, Stream outStream, CancellationToken cts);
 
