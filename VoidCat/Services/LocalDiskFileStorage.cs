@@ -112,7 +112,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         using var buffer = MemoryPool<byte>.Shared.Rent();
         foreach (var range in ranges)
         {
-            fileStream.Seek(range.Start ?? range.End ?? 0L, 
+            fileStream.Seek(range.Start ?? range.End ?? 0L,
                 range.Start.HasValue ? SeekOrigin.Begin : SeekOrigin.End);
 
             var readLength = 0;

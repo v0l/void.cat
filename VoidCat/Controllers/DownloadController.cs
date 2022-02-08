@@ -24,7 +24,7 @@ public class DownloadController : Controller
         var gid = id.FromBase58Guid();
         return SetupDownload(gid);
     }
-    
+
     [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 86400)]
     [HttpGet]
     [Route("{id}")]
@@ -43,7 +43,7 @@ public class DownloadController : Controller
                 Ranges = Enumerable.Empty<RangeRequest>()
             };
         }
-        else if(egressReq.Ranges.Count() == 1)
+        else if (egressReq.Ranges.Count() == 1)
         {
             Response.StatusCode = (int)HttpStatusCode.PartialContent;
         }
@@ -51,7 +51,7 @@ public class DownloadController : Controller
         {
             Response.Headers.AcceptRanges = "bytes";
         }
-        
+
         foreach (var range in egressReq.Ranges)
         {
             Response.Headers.Add("content-range", range.ToContentRange());
@@ -72,7 +72,7 @@ public class DownloadController : Controller
             Response.StatusCode = 404;
             return null;
         }
-        
+
         Response.Headers.XFrameOptions = "SAMEORIGIN";
         Response.Headers.ContentDisposition = $"inline; filename=\"{meta?.Metadata?.Name}\"";
         Response.ContentType = meta?.Metadata?.MimeType ?? "application/octet-stream";
