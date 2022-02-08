@@ -7,9 +7,9 @@ namespace VoidCat.Controllers;
 [Route("d")]
 public class DownloadController : Controller
 {
-    private readonly IFileStorage _storage;
+    private readonly IFileStore _storage;
 
-    public DownloadController(IFileStorage storage)
+    public DownloadController(IFileStore storage)
     {
         _storage = storage;
     }

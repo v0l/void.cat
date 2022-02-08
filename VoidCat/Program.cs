@@ -16,7 +16,8 @@ services.AddControllers().AddNewtonsoftJson();
 
 services.AddMemoryCache();
 
-services.AddScoped<IFileStorage, LocalDiskFileIngressFactory>();
+services.AddScoped<IFileMetadataStore, LocalDiskFileMetadataStore>();
+services.AddScoped<IFileStore, LocalDiskFileIngressFactory>();
 services.AddScoped<IStatsCollector, InMemoryStatsCollector>();
 
 var app = builder.Build();

@@ -10,9 +10,9 @@ namespace VoidCat.Controllers
     [Route("upload")]
     public class UploadController : Controller
     {
-        private readonly IFileStorage _storage;
+        private readonly IFileStore _storage;
 
-        public UploadController(IFileStorage storage)
+        public UploadController(IFileStore storage)
         {
             _storage = storage;
         }

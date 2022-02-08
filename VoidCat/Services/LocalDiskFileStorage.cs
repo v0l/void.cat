@@ -1,19 +1,21 @@
 using System.Buffers;
-using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
 
 namespace VoidCat.Services;
 
-public class LocalDiskFileIngressFactory : IFileStorage
+public class LocalDiskFileIngressFactory : IFileStore
 {
     private readonly VoidSettings _settings;
     private readonly IStatsCollector _stats;
+    private readonly IFileMetadataStore _metadataStore;
     
-    public LocalDiskFileIngressFactory(VoidSettings settings, IStatsCollector stats)
+    public LocalDiskFileIngressFactory(VoidSettings settings, IStatsCollector stats, 
+        IFileMetadataStore metadataStore)
     {
         _settings = settings;
         _stats = stats;
+        _metadataStore = metadataStore;
 
         if (!Directory.Exists(_settings.DataDirectory))
         {
@@ -23,11 +25,7 @@ public class LocalDiskFileIngressFactory : IFileStorage
 
     public async Task<VoidFile?> Get(Guid id)
     {
-        var path = MapMeta(id);
-        if (!File.Exists(path)) throw new VoidFileNotFoundException(id);
-        
-        var json = await File.ReadAllTextAsync(path);
-        return JsonConvert.DeserializeObject<VoidFile>(json);
+        return await _metadataStore.Get(id);
     }
 
     public async Task Egress(Guid id, Stream outStream, CancellationToken cts)
@@ -69,36 +67,31 @@ public class LocalDiskFileIngressFactory : IFileStorage
             Uploaded = DateTimeOffset.UtcNow,
             EditSecret = Guid.NewGuid()
         };
-        
-        var mPath = MapMeta(id);
-        var json = JsonConvert.SerializeObject(fm);
-        await File.WriteAllTextAsync(mPath, json, cts);
+
+        await _metadataStore.Set(fm);
         return fm;
     }
 
-    public async Task UpdateInfo(VoidFile patch, Guid editSecret)
+    public Task UpdateInfo(VoidFile patch, Guid editSecret)
     {
-        var path = MapMeta(patch.Id);
-        if (!File.Exists(path)) throw new VoidFileNotFoundException(patch.Id);
-
-        var oldJson = await File.ReadAllTextAsync(path);
-        var oldObj = JsonConvert.DeserializeObject<InternalVoidFile>(oldJson);
-
-        if (oldObj?.EditSecret != editSecret)
+        return _metadataStore.Update(patch, editSecret);
+    }
+    
+    public async IAsyncEnumerable<VoidFile> ListFiles()
+    {
+        foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
         {
-            throw new VoidNotAllowedException("Edit secret incorrect");
-        }
+            var filename = Path.GetFileNameWithoutExtension(fe);
+            if (!Guid.TryParse(filename, out var id)) continue;
 
-        // only patch metadata
-        oldObj.Metadata = patch.Metadata;
-        
-        var json = JsonConvert.SerializeObject(oldObj);
-        await File.WriteAllTextAsync(path, json);
+            var meta = await _metadataStore.Get(id);
+            if (meta != default)
+            {
+                yield return meta;
+            }
+        }
     }
 
     private string MapPath(Guid id) =>
         Path.Join(_settings.DataDirectory, id.ToString());
-
-    private string MapMeta(Guid id) =>
-        Path.ChangeExtension(MapPath(id), ".json");
 }

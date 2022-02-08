@@ -2,7 +2,7 @@
 
 namespace VoidCat.Services
 {
-    public interface IFileStorage
+    public interface IFileStore
     {
         Task<VoidFile?> Get(Guid id);
         
@@ -11,5 +11,7 @@ namespace VoidCat.Services
         Task Egress(Guid id, Stream outStream, CancellationToken cts);
 
         Task UpdateInfo(VoidFile patch, Guid editSecret);
+
+        IAsyncEnumerable<VoidFile> ListFiles();
     }
 }
