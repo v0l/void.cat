@@ -9,8 +9,8 @@ public class LocalDiskFileIngressFactory : IFileStore
     private readonly VoidSettings _settings;
     private readonly IStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
-    
-    public LocalDiskFileIngressFactory(VoidSettings settings, IStatsCollector stats, 
+
+    public LocalDiskFileIngressFactory(VoidSettings settings, IStatsCollector stats,
         IFileMetadataStore metadataStore)
     {
         _settings = settings;
@@ -28,18 +28,19 @@ public class LocalDiskFileIngressFactory : IFileStore
         return await _metadataStore.Get(id);
     }
 
-    public async Task Egress(Guid id, Stream outStream, CancellationToken cts)
+    public async Task Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
-        var path = MapPath(id);
-        if (!File.Exists(path)) throw new VoidFileNotFoundException(id);
+        var path = MapPath(request.Id);
+        if (!File.Exists(path)) throw new VoidFileNotFoundException(request.Id);
 
         await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-        using var buffer = MemoryPool<byte>.Shared.Rent();
-        var readLength = 0;
-        while ((readLength = await fs.ReadAsync(buffer.Memory, cts)) > 0)
+        if (request.Ranges.Any())
         {
-            await outStream.WriteAsync(buffer.Memory[..readLength], cts);
-            await _stats.TrackEgress(id, (ulong)readLength);
+            await EgressRanges(request.Id, request.Ranges, fs, outStream, cts);
+        }
+        else
+        {
+            await EgressFull(request.Id, fs, outStream, cts);
         }
     }
 
@@ -58,7 +59,7 @@ public class LocalDiskFileIngressFactory : IFileStore
             await _stats.TrackIngress(id, (ulong)readLength);
             total += (ulong)readLength;
         }
-        
+
         var fm = new InternalVoidFile()
         {
             Id = id,
@@ -76,7 +77,7 @@ public class LocalDiskFileIngressFactory : IFileStore
     {
         return _metadataStore.Update(patch, editSecret);
     }
-    
+
     public async IAsyncEnumerable<VoidFile> ListFiles()
     {
         foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
@@ -88,6 +89,42 @@ public class LocalDiskFileIngressFactory : IFileStore
             if (meta != default)
             {
                 yield return meta;
+            }
+        }
+    }
+
+    private async Task EgressFull(Guid id, FileStream fileStream, Stream outStream,
+        CancellationToken cts)
+    {
+        using var buffer = MemoryPool<byte>.Shared.Rent();
+        var readLength = 0;
+        while ((readLength = await fileStream.ReadAsync(buffer.Memory, cts)) > 0)
+        {
+            await outStream.WriteAsync(buffer.Memory[..readLength], cts);
+            await _stats.TrackEgress(id, (ulong)readLength);
+            await outStream.FlushAsync(cts);
+        }
+    }
+
+    private async Task EgressRanges(Guid id, IEnumerable<RangeRequest> ranges, FileStream fileStream, Stream outStream,
+        CancellationToken cts)
+    {
+        using var buffer = MemoryPool<byte>.Shared.Rent();
+        foreach (var range in ranges)
+        {
+            fileStream.Seek(range.Start ?? range.End ?? 0L, 
+                range.Start.HasValue ? SeekOrigin.Begin : SeekOrigin.End);
+
+            var readLength = 0;
+            var dataRemaining = range.Size ?? 0L;
+            while ((readLength = await fileStream.ReadAsync(buffer.Memory, cts)) > 0
+                   && dataRemaining > 0)
+            {
+                var toWrite = Math.Min(readLength, dataRemaining);
+                await outStream.WriteAsync(buffer.Memory[..(int)toWrite], cts);
+                await _stats.TrackEgress(id, (ulong)toWrite);
+                dataRemaining -= toWrite;
+                await outStream.FlushAsync(cts);
             }
         }
     }
