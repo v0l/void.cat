@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Security.Cryptography;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
 
@@ -44,33 +45,52 @@ public class LocalDiskFileIngressFactory : IFileStore
         }
     }
 
-    public async Task<InternalVoidFile> Ingress(Stream inStream, VoidFileMeta meta, CancellationToken cts)
+    public async Task<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
-        var id = Guid.NewGuid();
+        var id = payload.Id ?? Guid.NewGuid();
         var fPath = MapPath(id);
-        await using var fsTemp = new FileStream(fPath, FileMode.Create, FileAccess.ReadWrite);
-
-        using var buffer = MemoryPool<byte>.Shared.Rent();
-        var total = 0UL;
-        var readLength = 0;
-        while ((readLength = await inStream.ReadAsync(buffer.Memory, cts)) > 0)
+        InternalVoidFile? vf = null;
+        if (payload.IsAppend)
         {
-            await fsTemp.WriteAsync(buffer.Memory[..readLength], cts);
-            await _stats.TrackIngress(id, (ulong)readLength);
-            total += (ulong)readLength;
+            vf = await _metadataStore.Get(payload.Id!.Value);
+            if (vf?.EditSecret != null && vf.EditSecret != payload.EditSecret)
+            {
+                throw new VoidNotAllowedException("Edit secret incorrect!");
+            }
         }
 
-        var fm = new InternalVoidFile()
-        {
-            Id = id,
-            Size = total,
-            Metadata = meta,
-            Uploaded = DateTimeOffset.UtcNow,
-            EditSecret = Guid.NewGuid()
-        };
+        // open file
+        await using var fsTemp = new FileStream(fPath, 
+            payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.Write);
 
-        await _metadataStore.Set(fm);
-        return fm;
+        var (total, hash) = await IngressInternal(id, payload.InStream, fsTemp, cts);
+
+        if (!hash.Equals(payload.Hash, StringComparison.InvariantCultureIgnoreCase))
+        {
+            throw new CryptographicException("Invalid file hash");
+        }
+        if (payload.IsAppend)
+        {
+            vf = vf! with
+            {
+                Size = vf.Size + total
+            };
+        }
+        else
+        {
+            vf = new InternalVoidFile()
+            {
+                Id = id,
+                Metadata = payload.Meta,
+                Uploaded = DateTimeOffset.UtcNow,
+                EditSecret = Guid.NewGuid(),
+                Size = total
+            };
+        }
+
+
+        await _metadataStore.Set(vf);
+        return vf;
     }
 
     public Task UpdateInfo(VoidFile patch, Guid editSecret)
@@ -91,6 +111,25 @@ public class LocalDiskFileIngressFactory : IFileStore
                 yield return meta;
             }
         }
+    }
+
+    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream fs, CancellationToken cts)
+    {
+        using var buffer = MemoryPool<byte>.Shared.Rent();
+        var total = 0UL;
+        var readLength = 0;
+        var sha = SHA256.Create();
+        while ((readLength = await ingress.ReadAsync(buffer.Memory, cts)) > 0)
+        {
+            var buf = buffer.Memory[..readLength];
+            await fs.WriteAsync(buf, cts);
+            await _stats.TrackIngress(id, (ulong)readLength);
+            sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
+            total += (ulong)readLength;
+        }
+
+        sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        return (total, BitConverter.ToString(sha.Hash!).Replace("-", string.Empty));
     }
 
     private async Task EgressFull(Guid id, FileStream fileStream, Stream outStream,

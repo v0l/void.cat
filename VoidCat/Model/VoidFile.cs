@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace VoidCat.Model
 {
-    public class VoidFile
+    public record class VoidFile
     {
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid Id { get; init; }
@@ -15,13 +15,13 @@ namespace VoidCat.Model
         public DateTimeOffset Uploaded { get; init; }
     }
 
-    public class InternalVoidFile : VoidFile
+    public record class InternalVoidFile : VoidFile
     {
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid EditSecret { get; init; }
     }
 
-    public class VoidFileMeta
+    public record class VoidFileMeta
     {
         public string? Name { get; init; }
 

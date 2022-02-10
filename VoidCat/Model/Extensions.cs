@@ -13,4 +13,10 @@ public static class Extensions
         var enc = new NBitcoin.DataEncoders.Base58Encoder();
         return enc.EncodeData(id.ToByteArray());
     }
+
+    public static string? GetHeader(this IHeaderDictionary headers, string key)
+    {
+        return headers
+            .FirstOrDefault(a => a.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Value.ToString();
+    }
 }

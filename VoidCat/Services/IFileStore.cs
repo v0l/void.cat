@@ -6,7 +6,7 @@ namespace VoidCat.Services
     {
         Task<VoidFile?> Get(Guid id);
 
-        Task<InternalVoidFile> Ingress(Stream inStream, VoidFileMeta meta, CancellationToken cts);
+        Task<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts);
 
         Task Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
@@ -15,6 +15,14 @@ namespace VoidCat.Services
         IAsyncEnumerable<VoidFile> ListFiles();
     }
 
+    public record IngressPayload(Stream InStream, VoidFileMeta Meta, string Hash)
+    {
+        public Guid? Id { get; init; }
+        public Guid? EditSecret { get; init; }
+
+        public bool IsAppend => Id.HasValue && EditSecret.HasValue;
+    }
+    
     public record EgressRequest(Guid Id, IEnumerable<RangeRequest> Ranges)
     {
     }

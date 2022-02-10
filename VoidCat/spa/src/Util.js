@@ -25,3 +25,15 @@ export function FormatBytes(b, f) {
         return (b / Const.kiB).toFixed(f) + ' KiB';
     return b.toFixed(f) + ' B'
 }
+
+export function buf2hex(buffer) {
+    return [...new Uint8Array(buffer)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+export function ConstName(type, val) {
+    for(let [k, v] of Object.entries(type)) {
+        if(v === val) {
+            return k;
+        }
+    }
+}

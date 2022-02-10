@@ -26,7 +26,8 @@ export function FilePreview(props) {
                 case "video/mp4":
                 case "video/matroksa":
                 case "video/x-matroska":
-                case "video/webm": {
+                case "video/webm": 
+                case "video/quicktime": {
                     return <video src={link} controls />;
                 }
                 case "text/plain":{
