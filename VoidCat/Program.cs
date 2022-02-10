@@ -1,3 +1,4 @@
+using Prometheus;
 using VoidCat.Model;
 using VoidCat.Services;
 
@@ -18,7 +19,7 @@ services.AddMemoryCache();
 
 services.AddScoped<IFileMetadataStore, LocalDiskFileMetadataStore>();
 services.AddScoped<IFileStore, LocalDiskFileIngressFactory>();
-services.AddScoped<IStatsCollector, InMemoryStatsCollector>();
+services.AddScoped<IStatsCollector, PrometheusStatsCollector>();
 
 var app = builder.Build();
 
@@ -27,6 +28,7 @@ app.UseRouting();
 app.UseEndpoints(ep =>
 {
     ep.MapControllers();
+    ep.MapMetrics();
     ep.MapFallbackToFile("index.html");
 });
 
