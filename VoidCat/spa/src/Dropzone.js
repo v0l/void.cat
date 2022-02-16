@@ -17,7 +17,7 @@ export function Dropzone(props) {
     function renderUploads() {
         let fElm = [];
         for(let f of files) {
-            fElm.push(<FileUpload file={f}/>);
+            fElm.push(<FileUpload file={f} key={f.name}/>);
         }
         return (
             <Fragment>

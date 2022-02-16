@@ -11,7 +11,8 @@ const UploadState = {
     Hashing: 2,
     Uploading: 3,
     Done: 4,
-    Failed: 5
+    Failed: 5,
+    Challenge: 6
 };
 
 export function FileUpload(props) {
@@ -19,6 +20,7 @@ export function FileUpload(props) {
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState();
     const [uState, setUState] = useState(UploadState.NotStarted);
+    const [challenge, setChallenge] = useState();
     const calc = new RateCalculator();
 
     function handleProgress(e) {
@@ -95,6 +97,13 @@ export function FileUpload(props) {
                         let rsp = JSON.parse(req.responseText);
                         console.log(rsp);
                         resolve(rsp);
+                    } else if (req.readyState === XMLHttpRequest.DONE && req.status === 403) {
+                        let contentType = req.getResponseHeader("content-type");
+                        if (contentType.toLowerCase().trim().indexOf("text/html") === 0) {
+                            setChallenge(req.response);
+                            setUState(UploadState.Challenge);
+                            reject();
+                        }
                     }
                 };
                 req.upload.onprogress = handleProgress;
@@ -175,6 +184,11 @@ export function FileUpload(props) {
             <div className="status">
                 {renderStatus()}
             </div>
+            {uState === UploadState.Challenge ?
+                <div className="iframe-challenge" onClick={() => window.location.reload()}>
+                    <iframe src={`data:text/html;charset=utf-8,${encodeURIComponent(challenge)}`}/>
+                </div>
+                : null}
         </div>
     );
 }

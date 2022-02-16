@@ -18,3 +18,18 @@
     font-size: 12px;
     color: grey;
 }
+
+.upload .iframe-challenge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.8);
+}
+
+.upload .iframe-challenge > iframe {
+    margin-left: 25vw;
+    width: 50vw;
+    height: 100vh;
+}
