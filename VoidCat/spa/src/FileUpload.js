@@ -165,6 +165,12 @@ export function FileUpload(props) {
             );
         }
     }
+    
+    function getChallengeElement() {
+        let elm = document.createElement("div");
+        elm.innerHTML = challenge;
+        return <div dangerouslySetInnerHTML={{ __html: elm.innerHTML }}/>;
+    }
 
     useEffect(() => {
         console.log(props.file);
@@ -186,7 +192,7 @@ export function FileUpload(props) {
             </div>
             {uState === UploadState.Challenge ?
                 <div className="iframe-challenge" onClick={() => window.location.reload()}>
-                    <iframe src={`data:text/html;charset=utf-8,${encodeURIComponent(challenge)}`}/>
+                    {getChallengeElement()}
                 </div>
                 : null}
         </div>

@@ -28,7 +28,7 @@
     background-color: rgba(0,0,0,0.8);
 }
 
-.upload .iframe-challenge > iframe {
+.upload .iframe-challenge > div {
     margin-left: 25vw;
     width: 50vw;
     height: 100vh;
