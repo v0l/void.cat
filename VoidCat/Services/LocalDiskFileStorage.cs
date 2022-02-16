@@ -2,16 +2,17 @@ using System.Buffers;
 using System.Security.Cryptography;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services;
 
-public class LocalDiskFileIngressFactory : IFileStore
+public class LocalDiskFileStore : IFileStore
 {
     private readonly VoidSettings _settings;
     private readonly IStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
 
-    public LocalDiskFileIngressFactory(VoidSettings settings, IStatsCollector stats,
+    public LocalDiskFileStore(VoidSettings settings, IStatsCollector stats,
         IFileMetadataStore metadataStore)
     {
         _settings = settings;
@@ -24,12 +25,12 @@ public class LocalDiskFileIngressFactory : IFileStore
         }
     }
 
-    public async Task<VoidFile?> Get(Guid id)
+    public async ValueTask<VoidFile?> Get(Guid id)
     {
         return await _metadataStore.Get(id);
     }
 
-    public async Task Egress(EgressRequest request, Stream outStream, CancellationToken cts)
+    public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
         var path = MapPath(request.Id);
         if (!File.Exists(path)) throw new VoidFileNotFoundException(request.Id);
@@ -45,7 +46,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         }
     }
 
-    public async Task<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
+    public async ValueTask<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var id = payload.Id ?? Guid.NewGuid();
         var fPath = MapPath(id);
@@ -60,7 +61,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         }
 
         // open file
-        await using var fsTemp = new FileStream(fPath, 
+        await using var fsTemp = new FileStream(fPath,
             payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.Write);
 
         var (total, hash) = await IngressInternal(id, payload.InStream, fsTemp, cts);
@@ -69,6 +70,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         {
             throw new CryptographicException("Invalid file hash");
         }
+
         if (payload.IsAppend)
         {
             vf = vf! with
@@ -93,7 +95,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         return vf;
     }
 
-    public Task UpdateInfo(VoidFile patch, Guid editSecret)
+    public ValueTask UpdateInfo(VoidFile patch, Guid editSecret)
     {
         return _metadataStore.Update(patch, editSecret);
     }
@@ -123,9 +125,9 @@ public class LocalDiskFileIngressFactory : IFileStore
         {
             var buf = buffer.Memory[..readLength];
             await fs.WriteAsync(buf, cts);
-            await _stats.TrackIngress(id, (ulong)readLength);
+            await _stats.TrackIngress(id, (ulong) readLength);
             sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
-            total += (ulong)readLength;
+            total += (ulong) readLength;
         }
 
         sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
@@ -140,7 +142,7 @@ public class LocalDiskFileIngressFactory : IFileStore
         while ((readLength = await fileStream.ReadAsync(buffer.Memory, cts)) > 0)
         {
             await outStream.WriteAsync(buffer.Memory[..readLength], cts);
-            await _stats.TrackEgress(id, (ulong)readLength);
+            await _stats.TrackEgress(id, (ulong) readLength);
             await outStream.FlushAsync(cts);
         }
     }
@@ -160,8 +162,8 @@ public class LocalDiskFileIngressFactory : IFileStore
                    && dataRemaining > 0)
             {
                 var toWrite = Math.Min(readLength, dataRemaining);
-                await outStream.WriteAsync(buffer.Memory[..(int)toWrite], cts);
-                await _stats.TrackEgress(id, (ulong)toWrite);
+                await outStream.WriteAsync(buffer.Memory[..(int) toWrite], cts);
+                await _stats.TrackEgress(id, (ulong) toWrite);
                 dataRemaining -= toWrite;
                 await outStream.FlushAsync(cts);
             }

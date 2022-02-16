@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Services;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers
 {
@@ -8,17 +9,24 @@ namespace VoidCat.Controllers
     public class StatsController : Controller
     {
         private readonly IStatsCollector _statsCollector;
+        private readonly IFileStore _fileStore;
 
-        public StatsController(IStatsCollector statsCollector)
+        public StatsController(IStatsCollector statsCollector, IFileStore fileStore)
         {
             _statsCollector = statsCollector;
+            _fileStore = fileStore;
         }
 
         [HttpGet]
         public async Task<GlobalStats> GetGlobalStats()
         {
             var bw = await _statsCollector.GetBandwidth();
-            return new(bw);
+            var bytes = 0UL;
+            await foreach (var vf in _fileStore.ListFiles())
+            {
+                bytes += vf.Size;
+            }
+            return new(bw, bytes);
         }
 
         [HttpGet]
@@ -30,6 +38,6 @@ namespace VoidCat.Controllers
         }
     }
 
-    public sealed record GlobalStats(Bandwidth Bandwidth);
+    public sealed record GlobalStats(Bandwidth Bandwidth, ulong TotalBytes);
     public sealed record FileStats(Bandwidth Bandwidth);
 }

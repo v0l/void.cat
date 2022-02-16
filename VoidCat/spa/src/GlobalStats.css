@@ -1,5 +1,5 @@
 ﻿.stats {
     display: grid;
     grid-auto-flow: column;
-    margin: 0 100px;
+    margin: 0 30px;
 }

@@ -21,6 +21,8 @@ export function GlobalStats(props) {
             <div>{FormatBytes(stats?.bandwidth?.ingress ?? 0)}</div>
             <div>Egress:</div>
             <div>{FormatBytes(stats?.bandwidth?.egress ?? 0)}</div>
+            <div>Storage:</div>
+            <div>{FormatBytes(stats?.totalBytes ?? 0)}</div>
         </div>
     );
 }

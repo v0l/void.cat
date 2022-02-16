@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services;
 
@@ -20,23 +21,23 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         }
     }
     
-    public async Task<InternalVoidFile?> Get(Guid id)
+    public async ValueTask<InternalVoidFile?> Get(Guid id)
     {
         var path = MapMeta(id);
-        if (!File.Exists(path)) throw new VoidFileNotFoundException(id);
+        if (!File.Exists(path)) return default;
 
         var json = await File.ReadAllTextAsync(path);
         return JsonConvert.DeserializeObject<InternalVoidFile>(json);
     }
     
-    public Task Set(InternalVoidFile meta)
+    public async ValueTask Set(InternalVoidFile meta)
     {
         var path = MapMeta(meta.Id);
         var json = JsonConvert.SerializeObject(meta);
-        return File.WriteAllTextAsync(path, json);
+        await File.WriteAllTextAsync(path, json);
     }
     
-    public async Task Update(VoidFile patch, Guid editSecret)
+    public async ValueTask Update(VoidFile patch, Guid editSecret)
     {
         var oldMeta = await Get(patch.Id);
         if (oldMeta?.EditSecret != editSecret)

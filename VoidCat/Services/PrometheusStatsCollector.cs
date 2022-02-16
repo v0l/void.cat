@@ -1,14 +1,15 @@
 ﻿using Prometheus;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services;
 
 public class PrometheusStatsCollector : IStatsCollector
 {
     private readonly Counter _egress =
-        Metrics.CreateCounter("egress", "Outgoing traffic from the site", new[] {"file"});
+        Metrics.CreateCounter("egress", "Outgoing traffic from the site", "file");
 
     private readonly Counter _ingress =
-        Metrics.CreateCounter("ingress", "Incoming traffic to the site", new[] {"file"});
+        Metrics.CreateCounter("ingress", "Incoming traffic to the site", "file");
 
     public ValueTask TrackIngress(Guid id, ulong amount)
     {

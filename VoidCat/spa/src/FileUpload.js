@@ -98,11 +98,11 @@ export function FileUpload(props) {
                     }
                 };
                 req.upload.onprogress = handleProgress;
-                req.open("POST", typeof(id) === "string" ? `/upload/${id}` : "/upload");
+                req.open("POST", typeof (id) === "string" ? `/upload/${id}` : "/upload");
                 req.setRequestHeader("Content-Type", props.file.type);
                 req.setRequestHeader("X-Filename", props.file.name);
                 req.setRequestHeader("X-Digest", buf2hex(digest));
-                if (typeof(editSecret) === "string") {
+                if (typeof (editSecret) === "string") {
                     req.setRequestHeader("X-EditSecret", editSecret);
                 }
                 req.send(segment);
@@ -113,19 +113,20 @@ export function FileUpload(props) {
     }
 
     async function doXHRUpload() {
-        const UploadSize = 100_000_000;
-        // upload file in segments of 100MB
+        // upload file in segments of 50MB
+        const UploadSize = 50_000_000;
+
         let xhr = null;
         const segments = props.file.size / UploadSize;
         for (let s = 0; s < segments; s++) {
             let offset = s * UploadSize;
             let slice = props.file.slice(offset, offset + UploadSize, props.file.type);
             xhr = await xhrSegment(await slice.arrayBuffer(), xhr?.file?.id, xhr?.file?.editSecret);
-            if(!xhr.ok) {
+            if (!xhr.ok) {
                 break;
             }
         }
-        if(xhr.ok) {
+        if (xhr.ok) {
             setUState(UploadState.Done);
             setResult(xhr.file);
         } else {

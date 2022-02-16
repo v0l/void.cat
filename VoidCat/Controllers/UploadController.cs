@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers
 {
@@ -31,8 +32,7 @@ namespace VoidCat.Controllers
                 };
 
                 var digest = Request.Headers.GetHeader("X-Digest");
-                var vf = await (Request.HasFormContentType ?
-                    saveFromForm() : _storage.Ingress(new(Request.Body, meta, digest!), HttpContext.RequestAborted));
+                var vf = await _storage.Ingress(new(Request.Body, meta, digest!), HttpContext.RequestAborted);
 
                 return UploadResult.Success(vf);
             }
@@ -52,7 +52,7 @@ namespace VoidCat.Controllers
             {
                 var gid = id.FromBase58Guid();
                 var fileInfo = await _storage.Get(gid);
-                if (fileInfo == default) return null;
+                if (fileInfo == default) return UploadResult.Error("File not found");
 
                 var editSecret = Request.Headers.GetHeader("X-EditSecret");
                 var digest = Request.Headers.GetHeader("X-Digest");
@@ -72,14 +72,14 @@ namespace VoidCat.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public Task<VoidFile?> GetInfo([FromRoute] string id)
+        public ValueTask<VoidFile?> GetInfo([FromRoute] string id)
         {
             return _storage.Get(id.FromBase58Guid());
         }
 
         [HttpPatch]
         [Route("{id}")]
-        public Task UpdateFileInfo([FromRoute] string id, [FromBody] UpdateFileInfoRequest request)
+        public ValueTask UpdateFileInfo([FromRoute] string id, [FromBody] UpdateFileInfoRequest request)
         {
             return _storage.UpdateInfo(new VoidFile()
             {
@@ -88,12 +88,8 @@ namespace VoidCat.Controllers
             }, request.EditSecret);
         }
 
-        private Task<InternalVoidFile> saveFromForm()
-        {
-            return Task.FromResult<InternalVoidFile>(null);
-        }
-
-        public record UpdateFileInfoRequest([JsonConverter(typeof(Base58GuidConverter))] Guid EditSecret, VoidFileMeta Metadata);
+        public record UpdateFileInfoRequest([JsonConverter(typeof(Base58GuidConverter))] Guid EditSecret,
+            VoidFileMeta Metadata);
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
