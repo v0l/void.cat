@@ -3,12 +3,12 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services;
 
-public class InMemoryStatsCollector : IStatsCollector
+public class InMemoryStatsController : IStatsCollector, IStatsReporter
 {
-    private static Guid _global = new Guid("{A98DFDCC-C4E1-4D42-B818-912086FC6157}");
+    private static readonly Guid Global = new Guid("{A98DFDCC-C4E1-4D42-B818-912086FC6157}");
     private readonly IMemoryCache _cache;
 
-    public InMemoryStatsCollector(IMemoryCache cache)
+    public InMemoryStatsController(IMemoryCache cache)
     {
         _cache = cache;
     }
@@ -16,19 +16,19 @@ public class InMemoryStatsCollector : IStatsCollector
     public ValueTask TrackIngress(Guid id, ulong amount)
     {
         Incr(IngressKey(id), amount);
-        Incr(IngressKey(_global), amount);
+        Incr(IngressKey(Global), amount);
         return ValueTask.CompletedTask;
     }
 
     public ValueTask TrackEgress(Guid id, ulong amount)
     {
         Incr(EgressKey(id), amount);
-        Incr(EgressKey(_global), amount);
+        Incr(EgressKey(Global), amount);
         return ValueTask.CompletedTask;
     }
 
     public ValueTask<Bandwidth> GetBandwidth()
-        => ValueTask.FromResult(GetBandwidthInternal(_global));
+        => ValueTask.FromResult(GetBandwidthInternal(Global));
 
     public ValueTask<Bandwidth> GetBandwidth(Guid id)
         => ValueTask.FromResult(GetBandwidthInternal(id));

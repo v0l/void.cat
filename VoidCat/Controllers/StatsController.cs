@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Prometheus;
 using VoidCat.Model;
 using VoidCat.Services;
 using VoidCat.Services.Abstractions;
@@ -8,19 +9,19 @@ namespace VoidCat.Controllers
     [Route("stats")]
     public class StatsController : Controller
     {
-        private readonly IStatsCollector _statsCollector;
+        private readonly IStatsReporter _statsReporter;
         private readonly IFileStore _fileStore;
 
-        public StatsController(IStatsCollector statsCollector, IFileStore fileStore)
+        public StatsController(IStatsReporter statsReporter, IFileStore fileStore)
         {
-            _statsCollector = statsCollector;
+            _statsReporter = statsReporter;
             _fileStore = fileStore;
         }
 
         [HttpGet]
         public async Task<GlobalStats> GetGlobalStats()
         {
-            var bw = await _statsCollector.GetBandwidth();
+            var bw = await _statsReporter.GetBandwidth();
             var bytes = 0UL;
             await foreach (var vf in _fileStore.ListFiles())
             {
@@ -33,7 +34,7 @@ namespace VoidCat.Controllers
         [Route("{id}")]
         public async Task<FileStats> GetFileStats([FromRoute] string id)
         {
-            var bw = await _statsCollector.GetBandwidth(id.FromBase58Guid());
+            var bw = await _statsReporter.GetBandwidth(id.FromBase58Guid());
             return new(bw);
         }
     }

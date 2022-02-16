@@ -7,6 +7,8 @@
         public TorSettings? TorSettings { get; init; }
 
         public JwtSettings JwtSettings { get; init; } = new("void_cat_internal", "default_key");
+        
+        public string? Redis { get; init; }
     }
 
     public sealed record TorSettings(Uri TorControl, string PrivateKey, string ControlPassword);

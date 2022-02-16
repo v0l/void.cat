@@ -24,15 +24,4 @@ public class PrometheusStatsCollector : IStatsCollector
         _egress.WithLabels(id.ToString()).Inc(amount);
         return ValueTask.CompletedTask;
     }
-
-    public ValueTask<Bandwidth> GetBandwidth()
-    {
-        return ValueTask.FromResult<Bandwidth>(new((ulong) _ingress.Value, (ulong) _egress.Value));
-    }
-
-    public ValueTask<Bandwidth> GetBandwidth(Guid id)
-    {
-        return ValueTask.FromResult<Bandwidth>(new((ulong) _ingress.Labels(id.ToString()).Value,
-            (ulong) _egress.Labels(id.ToString()).Value));
-    }
 }

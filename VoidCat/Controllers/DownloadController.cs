@@ -47,6 +47,11 @@ public class DownloadController : Controller
         else if (egressReq.Ranges.Count() == 1)
         {
             Response.StatusCode = (int)HttpStatusCode.PartialContent;
+            if (egressReq.Ranges.Sum(a => a.Size) == 0)
+            {
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                return;
+            }
         }
         else
         {

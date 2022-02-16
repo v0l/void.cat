@@ -8,11 +8,12 @@ namespace VoidCat.Services;
 
 public class LocalDiskFileStore : IFileStore
 {
+    private const int BufferSize = 1024 * 1024;
     private readonly VoidSettings _settings;
-    private readonly IStatsCollector _stats;
+    private readonly IAggregateStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
 
-    public LocalDiskFileStore(VoidSettings settings, IStatsCollector stats,
+    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats,
         IFileMetadataStore metadataStore)
     {
         _settings = settings;
@@ -117,17 +118,26 @@ public class LocalDiskFileStore : IFileStore
 
     private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream fs, CancellationToken cts)
     {
-        using var buffer = MemoryPool<byte>.Shared.Rent();
+        using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
         var total = 0UL;
-        var readLength = 0;
+        int readLength = 0, offset = 0;
         var sha = SHA256.Create();
-        while ((readLength = await ingress.ReadAsync(buffer.Memory, cts)) > 0)
+        while ((readLength = await ingress.ReadAsync(buffer.Memory[offset..], cts)) > 0 || offset != 0)
         {
-            var buf = buffer.Memory[..readLength];
+            if (readLength != 0 && offset + readLength < buffer.Memory.Length)
+            {
+                // read until buffer full
+                offset += readLength;
+                continue;
+            }
+
+            var totalRead = readLength + offset;
+            var buf = buffer.Memory[..totalRead];
             await fs.WriteAsync(buf, cts);
-            await _stats.TrackIngress(id, (ulong) readLength);
+            await _stats.TrackIngress(id, (ulong)buf.Length);
             sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
-            total += (ulong) readLength;
+            total += (ulong)buf.Length;
+            offset = 0;
         }
 
         sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
@@ -137,35 +147,57 @@ public class LocalDiskFileStore : IFileStore
     private async Task EgressFull(Guid id, FileStream fileStream, Stream outStream,
         CancellationToken cts)
     {
-        using var buffer = MemoryPool<byte>.Shared.Rent();
-        var readLength = 0;
-        while ((readLength = await fileStream.ReadAsync(buffer.Memory, cts)) > 0)
+        using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
+        int readLength = 0, offset = 0;
+        while ((readLength = await fileStream.ReadAsync(buffer.Memory[offset..], cts)) > 0 || offset != 0)
         {
-            await outStream.WriteAsync(buffer.Memory[..readLength], cts);
-            await _stats.TrackEgress(id, (ulong) readLength);
+            if (readLength != 0 && offset + readLength < buffer.Memory.Length)
+            {
+                // read until buffer full
+                offset += readLength;
+                continue;
+            }
+
+            var fullSize = readLength + offset;
+            await outStream.WriteAsync(buffer.Memory[..fullSize], cts);
+            await _stats.TrackEgress(id, (ulong)fullSize);
             await outStream.FlushAsync(cts);
+            offset = 0;
         }
     }
 
     private async Task EgressRanges(Guid id, IEnumerable<RangeRequest> ranges, FileStream fileStream, Stream outStream,
         CancellationToken cts)
     {
-        using var buffer = MemoryPool<byte>.Shared.Rent();
+        using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
         foreach (var range in ranges)
         {
             fileStream.Seek(range.Start ?? range.End ?? 0L,
                 range.Start.HasValue ? SeekOrigin.Begin : SeekOrigin.End);
 
-            var readLength = 0;
+            int readLength = 0, offset = 0;
             var dataRemaining = range.Size ?? 0L;
-            while ((readLength = await fileStream.ReadAsync(buffer.Memory, cts)) > 0
-                   && dataRemaining > 0)
+            while ((readLength = await fileStream.ReadAsync(buffer.Memory[offset..], cts)) > 0 || offset != 0)
             {
-                var toWrite = Math.Min(readLength, dataRemaining);
-                await outStream.WriteAsync(buffer.Memory[..(int) toWrite], cts);
-                await _stats.TrackEgress(id, (ulong) toWrite);
-                dataRemaining -= toWrite;
+                if (readLength != 0 && offset + readLength < buffer.Memory.Length)
+                {
+                    // read until buffer full
+                    offset += readLength;
+                    continue;
+                }
+
+                var fullSize = readLength + offset;
+                var toWrite = Math.Min(fullSize, dataRemaining);
+                await outStream.WriteAsync(buffer.Memory[..(int)toWrite], cts);
+                await _stats.TrackEgress(id, (ulong)toWrite);
                 await outStream.FlushAsync(cts);
+                dataRemaining -= toWrite;
+                offset = 0;
+
+                if (dataRemaining == 0)
+                {
+                    break;
+                }
             }
         }
     }

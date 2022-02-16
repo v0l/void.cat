@@ -146,12 +146,12 @@ export function FileUpload(props) {
 
     function renderStatus() {
         if (result) {
-            return (
+            return uState === UploadState.Done ?
                 <dl>
                     <dt>Link:</dt>
                     <dd><a target="_blank" href={`/${result.id}`}>{result.id}</a></dd>
                 </dl>
-            );
+                : <b>{result}</b>;
         } else {
             return (
                 <dl>
