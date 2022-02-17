@@ -27,11 +27,11 @@ namespace VoidCat.Controllers
             {
                 var meta = new VoidFileMeta()
                 {
-                    MimeType = Request.ContentType,
-                    Name = Request.Headers.GetHeader("X-Filename")
+                    MimeType = Request.Headers.GetHeader("V-Content-Type"),
+                    Name = Request.Headers.GetHeader("V-Filename")
                 };
 
-                var digest = Request.Headers.GetHeader("X-Digest");
+                var digest = Request.Headers.GetHeader("V-Digest");
                 var vf = await _storage.Ingress(new(Request.Body, meta, digest!), HttpContext.RequestAborted);
 
                 return UploadResult.Success(vf);
@@ -54,8 +54,8 @@ namespace VoidCat.Controllers
                 var fileInfo = await _storage.Get(gid);
                 if (fileInfo == default) return UploadResult.Error("File not found");
 
-                var editSecret = Request.Headers.GetHeader("X-EditSecret");
-                var digest = Request.Headers.GetHeader("X-Digest");
+                var editSecret = Request.Headers.GetHeader("V-EditSecret");
+                var digest = Request.Headers.GetHeader("V-Digest");
                 var vf = await _storage.Ingress(new(Request.Body, fileInfo.Metadata, digest!)
                 {
                     EditSecret = editSecret?.FromBase58Guid(),

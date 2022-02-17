@@ -64,8 +64,8 @@ export function FileUpload(props) {
             method: "POST",
             body: rs,
             headers: {
-                "Content-Type": props.file.type,
-                "X-Filename": props.file.name
+                "V-Content-Type": props.file.type,
+                "V-Filename": props.file.name
             }
         });
 
@@ -108,11 +108,11 @@ export function FileUpload(props) {
                 };
                 req.upload.onprogress = handleProgress;
                 req.open("POST", typeof (id) === "string" ? `/upload/${id}` : "/upload");
-                req.setRequestHeader("Content-Type", props.file.type);
-                req.setRequestHeader("X-Filename", props.file.name);
-                req.setRequestHeader("X-Digest", buf2hex(digest));
+                req.setRequestHeader("V-Content-Type", props.file.type);
+                req.setRequestHeader("V-Filename", props.file.name);
+                req.setRequestHeader("V-Digest", buf2hex(digest));
                 if (typeof (editSecret) === "string") {
-                    req.setRequestHeader("X-EditSecret", editSecret);
+                    req.setRequestHeader("V-EditSecret", editSecret);
                 }
                 req.send(segment);
             } catch (e) {
