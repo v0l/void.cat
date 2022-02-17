@@ -64,6 +64,7 @@ export function FileUpload(props) {
             method: "POST",
             body: rs,
             headers: {
+                "Content-Type": "application/octet-stream",
                 "V-Content-Type": props.file.type,
                 "V-Filename": props.file.name
             }
@@ -108,6 +109,7 @@ export function FileUpload(props) {
                 };
                 req.upload.onprogress = handleProgress;
                 req.open("POST", typeof (id) === "string" ? `/upload/${id}` : "/upload");
+                req.setRequestHeader("Content-Type", "application/octet-stream");
                 req.setRequestHeader("V-Content-Type", props.file.type);
                 req.setRequestHeader("V-Filename", props.file.name);
                 req.setRequestHeader("V-Digest", buf2hex(digest));
