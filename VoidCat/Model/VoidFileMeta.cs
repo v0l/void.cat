@@ -4,14 +4,24 @@ using VoidCat.Services.Abstractions;
 namespace VoidCat.Model;
 
 /// <summary>
+/// Base metadata must contain version number
+/// </summary>
+public interface IVoidFileMeta
+{
+    const int CurrentVersion = 3;
+    
+    int Version { get; init; }
+}
+
+/// <summary>
 /// File metadata which is managed by <see cref="IFileMetadataStore"/>
 /// </summary>
-public record VoidFileMeta
+public record VoidFileMeta : IVoidFileMeta
 {
     /// <summary>
     /// Metadata version
     /// </summary>
-    public int Version { get; init; } = 2;
+    public int Version { get; init; } = IVoidFileMeta.CurrentVersion;
     
     /// <summary>
     /// Filename

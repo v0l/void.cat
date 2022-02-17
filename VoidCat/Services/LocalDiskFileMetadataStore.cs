@@ -7,7 +7,7 @@ namespace VoidCat.Services;
 
 public class LocalDiskFileMetadataStore : IFileMetadataStore
 {
-    private const string MetadataDir = "metadata-v2";
+    private const string MetadataDir = "metadata-v3";
     private readonly VoidSettings _settings;
     
     public LocalDiskFileMetadataStore(VoidSettings settings)
