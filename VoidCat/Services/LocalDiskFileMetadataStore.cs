@@ -21,13 +21,14 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         }
     }
     
-    public async ValueTask<SecretVoidFileMeta?> Get(Guid id)
+    public ValueTask<VoidFileMeta?> GetPublic(Guid id)
     {
-        var path = MapMeta(id);
-        if (!File.Exists(path)) return default;
-
-        var json = await File.ReadAllTextAsync(path);
-        return JsonConvert.DeserializeObject<SecretVoidFileMeta>(json);
+        return GetMeta<VoidFileMeta>(id);
+    }
+    
+    public ValueTask<SecretVoidFileMeta?> Get(Guid id)
+    {
+        return GetMeta<SecretVoidFileMeta>(id);
     }
     
     public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
@@ -48,6 +49,15 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         await Set(id, patch);
     }
 
+    private async ValueTask<TMeta?> GetMeta<TMeta>(Guid id)
+    {
+        var path = MapMeta(id);
+        if (!File.Exists(path)) return default;
+
+        var json = await File.ReadAllTextAsync(path);
+        return JsonConvert.DeserializeObject<TMeta>(json);
+    }
+    
     private string MapMeta(Guid id) =>
         Path.ChangeExtension(Path.Join(_settings.DataDirectory, MetadataDir, id.ToString()), ".json");
 }

@@ -28,10 +28,10 @@ public class LocalDiskFileStore : IFileStore
 
     public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
-        return new()
+        return new ()
         {
             Id = id,
-            Metadata = await _metadataStore.Get(id)
+            Metadata = await _metadataStore.GetPublic(id)
         };
     }
 
