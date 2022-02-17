@@ -169,9 +169,9 @@ export function FileUpload(props) {
     }
     
     function getChallengeElement() {
-        let elm = document.createElement("div");
-        elm.innerHTML = challenge;
-        return <div dangerouslySetInnerHTML={{ __html: elm.innerHTML }}/>;
+        let elm = document.createElement("iframe");
+        elm.contentWindow.document.write(challenge);
+        return <div dangerouslySetInnerHTML={{ __html: elm.outerHTML }}/>;
     }
 
     useEffect(() => {
