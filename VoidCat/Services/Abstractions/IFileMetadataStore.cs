@@ -4,9 +4,9 @@ namespace VoidCat.Services.Abstractions;
 
 public interface IFileMetadataStore
 {
-    ValueTask<InternalVoidFile?> Get(Guid id);
+    ValueTask<SecretVoidFileMeta?> Get(Guid id);
     
-    ValueTask Set(InternalVoidFile meta);
+    ValueTask Set(Guid id, SecretVoidFileMeta meta);
 
-    ValueTask Update(VoidFile patch, Guid editSecret);
+    ValueTask Update(Guid id, SecretVoidFileMeta patch);
 }

@@ -28,7 +28,9 @@ namespace VoidCat.Controllers
                 var meta = new VoidFileMeta()
                 {
                     MimeType = Request.Headers.GetHeader("V-Content-Type"),
-                    Name = Request.Headers.GetHeader("V-Filename")
+                    Name = Request.Headers.GetHeader("V-Filename"),
+                    Description = Request.Headers.GetHeader("V-Description"),
+                    Digest = Request.Headers.GetHeader("V-Full-Digest")
                 };
 
                 var digest = Request.Headers.GetHeader("V-Digest");
@@ -72,24 +74,10 @@ namespace VoidCat.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public ValueTask<VoidFile?> GetInfo([FromRoute] string id)
+        public ValueTask<PublicVoidFile?> GetInfo([FromRoute] string id)
         {
             return _storage.Get(id.FromBase58Guid());
         }
-
-        [HttpPatch]
-        [Route("{id}")]
-        public ValueTask UpdateFileInfo([FromRoute] string id, [FromBody] UpdateFileInfoRequest request)
-        {
-            return _storage.UpdateInfo(new VoidFile()
-            {
-                Id = id.FromBase58Guid(),
-                Metadata = request.Metadata
-            }, request.EditSecret);
-        }
-
-        public record UpdateFileInfoRequest([JsonConverter(typeof(Base58GuidConverter))] Guid EditSecret,
-            VoidFileMeta Metadata);
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
@@ -108,9 +96,9 @@ namespace VoidCat.Controllers
         }
     }
 
-    public record UploadResult(bool Ok, InternalVoidFile? File, string? ErrorMessage)
+    public record UploadResult(bool Ok, PrivateVoidFile? File, string? ErrorMessage)
     {
-        public static UploadResult Success(InternalVoidFile vf)
+        public static UploadResult Success(PrivateVoidFile vf)
             => new(true, vf, null);
 
         public static UploadResult Error(string message)

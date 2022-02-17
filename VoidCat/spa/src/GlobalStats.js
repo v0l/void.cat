@@ -1,4 +1,5 @@
 ﻿import {useEffect, useState} from "react";
+import FeatherIcon from "feather-icons-react";
 import {FormatBytes} from "./Util";
 
 import "./GlobalStats.css";
@@ -16,13 +17,23 @@ export function GlobalStats(props) {
     useEffect(() => loadStats(), []);
 
     return (
-        <div className="stats">
-            <div>Ingress:</div>
-            <div>{FormatBytes(stats?.bandwidth?.ingress ?? 0, 2)}</div>
-            <div>Egress:</div>
-            <div>{FormatBytes(stats?.bandwidth?.egress ?? 0, 2)}</div>
-            <div>Storage:</div>
-            <div>{FormatBytes(stats?.totalBytes ?? 0, 2)}</div>
-        </div>
+        <dl className="stats">
+            <div>
+                <FeatherIcon icon="upload-cloud" />
+                {FormatBytes(stats?.bandwidth?.ingress ?? 0, 2)}
+            </div>
+            <div>
+                <FeatherIcon icon="download-cloud" />
+                {FormatBytes(stats?.bandwidth?.egress ?? 0, 2)}
+            </div>
+            <div>
+                <FeatherIcon icon="database" />
+                {FormatBytes(stats?.totalBytes ?? 0, 2)}
+            </div>
+            <div>
+                <FeatherIcon icon="hash" />
+                {stats?.count ?? 0}
+            </div>
+        </dl>
     );
 }

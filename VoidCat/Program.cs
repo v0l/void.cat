@@ -6,6 +6,7 @@ using StackExchange.Redis;
 using VoidCat.Model;
 using VoidCat.Services;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Migrations;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -41,6 +42,8 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// void.cat services
+services.AddVoidMigrations();
 services.AddScoped<IFileMetadataStore, LocalDiskFileMetadataStore>();
 services.AddScoped<IFileStore, LocalDiskFileStore>();
 services.AddScoped<IAggregateStatsCollector, AggregateStatsCollector>();
@@ -60,6 +63,13 @@ else
 }
 
 var app = builder.Build();
+
+// run migrations
+var migrations = app.Services.GetServices<IMigration>();
+foreach (var migration in migrations)
+{
+    await migration.Migrate();
+}
 
 app.UseStaticFiles();
 app.UseAuthentication();

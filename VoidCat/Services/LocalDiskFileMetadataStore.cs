@@ -7,7 +7,7 @@ namespace VoidCat.Services;
 
 public class LocalDiskFileMetadataStore : IFileMetadataStore
 {
-    private const string MetadataDir = "metadata";
+    private const string MetadataDir = "metadata-v2";
     private readonly VoidSettings _settings;
     
     public LocalDiskFileMetadataStore(VoidSettings settings)
@@ -21,34 +21,31 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         }
     }
     
-    public async ValueTask<InternalVoidFile?> Get(Guid id)
+    public async ValueTask<SecretVoidFileMeta?> Get(Guid id)
     {
         var path = MapMeta(id);
         if (!File.Exists(path)) return default;
 
         var json = await File.ReadAllTextAsync(path);
-        return JsonConvert.DeserializeObject<InternalVoidFile>(json);
+        return JsonConvert.DeserializeObject<SecretVoidFileMeta>(json);
     }
     
-    public async ValueTask Set(InternalVoidFile meta)
+    public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
     {
-        var path = MapMeta(meta.Id);
+        var path = MapMeta(id);
         var json = JsonConvert.SerializeObject(meta);
         await File.WriteAllTextAsync(path, json);
     }
     
-    public async ValueTask Update(VoidFile patch, Guid editSecret)
+    public async ValueTask Update(Guid id, SecretVoidFileMeta patch)
     {
-        var oldMeta = await Get(patch.Id);
-        if (oldMeta?.EditSecret != editSecret)
+        var oldMeta = await Get(id);
+        if (oldMeta?.EditSecret != patch.EditSecret)
         {
             throw new VoidNotAllowedException("Edit secret incorrect");
         }
 
-        // only patch metadata
-        oldMeta.Metadata = patch.Metadata;
-
-        await Set(oldMeta);
+        await Set(id, patch);
     }
 
     private string MapMeta(Guid id) =>

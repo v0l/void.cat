@@ -26,9 +26,13 @@ public class LocalDiskFileStore : IFileStore
         }
     }
 
-    public async ValueTask<VoidFile?> Get(Guid id)
+    public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
-        return await _metadataStore.Get(id);
+        return new()
+        {
+            Id = id,
+            Metadata = await _metadataStore.Get(id)
+        };
     }
 
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
@@ -47,11 +51,11 @@ public class LocalDiskFileStore : IFileStore
         }
     }
 
-    public async ValueTask<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
+    public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var id = payload.Id ?? Guid.NewGuid();
         var fPath = MapPath(id);
-        InternalVoidFile? vf = null;
+        SecretVoidFileMeta? vf = null;
         if (payload.IsAppend)
         {
             vf = await _metadataStore.Get(payload.Id!.Value);
@@ -81,10 +85,12 @@ public class LocalDiskFileStore : IFileStore
         }
         else
         {
-            vf = new InternalVoidFile()
+            vf = new SecretVoidFileMeta()
             {
-                Id = id,
-                Metadata = payload.Meta,
+                Name = payload.Meta.Name,
+                Description = payload.Meta.Description,
+                Digest = payload.Meta.Digest,
+                MimeType = payload.Meta.MimeType,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = total
@@ -92,16 +98,15 @@ public class LocalDiskFileStore : IFileStore
         }
 
 
-        await _metadataStore.Set(vf);
-        return vf;
+        await _metadataStore.Set(id, vf);
+        return new()
+        {
+            Id = id,
+            Metadata = vf
+        };
     }
 
-    public ValueTask UpdateInfo(VoidFile patch, Guid editSecret)
-    {
-        return _metadataStore.Update(patch, editSecret);
-    }
-
-    public async IAsyncEnumerable<VoidFile> ListFiles()
+    public async IAsyncEnumerable<PublicVoidFile> ListFiles()
     {
         foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
         {
@@ -111,7 +116,11 @@ public class LocalDiskFileStore : IFileStore
             var meta = await _metadataStore.Get(id);
             if (meta != default)
             {
-                yield return meta;
+                yield return new()
+                {
+                    Id = id,
+                    Metadata = meta
+                };
             }
         }
     }
@@ -134,9 +143,9 @@ public class LocalDiskFileStore : IFileStore
             var totalRead = readLength + offset;
             var buf = buffer.Memory[..totalRead];
             await fs.WriteAsync(buf, cts);
-            await _stats.TrackIngress(id, (ulong)buf.Length);
+            await _stats.TrackIngress(id, (ulong) buf.Length);
             sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
-            total += (ulong)buf.Length;
+            total += (ulong) buf.Length;
             offset = 0;
         }
 
@@ -160,7 +169,7 @@ public class LocalDiskFileStore : IFileStore
 
             var fullSize = readLength + offset;
             await outStream.WriteAsync(buffer.Memory[..fullSize], cts);
-            await _stats.TrackEgress(id, (ulong)fullSize);
+            await _stats.TrackEgress(id, (ulong) fullSize);
             await outStream.FlushAsync(cts);
             offset = 0;
         }
@@ -188,8 +197,8 @@ public class LocalDiskFileStore : IFileStore
 
                 var fullSize = readLength + offset;
                 var toWrite = Math.Min(fullSize, dataRemaining);
-                await outStream.WriteAsync(buffer.Memory[..(int)toWrite], cts);
-                await _stats.TrackEgress(id, (ulong)toWrite);
+                await outStream.WriteAsync(buffer.Memory[..(int) toWrite], cts);
+                await _stats.TrackEgress(id, (ulong) toWrite);
                 await outStream.FlushAsync(cts);
                 dataRemaining -= toWrite;
                 offset = 0;

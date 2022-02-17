@@ -2,4 +2,13 @@
     display: grid;
     grid-auto-flow: column;
     margin: 0 30px;
+    line-height: 32px;
+}
+
+.stats svg {
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.stats > div {
 }

@@ -3,7 +3,6 @@ import {useEffect, useState} from "react";
 import "./FileUpload.css";
 import {buf2hex, ConstName, FormatBytes} from "./Util";
 import {RateCalculator} from "./RateCalculator";
-import {upload} from "@testing-library/user-event/dist/upload";
 
 const UploadState = {
     NotStarted: 0,

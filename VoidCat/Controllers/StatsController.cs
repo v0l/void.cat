@@ -23,11 +23,13 @@ namespace VoidCat.Controllers
         {
             var bw = await _statsReporter.GetBandwidth();
             var bytes = 0UL;
+            var count = 0;
             await foreach (var vf in _fileStore.ListFiles())
             {
-                bytes += vf.Size;
+                bytes += vf.Metadata?.Size ?? 0;
+                count++;
             }
-            return new(bw, bytes);
+            return new(bw, bytes, count);
         }
 
         [HttpGet]
@@ -39,6 +41,6 @@ namespace VoidCat.Controllers
         }
     }
 
-    public sealed record GlobalStats(Bandwidth Bandwidth, ulong TotalBytes);
+    public sealed record GlobalStats(Bandwidth Bandwidth, ulong TotalBytes, int Count);
     public sealed record FileStats(Bandwidth Bandwidth);
 }

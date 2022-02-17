@@ -1,7 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
-using VoidCat.Services;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers;
@@ -32,9 +31,9 @@ public class DownloadController : Controller
     public async Task DownloadFile([FromRoute] string id)
     {
         var gid = id.FromBase58Guid();
-        var meta = await SetupDownload(gid);
+        var voidFile = await SetupDownload(gid);
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)meta!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -46,10 +45,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+            Response.StatusCode = (int) HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -70,7 +69,7 @@ public class DownloadController : Controller
         await Response.CompleteAsync();
     }
 
-    private async Task<VoidFile?> SetupDownload(Guid id)
+    private async Task<PublicVoidFile?> SetupDownload(Guid id)
     {
         var meta = await _storage.Get(id);
         if (meta == null)

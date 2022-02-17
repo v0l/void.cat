@@ -1,32 +1,31 @@
-﻿
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace VoidCat.Model
 {
-    public record VoidFile
+    public abstract record VoidFile<TMeta> where TMeta : VoidFileMeta
     {
+        /// <summary>
+        /// Id of the file
+        /// </summary>
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid Id { get; init; }
-
-        public VoidFileMeta? Metadata { get; set; }
         
-        public ulong Size { get; init; }
-
-        public DateTimeOffset Uploaded { get; init; }
+        /// <summary>
+        /// Metadta related to the file
+        /// </summary>
+        public TMeta? Metadata { get; init; }
+        
+        /// <summary>
+        /// Optional paywall config
+        /// </summary>
+        public Paywall? Paywall { get; init; }
     }
 
-    public record InternalVoidFile : VoidFile
+    public sealed record PublicVoidFile : VoidFile<VoidFileMeta>
     {
-        [JsonConverter(typeof(Base58GuidConverter))]
-        public Guid EditSecret { get; init; }
     }
 
-    public record VoidFileMeta
+    public sealed record PrivateVoidFile : VoidFile<SecretVoidFileMeta>
     {
-        public string? Name { get; init; }
-
-        public string? Description { get; init; }
-        
-        public string? MimeType { get; init; }
     }
 }

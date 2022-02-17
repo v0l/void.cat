@@ -4,15 +4,13 @@ namespace VoidCat.Services.Abstractions;
 
 public interface IFileStore
 {
-    ValueTask<VoidFile?> Get(Guid id);
+    ValueTask<PublicVoidFile?> Get(Guid id);
 
-    ValueTask<InternalVoidFile> Ingress(IngressPayload payload, CancellationToken cts);
+    ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts);
 
     ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
-    ValueTask UpdateInfo(VoidFile patch, Guid editSecret);
-
-    IAsyncEnumerable<VoidFile> ListFiles();
+    IAsyncEnumerable<PublicVoidFile> ListFiles();
 }
 
 public sealed record IngressPayload(Stream InStream, VoidFileMeta Meta, string Hash)
