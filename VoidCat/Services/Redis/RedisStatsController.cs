@@ -1,7 +1,7 @@
 using StackExchange.Redis;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.Redis;
 
 public class RedisStatsController : IStatsReporter, IStatsCollector
 {

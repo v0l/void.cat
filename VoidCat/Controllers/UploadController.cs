@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 using VoidCat.Model;
-using VoidCat.Services;
+using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers
@@ -12,10 +12,14 @@ namespace VoidCat.Controllers
     public class UploadController : Controller
     {
         private readonly IFileStore _storage;
+        private readonly IFileMetadataStore _metadata;
+        private readonly IPaywallStore _paywall;
 
-        public UploadController(IFileStore storage)
+        public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall)
         {
             _storage = storage;
+            _metadata = metadata;
+            _paywall = paywall;
         }
 
         [HttpPost]
@@ -78,6 +82,32 @@ namespace VoidCat.Controllers
         {
             return _storage.Get(id.FromBase58Guid());
         }
+
+        [HttpGet]
+        [Route("{id}/paywall")]
+        public ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
+        {
+            throw new NotImplementedException();
+        }
+        
+        [HttpPost]
+        [Route("{id}/paywall")]
+        public async Task<IActionResult> SetPaywallConfig([FromRoute] string id, [FromBody] SetPaywallConfigRequest req)
+        {
+            var gid = id.FromBase58Guid();
+            var meta = await _metadata.Get(gid);
+            if (meta == default) return NotFound();
+
+            if (req.EditSecret != meta.EditSecret) return Unauthorized();
+            
+            if (req.Strike != default)
+            {
+                await _paywall.SetConfig(gid, req.Strike!);
+                return Ok();
+            }
+
+            return BadRequest();
+        }
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
@@ -103,5 +133,13 @@ namespace VoidCat.Controllers
 
         public static UploadResult Error(string message)
             => new(false, null, message);
+    }
+
+    public record SetPaywallConfigRequest
+    {
+        [JsonConverter(typeof(Base58GuidConverter))]
+        public Guid EditSecret { get; init; }
+        
+        public StrikePaywallConfig? Strike { get; init; }
     }
 }

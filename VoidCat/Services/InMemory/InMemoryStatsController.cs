@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.InMemory;
 
 public class InMemoryStatsController : IStatsCollector, IStatsReporter
 {

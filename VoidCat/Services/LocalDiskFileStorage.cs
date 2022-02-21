@@ -12,13 +12,15 @@ public class LocalDiskFileStore : IFileStore
     private readonly VoidSettings _settings;
     private readonly IAggregateStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
+    private readonly IPaywallStore _paywallStore;
 
     public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats,
-        IFileMetadataStore metadataStore)
+        IFileMetadataStore metadataStore, IPaywallStore paywallStore)
     {
         _settings = settings;
         _stats = stats;
         _metadataStore = metadataStore;
+        _paywallStore = paywallStore;
 
         if (!Directory.Exists(_settings.DataDirectory))
         {
@@ -31,7 +33,8 @@ public class LocalDiskFileStore : IFileStore
         return new ()
         {
             Id = id,
-            Metadata = await _metadataStore.GetPublic(id)
+            Metadata = await _metadataStore.GetPublic(id),
+            Paywall = await _paywallStore.GetConfig(id)
         };
     }
 

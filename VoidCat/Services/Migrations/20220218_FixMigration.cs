@@ -29,7 +29,6 @@ public class WrongFile
     [JsonConverter(typeof(Base58GuidConverter))]
     public Guid Id { get; init; }
     public WrongMeta? Metadata { get; init; }
-    public Paywall? Paywall { get; init; }
 }
 
 public class WrongMeta

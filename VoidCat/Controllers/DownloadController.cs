@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
+using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers;
@@ -9,12 +10,14 @@ namespace VoidCat.Controllers;
 public class DownloadController : Controller
 {
     private readonly IFileStore _storage;
+    private readonly IPaywallStore _paywall;
     private readonly ILogger<DownloadController> _logger;
 
-    public DownloadController(IFileStore storage, ILogger<DownloadController> logger)
+    public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IPaywallStore paywall)
     {
         _storage = storage;
         _logger = logger;
+        _paywall = paywall;
     }
 
     [HttpOptions]
@@ -32,8 +35,9 @@ public class DownloadController : Controller
     {
         var gid = id.FromBase58Guid();
         var voidFile = await SetupDownload(gid);
+        if (voidFile == default) return;
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -45,10 +49,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -76,6 +80,26 @@ public class DownloadController : Controller
         {
             Response.StatusCode = 404;
             return null;
+        }
+
+        // check paywall
+        if (meta.Paywall != default)
+        {
+            var orderId = Request.Headers.GetHeader("V-OrderId");
+            if (string.IsNullOrEmpty(orderId))
+            {
+                Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
+                return null;
+            }
+            else
+            {
+                var order = await _paywall.GetOrder(orderId.FromBase58Guid());
+                if (order?.Status != PaywallStatus.Paid)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
+                    return null;
+                }
+            }
         }
 
         Response.Headers.XFrameOptions = "SAMEORIGIN";

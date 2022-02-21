@@ -30,3 +30,10 @@ export const ZiB = Math.pow(1024, 7);
  * @constant {number} - Size of 1 YiB
  */
 export const YiB = Math.pow(1024, 8);
+
+export const PaywallCurrencies = {
+    BTC: 0,
+    USD: 1,
+    EUR: 2,
+    GBP: 3
+}

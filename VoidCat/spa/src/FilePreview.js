@@ -3,6 +3,8 @@ import {useParams} from "react-router-dom";
 import {TextPreview} from "./TextPreview";
 
 import "./FilePreview.css";
+import {FileEdit} from "./FileEdit";
+import {FilePaywall} from "./FilePaywall";
 
 export function FilePreview() {
     const params = useParams();
@@ -17,6 +19,10 @@ export function FilePreview() {
     }
 
     function renderTypes() {
+        if(info.paywall) {
+            return <FilePaywall file={info}/>;    
+        }
+        
         let link = `/d/${info.id}`;
         if (info.metadata) {
             switch (info.metadata.mimeType) {
@@ -53,6 +59,7 @@ export function FilePreview() {
                 <Fragment>
                     this.Download(<a className="btn" href={`/d/${info.id}`}>{info.metadata?.name ?? info.id}</a>)
                     {renderTypes()}
+                    <FileEdit file={info}/>
                 </Fragment>
             ) : "Not Found"}
         </div>

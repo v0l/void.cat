@@ -1,4 +1,6 @@
-﻿namespace VoidCat.Model
+﻿using VoidCat.Services.Abstractions;
+
+namespace VoidCat.Model
 {
     public class VoidSettings
     {
@@ -9,6 +11,8 @@
         public JwtSettings JwtSettings { get; init; } = new("void_cat_internal", "default_key");
         
         public string? Redis { get; init; }
+        
+        public StrikeApiSettings? Strike { get; init; }
     }
 
     public sealed record TorSettings(Uri TorControl, string PrivateKey, string ControlPassword);

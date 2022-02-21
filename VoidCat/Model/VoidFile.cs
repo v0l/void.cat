@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using VoidCat.Model.Paywall;
 
 namespace VoidCat.Model
 {
@@ -18,7 +19,7 @@ namespace VoidCat.Model
         /// <summary>
         /// Optional paywall config
         /// </summary>
-        public Paywall? Paywall { get; init; }
+        public PaywallConfig? Paywall { get; init; }
     }
 
     public sealed record PublicVoidFile : VoidFile<VoidFileMeta>

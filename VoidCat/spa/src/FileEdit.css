@@ -1,0 +1,9 @@
+.file-edit {
+    display: flex;
+    flex-direction: row;
+    text-align: start;
+}
+
+.file-edit > div {
+    flex: 1;
+}

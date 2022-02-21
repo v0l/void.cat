@@ -139,6 +139,7 @@ export function FileUpload(props) {
         if (xhr.ok) {
             setUState(UploadState.Done);
             setResult(xhr.file);
+            window.localStorage.setItem(xhr.file.id, JSON.stringify(xhr.file));
         } else {
             setUState(UploadState.Failed);
             setResult(xhr.errorMessage);
