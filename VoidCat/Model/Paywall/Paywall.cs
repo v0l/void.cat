@@ -8,7 +8,7 @@ public enum PaywallServices
 
 public abstract record PaywallConfig(PaywallServices Service, PaywallMoney Cost);
 
-public record StrikePaywallConfig(PaywallServices Service, PaywallMoney Cost) : PaywallConfig(Service, Cost)
+public record StrikePaywallConfig(PaywallMoney Cost) : PaywallConfig(PaywallServices.Strike, Cost)
 {
     public string Handle { get; init; }
 }
