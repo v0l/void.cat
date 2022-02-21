@@ -20,6 +20,7 @@ public class RedisPaywallStore : IPaywallStore
         var cfg = json.HasValue ? JsonConvert.DeserializeObject<PaywallBlank>(json) : default;
         return cfg?.Service switch
         {
+            PaywallServices.None => JsonConvert.DeserializeObject<NoPaywallConfig>(json),
             PaywallServices.Strike => JsonConvert.DeserializeObject<StrikePaywallConfig>(json),
             _ => default
         };

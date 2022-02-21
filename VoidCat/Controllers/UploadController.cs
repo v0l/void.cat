@@ -125,7 +125,9 @@ namespace VoidCat.Controllers
                 return Ok();
             }
 
-            return BadRequest();
+            // if none set, set NoPaywallConfig
+            await _paywall.SetConfig(gid, new NoPaywallConfig());
+            return Ok();
         }
     }
 

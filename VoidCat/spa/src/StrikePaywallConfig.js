@@ -5,15 +5,15 @@ import {PaywallCurrencies} from "./Const";
 export function StrikePaywallConfig(props) {
     const file = props.file;
     const privateFile = props.privateFile;
+    const onSaveConfig = props.onSaveConfig;
     const paywall = file.paywall;
     const editSecret = privateFile.metadata.editSecret;
-    const id = file.id;
 
     const [username, setUsername] = useState(paywall?.handle ?? "hrf");
     const [currency, setCurrency] = useState(paywall?.cost.currency ?? PaywallCurrencies.USD);
     const [price, setPrice] = useState(paywall?.cost.amount ?? 1);
     const [saveStatus, setSaveStatus] = useState();
-    
+
     async function saveStrikeConfig(e) {
         e.target.disabled = true;
         let cfg = {
@@ -27,17 +27,14 @@ export function StrikePaywallConfig(props) {
             }
         };
 
-        let req = await fetch(`/upload/${id}/paywall`, {
-            method: "POST",
-            body: JSON.stringify(cfg),
-            headers: {
-                "Content-Type": "application/json"
+        if (typeof onSaveConfig === "function") {
+            if (await onSaveConfig(cfg)) {
+                setSaveStatus(true);
+            } else {
+                alert("Error settings paywall config!");
+                setSaveStatus(false);
             }
-        });
-        if (!req.ok) {
-            alert("Error settings paywall config!");
         }
-        setSaveStatus(req.ok);
         e.target.disabled = false;
     }
 

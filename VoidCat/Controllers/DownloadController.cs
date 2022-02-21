@@ -83,7 +83,7 @@ public class DownloadController : Controller
         }
 
         // check paywall
-        if (meta.Paywall != default)
+        if (meta.Paywall != default && meta.Paywall.Service != PaywallServices.None)
         {
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))

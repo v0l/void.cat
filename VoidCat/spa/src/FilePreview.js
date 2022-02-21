@@ -21,7 +21,7 @@ export function FilePreview() {
     }
 
     function renderTypes() {
-        if (info.paywall) {
+        if (info.paywall && info.paywall.service !== 0) {
             if (!order) {
                 return <FilePaywall file={info} onPaid={loadInfo}/>;
             }
