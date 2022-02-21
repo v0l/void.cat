@@ -35,6 +35,8 @@ services.AddRouting();
 services.AddControllers().AddNewtonsoftJson((opt) =>
 {
     opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+    opt.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
+    opt.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
 });
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

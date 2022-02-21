@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace VoidCat.Model.Paywall;
+﻿namespace VoidCat.Model.Paywall;
 
 public enum PaywallServices
 {
@@ -9,4 +7,8 @@ public enum PaywallServices
 }
 
 public abstract record PaywallConfig(PaywallServices Service, PaywallMoney Cost);
-public record StrikePaywallConfig(string Handle, PaywallMoney Cost) : PaywallConfig(PaywallServices.Strike, Cost);
+
+public record StrikePaywallConfig(PaywallServices Service, PaywallMoney Cost) : PaywallConfig(Service, Cost)
+{
+    public string Handle { get; init; }
+}

@@ -17,7 +17,7 @@ public class RedisPaywallStore : IPaywallStore
     public async ValueTask<PaywallConfig?> GetConfig(Guid id)
     {
         var json = await _database.StringGetAsync(ConfigKey(id));
-        var cfg = json.HasValue ? JsonConvert.DeserializeObject<PaywallConfig>(json) : default;
+        var cfg = json.HasValue ? JsonConvert.DeserializeObject<PaywallBlank>(json) : default;
         return cfg?.Service switch
         {
             PaywallServices.Strike => JsonConvert.DeserializeObject<StrikePaywallConfig>(json),
@@ -44,4 +44,9 @@ public class RedisPaywallStore : IPaywallStore
 
     private RedisKey ConfigKey(Guid id) => $"paywall:config:{id}";
     private RedisKey OrderKey(Guid id) => $"paywall:order:{id}";
+
+    internal class PaywallBlank
+    {
+        public PaywallServices Service { get; init; }
+    }
 }
