@@ -9,6 +9,8 @@ import {FilePaywall} from "./FilePaywall";
 export function FilePreview() {
     const params = useParams();
     const [info, setInfo] = useState();
+    const [order, setOrder] = useState();
+    const [link, setLink] = useState("#");
 
     async function loadInfo() {
         let req = await fetch(`/upload/${params.id}`);
@@ -19,11 +21,12 @@ export function FilePreview() {
     }
 
     function renderTypes() {
-        if(info.paywall) {
-            return <FilePaywall file={info}/>;    
+        if (info.paywall) {
+            if (!order) {
+                return <FilePaywall file={info} onPaid={loadInfo}/>;
+            }
         }
-        
-        let link = `/d/${info.id}`;
+
         if (info.metadata) {
             switch (info.metadata.mimeType) {
                 case "image/jpg":
@@ -53,11 +56,24 @@ export function FilePreview() {
         loadInfo();
     }, []);
 
+    useEffect(() => {
+        if (info) {
+            let order = window.localStorage.getItem(`paywall-${info.id}`);
+            if (order) {
+                let orderObj = JSON.parse(order);
+                setOrder(orderObj);
+                setLink(`/d/${info.id}?orderId=${orderObj.id}`);
+            } else {
+                setLink(`/d/${info.id}`);
+            }
+        }
+    }, [info]);
+
     return (
         <div className="preview">
             {info ? (
                 <Fragment>
-                    this.Download(<a className="btn" href={`/d/${info.id}`}>{info.metadata?.name ?? info.id}</a>)
+                    this.Download(<a className="btn" href={link}>{info.metadata?.name ?? info.id}</a>)
                     {renderTypes()}
                     <FileEdit file={info}/>
                 </Fragment>

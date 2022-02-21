@@ -9,6 +9,7 @@ using VoidCat.Services;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
+using VoidCat.Services.Paywall;
 using VoidCat.Services.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,7 @@ var services = builder.Services;
 var configuration = builder.Configuration;
 var voidSettings = configuration.GetSection("Settings").Get<VoidSettings>();
 services.AddSingleton(voidSettings);
+services.AddSingleton(voidSettings.Strike ?? new());
 
 var seqSettings = configuration.GetSection("Seq");
 builder.Logging.AddSeq(seqSettings);
@@ -49,25 +51,34 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // void.cat services
+//
 services.AddVoidMigrations();
-services.AddScoped<IFileMetadataStore, LocalDiskFileMetadataStore>();
-services.AddScoped<IFileStore, LocalDiskFileStore>();
-services.AddScoped<IAggregateStatsCollector, AggregateStatsCollector>();
-services.AddScoped<IStatsCollector, PrometheusStatsCollector>();
+
+// file storage
+services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
+services.AddTransient<IFileStore, LocalDiskFileStore>();
+
+// stats
+services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();
+services.AddTransient<IStatsCollector, PrometheusStatsCollector>();
+
+// paywall
+services.AddVoidPaywall();
+
 if (useRedis)
 {
-    services.AddScoped<RedisStatsController>();
-    services.AddScoped<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
-    services.AddScoped<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
-    services.AddScoped<IPaywallStore, RedisPaywallStore>();
+    services.AddTransient<RedisStatsController>();
+    services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
+    services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
+    services.AddTransient<IPaywallStore, RedisPaywallStore>();
 }
 else
 {
     services.AddMemoryCache();
-    services.AddScoped<InMemoryStatsController>();
-    services.AddScoped<IStatsReporter>(svc => svc.GetRequiredService<InMemoryStatsController>());
-    services.AddScoped<IStatsCollector>(svc => svc.GetRequiredService<InMemoryStatsController>());
-    services.AddScoped<IPaywallStore, InMemoryPaywallStore>();
+    services.AddTransient<InMemoryStatsController>();
+    services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<InMemoryStatsController>());
+    services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<InMemoryStatsController>());
+    services.AddTransient<IPaywallStore, InMemoryPaywallStore>();
 }
 
 var app = builder.Build();

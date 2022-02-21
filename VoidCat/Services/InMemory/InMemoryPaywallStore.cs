@@ -31,7 +31,8 @@ public class InMemoryPaywallStore : IPaywallStore
 
     public ValueTask SaveOrder(PaywallOrder order)
     {
-        _cache.Set(order.Id, order);
+        _cache.Set(order.Id, order,
+            order.Status == PaywallOrderStatus.Paid ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(5));
         return ValueTask.CompletedTask;
     }
 }

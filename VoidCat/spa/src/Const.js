@@ -37,3 +37,14 @@ export const PaywallCurrencies = {
     EUR: 2,
     GBP: 3
 }
+
+export const PaywallServices = {
+    None: 0,
+    Strike: 1
+}
+
+export const PaywallOrderState = {
+    Unpaid: 0,
+    Paid: 1,
+    Expired: 2
+}

@@ -8,5 +8,5 @@ public enum PaywallServices
     Strike
 }
 
-public abstract record PaywallConfig(PaywallServices Service, [property: JsonConverter(typeof(JsonStringEnumConverter))]PaywallMoney Cost);
+public abstract record PaywallConfig(PaywallServices Service, PaywallMoney Cost);
 public record StrikePaywallConfig(string Handle, PaywallMoney Cost) : PaywallConfig(PaywallServices.Strike, Cost);

@@ -1,15 +1,21 @@
 import {useState} from "react";
+import FeatherIcon from "feather-icons-react";
 import {PaywallCurrencies} from "./Const";
 
 export function StrikePaywallConfig(props) {
-    const editSecret = props.file.metadata.editSecret;
-    const id = props.file.id;
+    const file = props.file;
+    const privateFile = props.privateFile;
+    const paywall = file.paywall;
+    const editSecret = privateFile.metadata.editSecret;
+    const id = file.id;
 
-    const [username, setUsername] = useState("hrf");
-    const [currency, setCurrency] = useState(PaywallCurrencies.USD);
-    const [price, setPrice] = useState(1);
-
-    async function saveStrikeConfig() {
+    const [username, setUsername] = useState(paywall?.handle ?? "hrf");
+    const [currency, setCurrency] = useState(paywall?.cost.currency ?? PaywallCurrencies.USD);
+    const [price, setPrice] = useState(paywall?.cost.amount ?? 1);
+    const [saveStatus, setSaveStatus] = useState();
+    
+    async function saveStrikeConfig(e) {
+        e.target.disabled = true;
         let cfg = {
             editSecret,
             strike: {
@@ -31,6 +37,8 @@ export function StrikePaywallConfig(props) {
         if (!req.ok) {
             alert("Error settings paywall config!");
         }
+        setSaveStatus(req.ok);
+        e.target.disabled = false;
     }
 
     return (
@@ -40,17 +48,18 @@ export function StrikePaywallConfig(props) {
                 <dd><input type="text" value={username} onChange={(e) => setUsername(e.target.value)}/></dd>
                 <dt>Currency:</dt>
                 <dd>
-                    <select onChange={(e) => setCurrency(parseInt(e.target.value))}>
-                        <option selected={currency === PaywallCurrencies.BTC} value={PaywallCurrencies.BTC}>BTC</option>
-                        <option selected={currency === PaywallCurrencies.USD} value={PaywallCurrencies.USD}>USD</option>
-                        <option selected={currency === PaywallCurrencies.EUR} value={PaywallCurrencies.EUR}>EUR</option>
-                        <option selected={currency === PaywallCurrencies.GBP} value={PaywallCurrencies.GBP}>GBP</option>
+                    <select onChange={(e) => setCurrency(parseInt(e.target.value))} value={currency}>
+                        <option value={PaywallCurrencies.BTC}>BTC</option>
+                        <option value={PaywallCurrencies.USD}>USD</option>
+                        <option value={PaywallCurrencies.EUR}>EUR</option>
+                        <option value={PaywallCurrencies.GBP}>GBP</option>
                     </select>
                 </dd>
                 <dt>Price:</dt>
                 <dd><input type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value))}/></dd>
             </dl>
             <button onClick={saveStrikeConfig}>Save</button>
+            {saveStatus ? <FeatherIcon icon="check-circle"/> : null}
         </div>
     );
 }

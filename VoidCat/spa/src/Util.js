@@ -37,3 +37,41 @@ export function ConstName(type, val) {
         }
     }
 }
+
+export function FormatCurrency(value, currency) {
+    if (typeof value !== "number") {
+        value = parseFloat(value);
+    }
+    switch (currency) {
+        case 0:
+        case "BTC": {
+            let hasDecimals = (value % 1) > 0;
+            return `₿${value.toLocaleString(undefined, {
+                minimumFractionDigits: hasDecimals ? 8 : 0, // Sats
+                maximumFractionDigits: 11 // MSats
+            })}`;
+        }
+        case 1:
+        case "USD":{
+            return value.toLocaleString(undefined, {
+                style: "currency",
+                currency: "USD"
+            });
+        }
+        case 2:
+        case "EUR": {
+            return value.toLocaleString(undefined, {
+                style: "currency",
+                currency: "EUR"
+            });
+        }
+        case 3:
+        case "GBP": {
+            return value.toLocaleString(undefined, {
+                style: "currency",
+                currency: "GBP"
+            });
+        }
+    }
+    return value.toString();
+}

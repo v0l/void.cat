@@ -7,3 +7,8 @@
 .file-edit > div {
     flex: 1;
 }
+
+.file-edit svg {
+    vertical-align: middle;
+    margin-left: 10px;
+}

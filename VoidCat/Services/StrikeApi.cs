@@ -1,9 +1,9 @@
-namespace VoidCat.Services.Abstractions;
-
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+
+namespace VoidCat.Services;
 
 public class StrikeApi
 {
@@ -93,56 +93,41 @@ public class StrikeApi
 
 public class Profile
 {
-    [JsonProperty("handle")]
-    public string Handle { get; init; } = null;
+    [JsonProperty("handle")] public string Handle { get; init; } = null;
 
-    [JsonProperty("avatarUrl")]
-    public string? AvatarUrl { get; init; }
+    [JsonProperty("avatarUrl")] public string? AvatarUrl { get; init; }
 
-    [JsonProperty("description")]
-    public string? Description { get; init; }
+    [JsonProperty("description")] public string? Description { get; init; }
 
-    [JsonProperty("canReceive")]
-    public bool CanReceive { get; init; }
+    [JsonProperty("canReceive")] public bool CanReceive { get; init; }
 
-    [JsonProperty("currencies")]
-    public List<AvailableCurrency> Currencies { get; init; } = new();
+    [JsonProperty("currencies")] public List<AvailableCurrency> Currencies { get; init; } = new();
 }
 
 public class InvoiceQuote
 {
-    [JsonProperty("quoteId")]
-    public Guid QuoteId { get; init; }
+    [JsonProperty("quoteId")] public Guid QuoteId { get; init; }
 
-    [JsonProperty("description")]
-    public string? Description { get; init; }
+    [JsonProperty("description")] public string? Description { get; init; }
 
-    [JsonProperty("lnInvoice")]
-    public string? LnInvoice { get; init; }
+    [JsonProperty("lnInvoice")] public string? LnInvoice { get; init; }
 
-    [JsonProperty("onchainAddress")]
-    public string? OnChainAddress { get; init; }
+    [JsonProperty("onchainAddress")] public string? OnChainAddress { get; init; }
 
-    [JsonProperty("expiration")]
-    public DateTimeOffset Expiration { get; init; }
+    [JsonProperty("expiration")] public DateTimeOffset Expiration { get; init; }
 
-    [JsonProperty("expirationInSec")]
-    public ulong ExpirationSec { get; init; }
+    [JsonProperty("expirationInSec")] public ulong ExpirationSec { get; init; }
 
-    [JsonProperty("targetAmount")]
-    public CurrencyAmount? TargetAmount { get; init; }
+    [JsonProperty("targetAmount")] public CurrencyAmount? TargetAmount { get; init; }
 
-    [JsonProperty("sourceAmount")]
-    public CurrencyAmount? SourceAmount { get; init; }
+    [JsonProperty("sourceAmount")] public CurrencyAmount? SourceAmount { get; init; }
 
-    [JsonProperty("conversionRate")]
-    public ConversionRate? ConversionRate { get; init; }
+    [JsonProperty("conversionRate")] public ConversionRate? ConversionRate { get; init; }
 }
 
 public class ConversionRate
 {
-    [JsonProperty("amount")]
-    public string? Amount { get; init; }
+    [JsonProperty("amount")] public string? Amount { get; init; }
 
     [JsonProperty("sourceCurrency")]
     [JsonConverter(typeof(StringEnumConverter))]
@@ -162,23 +147,18 @@ public class ErrorResponse : Exception
 
 public class CreateInvoiceRequest
 {
-    [JsonProperty("correlationId")]
-    public string? CorrelationId { get; init; }
+    [JsonProperty("correlationId")] public string? CorrelationId { get; init; }
 
-    [JsonProperty("description")]
-    public string? Description { get; init; }
+    [JsonProperty("description")] public string? Description { get; init; }
 
-    [JsonProperty("amount")]
-    public CurrencyAmount? Amount { get; init; }
+    [JsonProperty("amount")] public CurrencyAmount? Amount { get; init; }
 
-    [JsonProperty("handle")]
-    public string? Handle { get; init; }
+    [JsonProperty("handle")] public string? Handle { get; init; }
 }
 
 public class CurrencyAmount
 {
-    [JsonProperty("amount")]
-    public string? Amount { get; init; }
+    [JsonProperty("amount")] public string? Amount { get; init; }
 
     [JsonProperty("currency")]
     [JsonConverter(typeof(StringEnumConverter))]
@@ -187,14 +167,11 @@ public class CurrencyAmount
 
 public class AvailableCurrency
 {
-    [JsonProperty("currency")]
-    public Currencies Currency { get; init; }
+    [JsonProperty("currency")] public Currencies Currency { get; init; }
 
-    [JsonProperty("isDefaultCurrency")]
-    public bool IsDefault { get; init; }
+    [JsonProperty("isDefaultCurrency")] public bool IsDefault { get; init; }
 
-    [JsonProperty("isAvailable")]
-    public bool IsAvailable { get; init; }
+    [JsonProperty("isAvailable")] public bool IsAvailable { get; init; }
 }
 
 public enum Currencies
@@ -208,93 +185,70 @@ public enum Currencies
 
 public class Invoice
 {
-    [JsonProperty("invoiceId")]
-    public Guid InvoiceId { get; init; }
+    [JsonProperty("invoiceId")] public Guid InvoiceId { get; init; }
 
-    [JsonProperty("amount")]
-    public CurrencyAmount? Amount { get; init; }
+    [JsonProperty("amount")] public CurrencyAmount? Amount { get; init; }
 
     [JsonProperty("state")]
     [JsonConverter(typeof(StringEnumConverter))]
     public InvoiceState State { get; set; }
 
-    [JsonProperty("created")]
-    public DateTimeOffset? Created { get; init; }
+    [JsonProperty("created")] public DateTimeOffset? Created { get; init; }
 
-    [JsonProperty("correlationId")]
-    public string? CorrelationId { get; init; }
+    [JsonProperty("correlationId")] public string? CorrelationId { get; init; }
 
-    [JsonProperty("description")]
-    public string? Description { get; init; }
+    [JsonProperty("description")] public string? Description { get; init; }
 
-    [JsonProperty("issuerId")]
-    public Guid? IssuerId { get; init; }
+    [JsonProperty("issuerId")] public Guid? IssuerId { get; init; }
 
-    [JsonProperty("receiverId")]
-    public Guid? ReceiverId { get; init; }
+    [JsonProperty("receiverId")] public Guid? ReceiverId { get; init; }
 
-    [JsonProperty("payerId")]
-    public Guid? PayerId { get; init; }
+    [JsonProperty("payerId")] public Guid? PayerId { get; init; }
 }
 
 public abstract class WebhookBase
 {
-    [JsonProperty("webhookUrl")]
-    public Uri? Uri { get; init; }
+    [JsonProperty("webhookUrl")] public Uri? Uri { get; init; }
 
-    [JsonProperty("webhookVersion")]
-    public string? Version { get; init; }
+    [JsonProperty("webhookVersion")] public string? Version { get; init; }
 
-    [JsonProperty("enabled")]
-    public bool? Enabled { get; init; }
+    [JsonProperty("enabled")] public bool? Enabled { get; init; }
 
-    [JsonProperty("eventTypes")]
-    public HashSet<string>? EventTypes { get; init; }
+    [JsonProperty("eventTypes")] public HashSet<string>? EventTypes { get; init; }
 }
 
 public sealed class NewWebhook : WebhookBase
 {
-    [JsonProperty("secret")]
-    public string? Secret { get; init; }
+    [JsonProperty("secret")] public string? Secret { get; init; }
 }
 
 public sealed class WebhookSubscription : WebhookBase
 {
-    [JsonProperty("id")]
-    public Guid? Id { get; init; }
+    [JsonProperty("id")] public Guid? Id { get; init; }
 
-    [JsonProperty("created")]
-    public DateTimeOffset? Created { get; init; }
+    [JsonProperty("created")] public DateTimeOffset? Created { get; init; }
 }
 
 public class WebhookData
 {
-    [JsonProperty("entityId")]
-    public Guid? EntityId { get; set; }
+    [JsonProperty("entityId")] public Guid? EntityId { get; set; }
 
-    [JsonProperty("changes")]
-    public List<string>? Changes { get; set; }
+    [JsonProperty("changes")] public List<string>? Changes { get; set; }
 }
 
 public class WebhookEvent
 {
-    [JsonProperty("id")]
-    public Guid? Id { get; set; }
+    [JsonProperty("id")] public Guid? Id { get; set; }
 
-    [JsonProperty("eventType")]
-    public string? EventType { get; set; }
+    [JsonProperty("eventType")] public string? EventType { get; set; }
 
-    [JsonProperty("webhookVersion")]
-    public string? WebhookVersion { get; set; }
+    [JsonProperty("webhookVersion")] public string? WebhookVersion { get; set; }
 
-    [JsonProperty("data")]
-    public WebhookData? Data { get; set; }
+    [JsonProperty("data")] public WebhookData? Data { get; set; }
 
-    [JsonProperty("created")]
-    public DateTimeOffset? Created { get; set; }
+    [JsonProperty("created")] public DateTimeOffset? Created { get; set; }
 
-    [JsonProperty("deliverySuccess")]
-    public bool? DeliverySuccess { get; set; }
+    [JsonProperty("deliverySuccess")] public bool? DeliverySuccess { get; set; }
 
     public override string ToString()
     {

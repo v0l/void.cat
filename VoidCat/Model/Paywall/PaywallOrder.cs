@@ -1,11 +1,13 @@
 namespace VoidCat.Model.Paywall;
 
-public enum PaywallStatus : byte
+public enum PaywallOrderStatus : byte
 {
     Unpaid,
     Paid,
     Expired
 }
 
-public abstract record PaywallOrder(Guid Id, PaywallMoney Price, PaywallStatus Status);
-public record LightningPaywallOrder(Guid Id, PaywallMoney Price, PaywallStatus Status, string LnInvoice) : PaywallOrder(Id, Price, Status);
+public record PaywallOrder(Guid Id, PaywallMoney Price, PaywallOrderStatus Status);
+
+public record LightningPaywallOrder(Guid Id, PaywallMoney Price, PaywallOrderStatus Status, string LnInvoice,
+    DateTimeOffset Expire) : PaywallOrder(Id, Price, Status);

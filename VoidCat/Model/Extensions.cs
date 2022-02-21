@@ -16,7 +16,8 @@ public static class Extensions
 
     public static string? GetHeader(this IHeaderDictionary headers, string key)
     {
-        return headers
-            .FirstOrDefault(a => a.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Value.ToString();
+        var h = headers
+            .FirstOrDefault(a => a.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase));
+        return !string.IsNullOrEmpty(h.Value.ToString()) ? h.Value.ToString() : default;
     }
 }

@@ -1,4 +1,5 @@
-﻿using VoidCat.Services.Abstractions;
+﻿using VoidCat.Services;
+using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Model
 {

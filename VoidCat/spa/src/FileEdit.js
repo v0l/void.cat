@@ -4,9 +4,10 @@ import "./FileEdit.css";
 import {StrikePaywallConfig} from "./StrikePaywallConfig";
 
 export function FileEdit(props) {
-    const [paywall, setPaywall] = useState();
+    const file = props.file;
+    const [paywall, setPaywall] = useState(file.paywall?.service);
 
-    const privateFile = JSON.parse(window.localStorage.getItem(props.file.id));
+    const privateFile = JSON.parse(window.localStorage.getItem(file.id));
     if (!privateFile) {
         return null;
     }
@@ -14,13 +15,13 @@ export function FileEdit(props) {
     function renderPaywallConfig() {
         switch (paywall) {
             case 1: {
-                return <StrikePaywallConfig file={privateFile}/>
+                return <StrikePaywallConfig file={file} privateFile={privateFile}/>
             }
         }
         return null;
     }
 
-    const meta = props.file.metadata;
+    const meta = file.metadata;
     return (
         <div className="file-edit">
             <div>
@@ -36,7 +37,7 @@ export function FileEdit(props) {
             <div>
                 <h3>Paywall Config</h3>
                 Type:
-                <select onChange={(e) => setPaywall(parseInt(e.target.value))}>
+                <select onChange={(e) => setPaywall(parseInt(e.target.value))} value={paywall}>
                     <option value={0}>None</option>
                     <option value={1}>Strike</option>
                 </select>

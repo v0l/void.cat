@@ -1,15 +1,16 @@
+using VoidCat.Model;
 using VoidCat.Model.Paywall;
 
 namespace VoidCat.Services.Abstractions;
 
 public interface IPaywallFactory
 {
-    ValueTask<IPaywallProvider> CreateStrikeProvider();
+    ValueTask<IPaywallProvider> CreateProvider(PaywallServices svc);
 }
 
 public interface IPaywallProvider
 {
-    ValueTask<PaywallOrder?> CreateOrder(PaywallConfig config);
+    ValueTask<PaywallOrder?> CreateOrder(PublicVoidFile file);
 
     ValueTask<PaywallOrder?> GetOrderStatus(Guid id);
 }

@@ -14,12 +14,15 @@ namespace VoidCat.Controllers
         private readonly IFileStore _storage;
         private readonly IFileMetadataStore _metadata;
         private readonly IPaywallStore _paywall;
+        private readonly IPaywallFactory _paywallFactory;
 
-        public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall)
+        public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall,
+            IPaywallFactory paywallFactory)
         {
             _storage = storage;
             _metadata = metadata;
             _paywall = paywall;
+            _paywallFactory = paywallFactory;
         }
 
         [HttpPost]
@@ -85,11 +88,27 @@ namespace VoidCat.Controllers
 
         [HttpGet]
         [Route("{id}/paywall")]
-        public ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
+        public async ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
         {
-            throw new NotImplementedException();
+            var gid = id.FromBase58Guid();
+            var file = await _storage.Get(gid);
+            var config = await _paywall.GetConfig(gid);
+
+            var provider = await _paywallFactory.CreateProvider(config!.Service);
+            return await provider.CreateOrder(file!);
         }
         
+        [HttpGet]
+        [Route("{id}/paywall/{order:guid}")]
+        public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute]Guid order)
+        {
+            var gid = id.FromBase58Guid();
+            var config = await _paywall.GetConfig(gid);
+
+            var provider = await _paywallFactory.CreateProvider(config!.Service);
+            return await provider.GetOrderStatus(order);
+        }
+
         [HttpPost]
         [Route("{id}/paywall")]
         public async Task<IActionResult> SetPaywallConfig([FromRoute] string id, [FromBody] SetPaywallConfigRequest req)
@@ -99,7 +118,7 @@ namespace VoidCat.Controllers
             if (meta == default) return NotFound();
 
             if (req.EditSecret != meta.EditSecret) return Unauthorized();
-            
+
             if (req.Strike != default)
             {
                 await _paywall.SetConfig(gid, req.Strike!);
@@ -139,7 +158,7 @@ namespace VoidCat.Controllers
     {
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid EditSecret { get; init; }
-        
+
         public StrikePaywallConfig? Strike { get; init; }
     }
 }

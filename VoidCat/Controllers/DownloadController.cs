@@ -37,7 +37,7 @@ public class DownloadController : Controller
         var voidFile = await SetupDownload(gid);
         if (voidFile == default) return;
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -49,10 +49,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int)HttpStatusCode.PartialContent;
+            Response.StatusCode = (int) HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -79,26 +79,17 @@ public class DownloadController : Controller
         if (meta == null)
         {
             Response.StatusCode = 404;
-            return null;
+            return default;
         }
 
         // check paywall
         if (meta.Paywall != default)
         {
-            var orderId = Request.Headers.GetHeader("V-OrderId");
-            if (string.IsNullOrEmpty(orderId))
+            var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
+            if (!await IsOrderPaid(orderId))
             {
-                Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
-                return null;
-            }
-            else
-            {
-                var order = await _paywall.GetOrder(orderId.FromBase58Guid());
-                if (order?.Status != PaywallStatus.Paid)
-                {
-                    Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
-                    return null;
-                }
+                Response.StatusCode = (int) HttpStatusCode.PaymentRequired;
+                return default;
             }
         }
 
@@ -107,6 +98,20 @@ public class DownloadController : Controller
         Response.ContentType = meta?.Metadata?.MimeType ?? "application/octet-stream";
 
         return meta;
+    }
+
+    private async ValueTask<bool> IsOrderPaid(string orderId)
+    {
+        if (Guid.TryParse(orderId, out var oid))
+        {
+            var order = await _paywall.GetOrder(oid);
+            if (order?.Status == PaywallOrderStatus.Paid)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private IEnumerable<RangeRequest> GetRanges(HttpRequest request, long totalSize)
