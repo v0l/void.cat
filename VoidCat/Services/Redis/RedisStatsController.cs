@@ -1,4 +1,5 @@
 using StackExchange.Redis;
+using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Redis;

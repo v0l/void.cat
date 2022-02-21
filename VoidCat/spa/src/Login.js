@@ -10,7 +10,7 @@ export function Login(props) {
     async function login(e) {
         e.target.disabled = true;
         
-        let req = await fetch("/login", {
+        let req = await fetch("/auth/login", {
             method: "POST",
             body: JSON.stringify({
                 username, password

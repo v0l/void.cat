@@ -1,10 +1,9 @@
-﻿namespace VoidCat.Services.Abstractions;
+using VoidCat.Model;
+
+namespace VoidCat.Services.Abstractions;
 
 public interface IUserManager
 {
-    ValueTask<VoidUser> Get(string email, string password);
-    ValueTask<VoidUser> Get(Guid id);
-    ValueTask Set(VoidUser user);
+    ValueTask<VoidUser> Login(string username, string password);
+    ValueTask<VoidUser> Register(string username, string password);
 }
-
-public sealed record VoidUser(Guid Id, string Email, string PasswordHash); 

@@ -27,6 +27,7 @@ public static class Paywall
     public static IServiceCollection AddVoidPaywall(this IServiceCollection services)
     {
         services.AddTransient<IPaywallFactory, PaywallFactory>();
+        services.AddTransient<IPaywallStore, PaywallStore>();
         
         // strike
         services.AddTransient<StrikeApi>();

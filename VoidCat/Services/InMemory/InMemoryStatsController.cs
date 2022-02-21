@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.InMemory;

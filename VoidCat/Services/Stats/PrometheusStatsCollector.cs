@@ -1,7 +1,7 @@
 ﻿using Prometheus;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.Stats;
 
 public class PrometheusStatsCollector : IStatsCollector
 {

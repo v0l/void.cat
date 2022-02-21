@@ -1,6 +1,6 @@
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.Stats;
 
 public class AggregateStatsCollector : IAggregateStatsCollector
 {

@@ -11,6 +11,8 @@ using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
 using VoidCat.Services.Paywall;
 using VoidCat.Services.Redis;
+using VoidCat.Services.Stats;
+using VoidCat.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -38,6 +40,7 @@ services.AddControllers().AddNewtonsoftJson((opt) =>
     opt.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
     opt.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
 });
+
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -51,6 +54,14 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(voidSettings.JwtSettings.Key))
         };
     });
+
+services.AddAuthorization((opt) =>
+{
+    opt.AddPolicy(Policies.RequireAdmin, (auth) =>
+    {
+        auth.RequireRole(Roles.Admin);
+    });
+});
 
 // void.cat services
 //
@@ -67,20 +78,24 @@ services.AddTransient<IStatsCollector, PrometheusStatsCollector>();
 // paywall
 services.AddVoidPaywall();
 
+// users
+services.AddTransient<IUserStore, UserStore>();
+services.AddTransient<IUserManager, UserManager>();
+
 if (useRedis)
 {
+    services.AddTransient<ICache, RedisCache>();
     services.AddTransient<RedisStatsController>();
     services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
     services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
-    services.AddTransient<IPaywallStore, RedisPaywallStore>();
 }
 else
 {
     services.AddMemoryCache();
+    services.AddTransient<ICache, InMemoryCache>();
     services.AddTransient<InMemoryStatsController>();
     services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<InMemoryStatsController>());
     services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<InMemoryStatsController>());
-    services.AddTransient<IPaywallStore, InMemoryPaywallStore>();
 }
 
 var app = builder.Build();
