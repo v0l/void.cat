@@ -46,8 +46,8 @@ export function FileList(props) {
 
         return (
             <tr key={i.id}>
-                <td><Link to={`/${i.id}`}>{i.id.substring(0, 4)}...</Link></td>
-                <td>{meta?.name}</td>
+                <td><Link to={`/${i.id}`}>{i.id.substring(0, 4)}..</Link></td>
+                <td>{meta?.name ? (meta?.name.length > 20 ? `${meta?.name.substring(0, 20)}..` : meta?.name) : null}</td>
                 <td>{meta?.uploaded ? moment(meta?.uploaded).fromNow() : null}</td>
                 <td>{meta?.size ? FormatBytes(meta?.size, 2) : null}</td>
                 <td>{bw ? FormatBytes(bw.egress, 2) : null}</td>
