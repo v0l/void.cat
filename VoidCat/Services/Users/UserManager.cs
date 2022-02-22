@@ -26,7 +26,7 @@ public class UserManager : IUserManager
     public async ValueTask<VoidUser> Register(string email, string password)
     {
         var existingUser = await _store.LookupUser(email);
-        if (existingUser != default) throw new InvalidOperationException("User already exists");
+        if (existingUser != Guid.Empty) throw new InvalidOperationException("User already exists");
 
         var newUser = new VoidUser(Guid.NewGuid(), email, password.HashPassword());
         await _store.Set(newUser);

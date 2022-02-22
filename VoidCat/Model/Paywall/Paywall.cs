@@ -12,5 +12,5 @@ public record NoPaywallConfig() : PaywallConfig(PaywallServices.None, new Paywal
 
 public record StrikePaywallConfig(PaywallMoney Cost) : PaywallConfig(PaywallServices.Strike, Cost)
 {
-    public string Handle { get; init; }
+    public string Handle { get; init; } = null!;
 }

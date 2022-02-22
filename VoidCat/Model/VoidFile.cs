@@ -24,9 +24,11 @@ namespace VoidCat.Model
 
     public sealed record PublicVoidFile : VoidFile<VoidFileMeta>
     {
+        public Bandwidth? Bandwidth { get; init; }
     }
 
     public sealed record PrivateVoidFile : VoidFile<SecretVoidFileMeta>
     {
+        public Bandwidth? Bandwidth { get; init; }
     }
 }

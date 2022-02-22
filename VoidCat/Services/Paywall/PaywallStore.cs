@@ -14,10 +14,10 @@ public class PaywallStore : IPaywallStore
 
     public async ValueTask<PaywallConfig?> GetConfig(Guid id)
     {
-        var cfg = await _cache.Get<PaywallConfig>(ConfigKey(id));
+        var cfg = await _cache.Get<NoPaywallConfig>(ConfigKey(id));
         return cfg?.Service switch
         {
-            PaywallServices.None => await _cache.Get<NoPaywallConfig>(ConfigKey(id)),
+            PaywallServices.None => cfg,
             PaywallServices.Strike => await _cache.Get<StrikePaywallConfig>(ConfigKey(id)),
             _ => default
         };

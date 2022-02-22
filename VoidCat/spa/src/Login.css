@@ -1,0 +1,8 @@
+.login .error-msg {
+    color: red;
+    padding: 10px;
+    border: 1px solid red;
+    border-radius: 10px;
+    margin-top: 10px;
+    width: fit-content;
+}

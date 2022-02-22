@@ -4,23 +4,27 @@ using VoidCat.Model;
 using VoidCat.Model.Exceptions;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.Files;
 
 public class LocalDiskFileStore : IFileStore
 {
-    private const int BufferSize = 1024 * 1024;
+    private const int BufferSize = 1_048_576;
+    private readonly ILogger<LocalDiskFileStore> _logger;
     private readonly VoidSettings _settings;
     private readonly IAggregateStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
     private readonly IPaywallStore _paywallStore;
+    private readonly IStatsReporter _statsReporter;
 
-    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats,
-        IFileMetadataStore metadataStore, IPaywallStore paywallStore)
+    public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats,
+        IFileMetadataStore metadataStore, IPaywallStore paywallStore, IStatsReporter statsReporter)
     {
         _settings = settings;
         _stats = stats;
         _metadataStore = metadataStore;
         _paywallStore = paywallStore;
+        _statsReporter = statsReporter;
+        _logger = logger;
 
         if (!Directory.Exists(_settings.DataDirectory))
         {
@@ -30,11 +34,12 @@ public class LocalDiskFileStore : IFileStore
 
     public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
-        return new ()
+        return new()
         {
             Id = id,
             Metadata = await _metadataStore.GetPublic(id),
-            Paywall = await _paywallStore.GetConfig(id)
+            Paywall = await _paywallStore.GetConfig(id),
+            Bandwidth = await _statsReporter.GetBandwidth(id)
         };
     }
 
@@ -114,18 +119,27 @@ public class LocalDiskFileStore : IFileStore
         foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
         {
             var filename = Path.GetFileNameWithoutExtension(fe);
+            if (Path.HasExtension(fe)) continue; // real file does not have extension
             if (!Guid.TryParse(filename, out var id)) continue;
 
-            var meta = await _metadataStore.Get(id);
-            if (meta != default)
+            var vf = await Get(id);
+            if (vf != default)
             {
-                yield return new()
-                {
-                    Id = id,
-                    Metadata = meta
-                };
+                yield return vf;
             }
         }
+    }
+
+    public async ValueTask DeleteFile(Guid id)
+    {
+        var fp = MapPath(id);
+        if (File.Exists(fp))
+        {
+            _logger.LogInformation("Deleting file: {Path}", fp);
+            File.Delete(fp);
+        }
+
+        await _metadataStore.Delete(id);
     }
 
     private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream fs, CancellationToken cts)

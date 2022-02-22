@@ -5,8 +5,8 @@ using Newtonsoft.Json;
 using Prometheus;
 using StackExchange.Redis;
 using VoidCat.Model;
-using VoidCat.Services;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
 using VoidCat.Services.Paywall;
@@ -108,9 +108,11 @@ foreach (var migration in migrations)
 }
 
 app.UseStaticFiles();
-app.UseAuthentication();
+
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseEndpoints(ep =>
 {
     ep.MapControllers();

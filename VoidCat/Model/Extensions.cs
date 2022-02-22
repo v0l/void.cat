@@ -117,12 +117,12 @@ public static class Extensions
             case "sha256":
             {
                 var hash = SHA256.Create().ComputeHash(bytes);
-                return $"sha256:${hash.ToHex()}";
+                return $"sha256:{hash.ToHex()}";
             }
             case "sha512":
             {
                 var hash = SHA512.Create().ComputeHash(bytes);
-                return $"sha512:${hash.ToHex()}";
+                return $"sha512:{hash.ToHex()}";
             }
             case "pbkdf2":
             {
@@ -140,7 +140,7 @@ public static class Extensions
                 }
 
                 var pbkdf2 = new Rfc2898DeriveBytes(bytes, salt, iterations);
-                return $"pbkdf2:{salt.ToHex()}:${pbkdf2.GetBytes(salt.Length).ToHex()}";
+                return $"pbkdf2:{salt.ToHex()}:{pbkdf2.GetBytes(salt.Length).ToHex()}";
             }
         }
 

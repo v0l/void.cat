@@ -11,4 +11,6 @@ public interface IFileStore
     ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
     IAsyncEnumerable<PublicVoidFile> ListFiles();
+
+    ValueTask DeleteFile(Guid id);
 }

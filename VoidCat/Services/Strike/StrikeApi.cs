@@ -3,7 +3,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace VoidCat.Services;
+namespace VoidCat.Services.Strike;
 
 public class StrikeApi
 {

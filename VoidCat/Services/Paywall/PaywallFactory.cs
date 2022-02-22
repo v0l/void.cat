@@ -1,5 +1,6 @@
 ﻿using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Strike;
 
 namespace VoidCat.Services.Paywall;
 

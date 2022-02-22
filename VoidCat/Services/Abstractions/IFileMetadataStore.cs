@@ -10,4 +10,6 @@ public interface IFileMetadataStore
     ValueTask Set(Guid id, SecretVoidFileMeta meta);
 
     ValueTask Update(Guid id, SecretVoidFileMeta patch);
+
+    ValueTask Delete(Guid id);
 }

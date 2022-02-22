@@ -1,16 +1,25 @@
-﻿import {useSelector} from "react-redux";
+﻿import {Fragment} from "react";
+import {useSelector} from "react-redux";
 import {Login} from "../Login";
+import {FileList} from "./FileList";
+import {UserList} from "./UserList";
 
-export function Admin(props) {
+export function Admin() {
     const auth = useSelector((state) => state.login.jwt);
-    
-    if(!auth) {
+
+    if (!auth) {
         return <Login/>;
     } else {
         return (
-            <div>
-                <h3>Admin</h3>
-            </div>
+            <Fragment>
+                <h2>Admin</h2>
+
+                <h4>Users</h4>
+                <UserList/>
+
+                <h4>Files</h4>
+                <FileList/>
+            </Fragment>
         );
     }
 }

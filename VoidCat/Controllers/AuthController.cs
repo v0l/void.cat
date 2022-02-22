@@ -61,12 +61,13 @@ public class AuthController : Controller
 
         var claims = new Claim[]
         {
-            new(ClaimTypes.Sid, user.Id.ToString()),
-            new(ClaimTypes.Expiration, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-            new(ClaimTypes.AuthorizationDecision, string.Join(",", user.Roles))
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString()),
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+            new(ClaimTypes.Role, string.Join(",", user.Roles))
         };
 
-        return new JwtSecurityToken(_settings.JwtSettings.Issuer, claims: claims, expires: DateTime.UtcNow.AddHours(6),
+        return new JwtSecurityToken(_settings.JwtSettings.Issuer, claims: claims,
             signingCredentials: credentials);
     }
 
