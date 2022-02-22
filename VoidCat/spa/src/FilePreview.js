@@ -34,6 +34,8 @@ export function FilePreview() {
                 case "image/png": {
                     return <img src={link} alt={info.metadata.name}/>;
                 }
+                case "audio/mp3":
+                case "audio/ogg":
                 case "video/mp4":
                 case "video/matroksa":
                 case "video/x-matroska":
@@ -41,6 +43,7 @@ export function FilePreview() {
                 case "video/quicktime": {
                     return <video src={link} controls/>;
                 }
+                case "text/css":
                 case "text/plain": {
                     return <TextPreview link={link}/>;
                 }

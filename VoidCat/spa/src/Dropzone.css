@@ -1,0 +1,9 @@
+.drop {
+    border-radius: 20px;
+    border: 1px solid;
+    margin-top: 20vh;
+    text-align: center;
+    line-height: 300px;
+    user-select: none;
+    cursor: pointer;
+}

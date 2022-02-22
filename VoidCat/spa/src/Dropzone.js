@@ -1,6 +1,8 @@
 import {Fragment, useState} from "react";
 import {FileUpload} from "./FileUpload";
 
+import "./Dropzone.css";
+
 export function Dropzone(props) {
     let [files, setFiles] = useState([]);
 

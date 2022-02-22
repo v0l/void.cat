@@ -1,14 +1,15 @@
-﻿import {Fragment} from "react";
-import {Dropzone} from "./Dropzone";
+﻿import {Dropzone} from "./Dropzone";
 import {GlobalStats} from "./GlobalStats";
 import {FooterLinks} from "./FooterLinks";
 
-export function HomePage(props) {
+import "./HomePage.css";
+
+export function HomePage() {
     return (
-        <Fragment>
+        <div className="home">
             <Dropzone/>
             <GlobalStats/>
             <FooterLinks/>
-        </Fragment>
+        </div>
     );
 }

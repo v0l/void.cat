@@ -1,3 +1,6 @@
 table.file-list {
     width: 100%;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
