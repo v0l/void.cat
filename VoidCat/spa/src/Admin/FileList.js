@@ -8,16 +8,19 @@ import "./FileList.css";
 import {AdminApi} from "../Api";
 import {logout} from "../LoginState";
 import {PagedSortBy, PageSortOrder} from "../Const";
+import {PageSelector} from "../PageSelector";
 
 export function FileList(props) {
     const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState();
+    const [page, setPage] = useState(0);
+    const pageSize = 10;
 
     async function loadFileList() {
         let pageReq = {
-            page: 0,
-            pageSize: 20,
+            page: page,
+            pageSize,
             sortBy: PagedSortBy.Date,
             sortOrder: PageSortOrder.Dsc
         };
@@ -34,9 +37,10 @@ export function FileList(props) {
         if (window.confirm(`Are you sure you want to delete: ${id}?`)) {
             let req = await AdminApi.deleteFile(auth, id);
             if (req.ok) {
-                setFiles([
-                    ...files.filter(a => a.id !== id)
-                ]);
+                setFiles({
+                    ...files,
+                    results: files.results.filter(a => a.id !== id)
+                });
             } else {
                 alert("Failed to delete file!");
             }
@@ -64,7 +68,7 @@ export function FileList(props) {
 
     useEffect(() => {
         loadFileList()
-    }, []);
+    }, [page]);
 
     return (
         <table className="file-list">
@@ -79,7 +83,13 @@ export function FileList(props) {
             </tr>
             </thead>
             <tbody>
-            {files?.map(a => renderItem(a))}
+            {files ? files.results.map(a => renderItem(a)) : null}
+            </tbody>
+            <tbody>
+            <tr>
+                <td colSpan={999}>{files ?
+                    <PageSelector onSelectPage={(x) => setPage(x)} page={page} total={files.totalResults} pageSize={pageSize}/> : null}</td>
+            </tr>
             </tbody>
         </table>
     );
