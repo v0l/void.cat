@@ -1,4 +1,5 @@
 import * as Const from "./Const";
+
 /**
  * Formats bytes into binary notation
  * @param {number} b - The value in bytes
@@ -31,8 +32,8 @@ export function buf2hex(buffer) {
 }
 
 export function ConstName(type, val) {
-    for(let [k, v] of Object.entries(type)) {
-        if(v === val) {
+    for (let [k, v] of Object.entries(type)) {
+        if (v === val) {
             return k;
         }
     }
@@ -52,7 +53,7 @@ export function FormatCurrency(value, currency) {
             })}`;
         }
         case 1:
-        case "USD":{
+        case "USD": {
             return value.toLocaleString(undefined, {
                 style: "currency",
                 currency: "USD"

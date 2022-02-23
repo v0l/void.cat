@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
-
-import "./FileUpload.css";
 import {buf2hex, ConstName, FormatBytes} from "./Util";
 import {RateCalculator} from "./RateCalculator";
+
+import "./FileUpload.css";
 
 const UploadState = {
     NotStarted: 0,
@@ -167,11 +167,11 @@ export function FileUpload(props) {
             );
         }
     }
-    
+
     function getChallengeElement() {
         let elm = document.createElement("iframe");
         elm.contentWindow.document.write(challenge);
-        return <div dangerouslySetInnerHTML={{ __html: elm.outerHTML }}/>;
+        return <div dangerouslySetInnerHTML={{__html: elm.outerHTML}}/>;
     }
 
     useEffect(() => {

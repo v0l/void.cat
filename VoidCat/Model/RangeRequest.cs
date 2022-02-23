@@ -1,4 +1,4 @@
-namespace VoidCat.Services.Abstractions;
+namespace VoidCat.Model;
 
 public sealed record RangeRequest(long? TotalSize, long? Start, long? End)
 {

@@ -1,41 +1,45 @@
 import moment from "moment";
 import {Link} from "react-router-dom";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {FormatBytes} from "../Util";
 
 import "./FileList.css";
+import {AdminApi} from "../Api";
+import {logout} from "../LoginState";
+import {PagedSortBy, PageSortOrder} from "../Const";
 
 export function FileList(props) {
     const auth = useSelector((state) => state.login.jwt);
+    const dispatch = useDispatch();
     const [files, setFiles] = useState([]);
 
     async function loadFileList() {
-        let req = await fetch("/admin/file", {
-            headers: {
-                "authorization": `Bearer ${auth}`
-            }
-        });
+        let pageReq = {
+            page: 0,
+            pageSize: 20,
+            sortBy: PagedSortBy.Date,
+            sortOrder: PageSortOrder.Dsc
+        };
+        let req = await AdminApi.fileList(auth, pageReq);
         if (req.ok) {
             setFiles(await req.json());
+        } else if (req.status === 401) {
+            dispatch(logout());
         }
     }
 
     async function deleteFile(e, id) {
         e.target.disabled = true;
-
-        let req = await fetch(`/admin/file/${id}`, {
-            method: "DELETE",
-            headers: {
-                "authorization": `Bearer ${auth}`
+        if (window.confirm(`Are you sure you want to delete: ${id}?`)) {
+            let req = await AdminApi.deleteFile(auth, id);
+            if (req.ok) {
+                setFiles([
+                    ...files.filter(a => a.id !== id)
+                ]);
+            } else {
+                alert("Failed to delete file!");
             }
-        });
-        if (req.ok) {
-            setFiles([
-                ...files.filter(a => a.id !== id)
-            ]);
-        } else {
-            alert("Failed to delete file!");
         }
         e.target.disabled = false;
     }

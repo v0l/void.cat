@@ -34,12 +34,17 @@ public class LocalDiskFileStore : IFileStore
 
     public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
+        var meta = _metadataStore.GetPublic(id);
+        var paywall = _paywallStore.GetConfig(id);
+        var bandwidth = _statsReporter.GetBandwidth(id);
+        await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask());
+
         return new()
         {
             Id = id,
-            Metadata = await _metadataStore.GetPublic(id),
-            Paywall = await _paywallStore.GetConfig(id),
-            Bandwidth = await _statsReporter.GetBandwidth(id)
+            Metadata = meta.Result,
+            Paywall = paywall.Result,
+            Bandwidth = bandwidth.Result
         };
     }
 
@@ -114,20 +119,45 @@ public class LocalDiskFileStore : IFileStore
         };
     }
 
-    public async IAsyncEnumerable<PublicVoidFile> ListFiles()
+    public PagedResult<PublicVoidFile> ListFiles(PagedRequest request)
     {
-        foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
+        var files = Directory.EnumerateFiles(_settings.DataDirectory)
+            .Where(a => !Path.HasExtension(a));
+        files = (request.SortBy, request.SortOrder) switch
         {
-            var filename = Path.GetFileNameWithoutExtension(fe);
-            if (Path.HasExtension(fe)) continue; // real file does not have extension
-            if (!Guid.TryParse(filename, out var id)) continue;
+            (PagedSortBy.Id, PageSortOrder.Asc) => files.OrderBy(a =>
+                Guid.TryParse(Path.GetFileNameWithoutExtension(a), out var g) ? g : Guid.Empty),
+            (PagedSortBy.Id, PageSortOrder.Dsc) => files.OrderByDescending(a =>
+                Guid.TryParse(Path.GetFileNameWithoutExtension(a), out var g) ? g : Guid.Empty),
+            (PagedSortBy.Name, PageSortOrder.Asc) => files.OrderBy(Path.GetFileNameWithoutExtension),
+            (PagedSortBy.Name, PageSortOrder.Dsc) => files.OrderByDescending(Path.GetFileNameWithoutExtension),
+            (PagedSortBy.Size, PageSortOrder.Asc) => files.OrderBy(a => new FileInfo(a).Length),
+            (PagedSortBy.Size, PageSortOrder.Dsc) => files.OrderByDescending(a => new FileInfo(a).Length),
+            (PagedSortBy.Date, PageSortOrder.Asc) => files.OrderBy(File.GetCreationTimeUtc),
+            (PagedSortBy.Date, PageSortOrder.Dsc) => files.OrderByDescending(File.GetCreationTimeUtc),
+            _ => files
+        };
 
-            var vf = await Get(id);
-            if (vf != default)
+        async IAsyncEnumerable<PublicVoidFile> EnumeratePage(IEnumerable<string> page)
+        {
+            foreach (var file in page)
             {
-                yield return vf;
+                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var gid)) continue;
+                var loaded = await Get(gid);
+                if (loaded != default)
+                {
+                    yield return loaded;
+                }
             }
         }
+
+        return new()
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalResults = files.Count(),
+            Results = EnumeratePage(files.Skip(request.PageSize * request.Page).Take(request.PageSize))
+        };
     }
 
     public async ValueTask DeleteFile(Guid id)

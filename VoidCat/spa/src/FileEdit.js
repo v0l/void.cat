@@ -1,8 +1,9 @@
 import {useState} from "react";
 
-import "./FileEdit.css";
 import {StrikePaywallConfig} from "./StrikePaywallConfig";
 import {NoPaywallConfig} from "./NoPaywallConfig";
+import {Api} from "./Api";
+import "./FileEdit.css";
 
 export function FileEdit(props) {
     const file = props.file;
@@ -14,16 +15,10 @@ export function FileEdit(props) {
     }
 
     async function saveConfig(cfg) {
-        let req = await fetch(`/upload/${file.id}/paywall`, {
-            method: "POST",
-            body: JSON.stringify(cfg),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
+        let req = await Api.setPaywallConfig(file.id, cfg);
         return req.ok;
     }
-    
+
     function renderPaywallConfig() {
         switch (paywall) {
             case 0: {
@@ -47,7 +42,7 @@ export function FileEdit(props) {
                     <dt>Description:</dt>
                     <dd><input type="text" value={meta.description}/></dd>
                 </dl>
-                
+
             </div>
             <div>
                 <h3>Paywall Config</h3>

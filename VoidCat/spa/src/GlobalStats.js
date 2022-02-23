@@ -3,12 +3,13 @@ import FeatherIcon from "feather-icons-react";
 import {FormatBytes} from "./Util";
 
 import "./GlobalStats.css";
+import {Api} from "./Api";
 
 export function GlobalStats(props) {
     let [stats, setStats] = useState();
 
     async function loadStats() {
-        let req = await fetch("/stats");
+        let req = await Api.stats();
         if (req.ok) {
             setStats(await req.json());
         }

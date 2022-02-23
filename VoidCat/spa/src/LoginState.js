@@ -19,5 +19,5 @@ export const LoginState = createSlice({
     }
 });
 
-export const { setAuth, logout } = LoginState.actions;
+export const {setAuth, logout} = LoginState.actions;
 export default LoginState.reducer;

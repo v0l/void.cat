@@ -6,15 +6,15 @@ export function TextPreview(props) {
 
     async function getContent(link) {
         let req = await fetch(link);
-        if(req.ok) {
+        if (req.ok) {
             setContent(await req.text());
         }
     }
-    
+
     useEffect(() => {
         getContent(props.link);
     }, []);
-    
+
     return (
         <pre className="text-preview">{content}</pre>
     )

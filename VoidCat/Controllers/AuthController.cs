@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -26,6 +27,12 @@ public class AuthController : Controller
     {
         try
         {
+            if (!TryValidateModel(req))
+            {
+                var error = ControllerContext.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage;
+                return new(null, error);
+            }
+            
             var user = await _manager.Login(req.Username, req.Password);
             var token = CreateToken(user);
             var tokenWriter = new JwtSecurityTokenHandler();
@@ -43,6 +50,12 @@ public class AuthController : Controller
     {
         try
         {
+            if (!TryValidateModel(req))
+            {
+                var error = ControllerContext.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage;
+                return new(null, error);
+            }
+            
             var newUser = await _manager.Register(req.Username, req.Password);
             var token = CreateToken(newUser);
             var tokenWriter = new JwtSecurityTokenHandler();
@@ -72,7 +85,22 @@ public class AuthController : Controller
     }
 
 
-    public record LoginRequest(string Username, string Password);
+    public class LoginRequest
+    {
+        public LoginRequest(string username, string password)
+        {
+            Username = username;
+            Password = password;
+        }
+
+        [Required]
+        [EmailAddress]
+        public string Username { get; init; }
+        
+        [Required]
+        [MinLength(6)]
+        public string Password { get; init; }
+    }
 
     public record LoginResponse(string? Jwt, string? Error = null);
 }

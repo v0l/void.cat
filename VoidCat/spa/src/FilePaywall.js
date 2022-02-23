@@ -1,7 +1,8 @@
-import {ConstName, FormatCurrency} from "./Util";
-import {PaywallCurrencies, PaywallServices} from "./Const";
+import {FormatCurrency} from "./Util";
+import {PaywallServices} from "./Const";
 import {useState} from "react";
 import {LightningPaywall} from "./LightningPaywall";
+import {Api} from "./Api";
 
 export function FilePaywall(props) {
     const file = props.file;
@@ -13,7 +14,7 @@ export function FilePaywall(props) {
 
     async function fetchOrder(e) {
         e.target.disabled = true;
-        let req = await fetch(`/upload/${file.id}/paywall`);
+        let req = await Api.createOrder(file.id);
         if (req.ok) {
             setOrder(await req.json());
         }

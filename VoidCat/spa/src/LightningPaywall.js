@@ -1,7 +1,9 @@
 ﻿import QRCode from "qrcode.react";
-import {Countdown} from "./Countdown";
 import {useEffect} from "react";
+
+import {Countdown} from "./Countdown";
 import {PaywallOrderState} from "./Const";
+import {Api} from "./Api";
 
 export function LightningPaywall(props) {
     const file = props.file;
@@ -16,7 +18,7 @@ export function LightningPaywall(props) {
     }
 
     async function checkStatus() {
-        let req = await fetch(`/upload/${file.id}/paywall/${order.id}`);
+        let req = await Api.getOrder(file.id, order.id);
         if (req.ok) {
             let order = await req.json();
 

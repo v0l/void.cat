@@ -48,3 +48,15 @@ export const PaywallOrderState = {
     Paid: 1,
     Expired: 2
 }
+
+export const PagedSortBy = {
+    Name: 0,
+    Date: 1,
+    Size: 2,
+    Id: 3
+}
+
+export const PageSortOrder = {
+    Asc: 0,
+    Dsc: 1
+}

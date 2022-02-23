@@ -5,6 +5,7 @@ import {TextPreview} from "./TextPreview";
 import "./FilePreview.css";
 import {FileEdit} from "./FileEdit";
 import {FilePaywall} from "./FilePaywall";
+import {Api} from "./Api";
 
 export function FilePreview() {
     const params = useParams();
@@ -13,7 +14,7 @@ export function FilePreview() {
     const [link, setLink] = useState("#");
 
     async function loadInfo() {
-        let req = await fetch(`/upload/${params.id}`);
+        let req = await Api.fileInfo(params.id);
         if (req.ok) {
             let info = await req.json();
             setInfo(info);

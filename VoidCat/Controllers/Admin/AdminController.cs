@@ -16,11 +16,11 @@ public class AdminController : Controller
         _fileStore = fileStore;
     }
 
-    [HttpGet]
+    [HttpPost]
     [Route("file")]
-    public IAsyncEnumerable<PublicVoidFile> ListFiles()
+    public Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
     {
-        return _fileStore.ListFiles();
+        return _fileStore.ListFiles(request).GetResults();
     }
 
     [HttpDelete]
