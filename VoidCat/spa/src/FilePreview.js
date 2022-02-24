@@ -58,6 +58,29 @@ export function FilePreview() {
         return null;
     }
 
+    function renderOpenGraphTags() {
+        let tags = [
+            <meta key="og-site_name" property={"og:site_name"} content={"void.cat"}/>,
+            <meta key="og-title" property={"og:title"} content={info?.metadata?.name}/>,
+            <meta key="og-description" property={"og:description"} content={info?.metadata?.description}/>,
+            <meta key="og-url" property={"og:url"} content={`https://${window.location.host}/${info?.id}`}/>
+        ];
+
+        const mime = info?.metadata?.mimeType;
+        if (mime?.startsWith("image/")) {
+            tags.push(<meta key="og-image" property={"og:image"} content={link}/>);
+            tags.push(<meta key="og-image-type" property={"og:image:type"} content={mime}/>);
+        } else if (mime?.startsWith("video/")) {
+            tags.push(<meta key="og-video" property={"og:video"} content={link}/>);
+            tags.push(<meta key="og-video-type" property={"og:video:type"} content={mime}/>);
+        } else if (mime?.startsWith("audio/")) {
+            tags.push(<meta key="og-audio" property={"og:audio"} content={link}/>);
+            tags.push(<meta key="og-audio-type" property={"og:audio:type"} content={mime}/>);
+        }
+
+        return tags;
+    }
+
     useEffect(() => {
         loadInfo();
     }, []);
@@ -82,6 +105,7 @@ export function FilePreview() {
                     <Helmet>
                         <title>void.cat - {info.metadata?.name}</title>
                         <meta name="description" content={info.metadata?.description}/>
+                        {renderOpenGraphTags()}
                     </Helmet>
                     <a className="btn" href={link}>{info.metadata?.name ?? info.id}</a>
                     {renderTypes()}
