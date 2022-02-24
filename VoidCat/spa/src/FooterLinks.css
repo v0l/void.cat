@@ -2,3 +2,19 @@
     margin-top: 10px;
     text-align: center;
 }
+
+.footer > a {
+    margin-left: 10px;
+    padding-right: 10px;
+    border-right: 1px solid;
+}
+
+.footer > a:last-child {
+    border: none;
+}
+
+.footer > a > img {
+    filter: invert(1);
+    vertical-align: middle;
+    height: 20px;
+}
