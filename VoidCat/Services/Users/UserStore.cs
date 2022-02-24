@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
@@ -19,35 +18,47 @@ public class UserStore : IUserStore
         return await _cache.Get<Guid>(MapKey(email));
     }
 
-    public async ValueTask<VoidUser?> Get(Guid id)
+    public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
     {
-        return await _cache.Get<VoidUser>(MapKey(id));
+        return await _cache.Get<T>(MapKey(id));
     }
 
-    public async ValueTask Set(VoidUser user)
+    public async ValueTask Set(PrivateVoidUser user)
     {
         await _cache.Set(MapKey(user.Id), user);
         await _cache.AddToList(UserList, user.Id.ToString());
         await _cache.Set(MapKey(user.Email), user.Id.ToString());
     }
 
-    public async IAsyncEnumerable<VoidUser> ListUsers([EnumeratorCancellation] CancellationToken cts = default)
+    public async ValueTask<PagedResult<PublicVoidUser>> ListUsers(PagedRequest request)
     {
         var users = (await _cache.GetList(UserList))?.Select(Guid.Parse);
-        if (users != default)
+        users = (request.SortBy, request.SortOrder) switch
         {
-            while (!cts.IsCancellationRequested)
+            (PagedSortBy.Id, PageSortOrder.Asc) => users?.OrderBy(a => a),
+            (PagedSortBy.Id, PageSortOrder.Dsc) => users?.OrderByDescending(a => a),
+            _ => users
+        };
+
+        async IAsyncEnumerable<PublicVoidUser> EnumerateUsers(IEnumerable<Guid> ids)
+        {
+            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PublicVoidUser>(a)));
+            foreach (var user in usersLoaded)
             {
-                var loadUsers = await Task.WhenAll(users.Select(async a => await Get(a)));
-                foreach (var user in loadUsers)
+                if (user != default)
                 {
-                    if (user != default)
-                    {
-                        yield return user;
-                    }
+                    yield return user;
                 }
             }
         }
+
+        return new()
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalResults = users?.Count() ?? 0,
+            Results = EnumerateUsers(users?.Skip(request.PageSize * request.Page).Take(request.PageSize))
+        };
     }
 
     private static string MapKey(Guid id) => $"user:{id}";

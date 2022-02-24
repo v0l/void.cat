@@ -18,7 +18,8 @@
 
 export const AdminApi = {
     fileList: (auth, pageReq) => getJson("POST", "/admin/file", auth, pageReq),
-    deleteFile: (auth, id) => getJson("DELETE", `/admin/file/${id}`, auth)
+    deleteFile: (auth, id) => getJson("DELETE", `/admin/file/${id}`, auth),
+    userList: (auth, pageReq) => getJson("POST", `/admin/user`, auth, pageReq)
 }
 
 export const Api = {

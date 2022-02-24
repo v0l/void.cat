@@ -3,3 +3,10 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+.admin table {
+    width: 100%;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

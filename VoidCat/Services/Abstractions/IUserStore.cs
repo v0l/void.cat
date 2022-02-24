@@ -5,7 +5,7 @@ namespace VoidCat.Services.Abstractions;
 public interface IUserStore
 {
     ValueTask<Guid?> LookupUser(string email);
-    ValueTask<VoidUser?> Get(Guid id);
-    ValueTask Set(VoidUser user);
-    IAsyncEnumerable<VoidUser> ListUsers(CancellationToken cts);
+    ValueTask<T?> Get<T>(Guid id) where T : VoidUser;
+    ValueTask Set(PrivateVoidUser user);
+    ValueTask<PagedResult<PublicVoidUser>> ListUsers(PagedRequest request);
 }

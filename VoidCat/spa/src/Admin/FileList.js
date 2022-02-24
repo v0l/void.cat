@@ -3,8 +3,6 @@ import {Link} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {FormatBytes} from "../Util";
-
-import "./FileList.css";
 import {AdminApi} from "../Api";
 import {logout} from "../LoginState";
 import {PagedSortBy, PageSortOrder} from "../Const";
@@ -16,6 +14,7 @@ export function FileList(props) {
     const [files, setFiles] = useState();
     const [page, setPage] = useState(0);
     const pageSize = 10;
+    const [accessDenied, setAccessDenied] = useState();
 
     async function loadFileList() {
         let pageReq = {
@@ -29,6 +28,8 @@ export function FileList(props) {
             setFiles(await req.json());
         } else if (req.status === 401) {
             dispatch(logout());
+        } else if (req.status === 403) {
+            setAccessDenied(true);
         }
     }
 
@@ -70,6 +71,10 @@ export function FileList(props) {
         loadFileList()
     }, [page]);
 
+    if (accessDenied === true) {
+        return <h3>Access Denied</h3>;
+    }
+    
     return (
         <table className="file-list">
             <thead>
@@ -88,7 +93,8 @@ export function FileList(props) {
             <tbody>
             <tr>
                 <td colSpan={999}>{files ?
-                    <PageSelector onSelectPage={(x) => setPage(x)} page={page} total={files.totalResults} pageSize={pageSize}/> : null}</td>
+                    <PageSelector onSelectPage={(x) => setPage(x)} page={page} total={files.totalResults}
+                                  pageSize={pageSize}/> : null}</td>
             </tr>
             </tbody>
         </table>

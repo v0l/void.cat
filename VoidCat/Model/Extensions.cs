@@ -147,7 +147,7 @@ public static class Extensions
         throw new ArgumentException("Unknown algo", nameof(algo));
     }
 
-    public static bool CheckPassword(this VoidUser vu, string password)
+    public static bool CheckPassword(this PrivateVoidUser vu, string password)
     {
         var hashParts = vu.PasswordHash.Split(":");
         return vu.PasswordHash == password.HashPassword(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);

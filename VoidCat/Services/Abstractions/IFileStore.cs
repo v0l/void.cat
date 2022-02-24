@@ -10,7 +10,7 @@ public interface IFileStore
 
     ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
-    PagedResult<PublicVoidFile> ListFiles(PagedRequest request);
+    ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request);
 
     ValueTask DeleteFile(Guid id);
 }

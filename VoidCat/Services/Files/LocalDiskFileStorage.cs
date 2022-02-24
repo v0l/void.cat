@@ -119,10 +119,11 @@ public class LocalDiskFileStore : IFileStore
         };
     }
 
-    public PagedResult<PublicVoidFile> ListFiles(PagedRequest request)
+    public ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
     {
         var files = Directory.EnumerateFiles(_settings.DataDirectory)
             .Where(a => !Path.HasExtension(a));
+
         files = (request.SortBy, request.SortOrder) switch
         {
             (PagedSortBy.Id, PageSortOrder.Asc) => files.OrderBy(a =>
@@ -143,6 +144,7 @@ public class LocalDiskFileStore : IFileStore
             foreach (var file in page)
             {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var gid)) continue;
+
                 var loaded = await Get(gid);
                 if (loaded != default)
                 {
@@ -151,13 +153,13 @@ public class LocalDiskFileStore : IFileStore
             }
         }
 
-        return new()
+        return ValueTask.FromResult(new PagedResult<PublicVoidFile>()
         {
             Page = request.Page,
             PageSize = request.PageSize,
             TotalResults = files.Count(),
             Results = EnumeratePage(files.Skip(request.PageSize * request.Page).Take(request.PageSize))
-        };
+        });
     }
 
     public async ValueTask DeleteFile(Guid id)
@@ -190,9 +192,9 @@ public class LocalDiskFileStore : IFileStore
             var totalRead = readLength + offset;
             var buf = buffer.Memory[..totalRead];
             await fs.WriteAsync(buf, cts);
-            await _stats.TrackIngress(id, (ulong) buf.Length);
+            await _stats.TrackIngress(id, (ulong)buf.Length);
             sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
-            total += (ulong) buf.Length;
+            total += (ulong)buf.Length;
             offset = 0;
         }
 
@@ -216,7 +218,7 @@ public class LocalDiskFileStore : IFileStore
 
             var fullSize = readLength + offset;
             await outStream.WriteAsync(buffer.Memory[..fullSize], cts);
-            await _stats.TrackEgress(id, (ulong) fullSize);
+            await _stats.TrackEgress(id, (ulong)fullSize);
             await outStream.FlushAsync(cts);
             offset = 0;
         }
@@ -244,8 +246,8 @@ public class LocalDiskFileStore : IFileStore
 
                 var fullSize = readLength + offset;
                 var toWrite = Math.Min(fullSize, dataRemaining);
-                await outStream.WriteAsync(buffer.Memory[..(int) toWrite], cts);
-                await _stats.TrackEgress(id, (ulong) toWrite);
+                await outStream.WriteAsync(buffer.Memory[..(int)toWrite], cts);
+                await _stats.TrackEgress(id, (ulong)toWrite);
                 await outStream.FlushAsync(cts);
                 dataRemaining -= toWrite;
                 offset = 0;

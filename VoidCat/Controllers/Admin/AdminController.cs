@@ -10,17 +10,19 @@ namespace VoidCat.Controllers.Admin;
 public class AdminController : Controller
 {
     private readonly IFileStore _fileStore;
+    private readonly IUserStore _userStore;
 
-    public AdminController(IFileStore fileStore)
+    public AdminController(IFileStore fileStore, IUserStore userStore)
     {
         _fileStore = fileStore;
+        _userStore = userStore;
     }
 
     [HttpPost]
     [Route("file")]
-    public Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
+    public async Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
     {
-        return _fileStore.ListFiles(request).GetResults();
+        return await (await _fileStore.ListFiles(request)).GetResults();
     }
 
     [HttpDelete]
@@ -28,5 +30,13 @@ public class AdminController : Controller
     public ValueTask DeleteFile([FromRoute] string id)
     {
         return _fileStore.DeleteFile(id.FromBase58Guid());
+    }
+
+    [HttpPost]
+    [Route("user")]
+    public async Task<RenderedResults<PublicVoidUser>> ListUsers([FromBody] PagedRequest request)
+    {
+        var result = await _userStore.ListUsers(request);
+        return await result.GetResults();
     }
 }

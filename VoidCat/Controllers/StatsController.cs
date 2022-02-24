@@ -24,7 +24,7 @@ namespace VoidCat.Controllers
             var bw = await _statsReporter.GetBandwidth();
             var bytes = 0UL;
             var count = 0;
-            var files = _fileStore.ListFiles(new(0, Int32.MaxValue));
+            var files = await _fileStore.ListFiles(new(0, Int32.MaxValue));
             await foreach (var vf in files.Results)
             {
                 bytes += vf.Metadata?.Size ?? 0;
