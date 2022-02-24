@@ -5,11 +5,12 @@ import FeatherIcon from "feather-icons-react";
 import "./FilePreview.css";
 import {FileEdit} from "./FileEdit";
 import {FilePaywall} from "./FilePaywall";
-import {Api} from "./Api";
+import {useApi} from "./Api";
 import {Helmet} from "react-helmet";
 import {FormatBytes} from "./Util";
 
 export function FilePreview() {
+    const {Api} = useApi();
     const params = useParams();
     const [info, setInfo] = useState();
     const [order, setOrder] = useState();

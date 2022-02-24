@@ -104,6 +104,7 @@ public class LocalDiskFileStore : IFileStore
                 Description = payload.Meta.Description,
                 Digest = payload.Meta.Digest,
                 MimeType = payload.Meta.MimeType,
+                Uploader = payload.Meta.Uploader,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = total

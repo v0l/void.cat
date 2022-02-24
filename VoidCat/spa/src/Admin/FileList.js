@@ -3,12 +3,13 @@ import {Link} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {FormatBytes} from "../Util";
-import {AdminApi} from "../Api";
+import {useApi} from "../Api";
 import {logout} from "../LoginState";
 import {PagedSortBy, PageSortOrder} from "../Const";
 import {PageSelector} from "../PageSelector";
 
 export function FileList(props) {
+    const {AdminApi} = useApi();
     const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
     const [files, setFiles] = useState();

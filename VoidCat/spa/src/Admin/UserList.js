@@ -1,12 +1,13 @@
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import {PagedSortBy, PageSortOrder} from "../Const";
-import {AdminApi} from "../Api";
+import {useApi} from "../Api";
 import {logout} from "../LoginState";
 import {PageSelector} from "../PageSelector";
 import moment from "moment";
 
 export function UserList() {
+    const {AdminApi} = useApi();
     const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
     const [users, setUsers] = useState();

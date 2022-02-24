@@ -2,10 +2,11 @@ import {useState} from "react";
 
 import {StrikePaywallConfig} from "./StrikePaywallConfig";
 import {NoPaywallConfig} from "./NoPaywallConfig";
-import {Api} from "./Api";
+import {useApi} from "./Api";
 import "./FileEdit.css";
 
 export function FileEdit(props) {
+    const {Api} = useApi();
     const file = props.file;
     const [paywall, setPaywall] = useState(file.paywall?.service);
 

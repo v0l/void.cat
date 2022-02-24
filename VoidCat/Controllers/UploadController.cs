@@ -32,12 +32,14 @@ namespace VoidCat.Controllers
         {
             try
             {
+                var uid = HttpContext.GetUserId();
                 var meta = new VoidFileMeta()
                 {
                     MimeType = Request.Headers.GetHeader("V-Content-Type"),
                     Name = Request.Headers.GetHeader("V-Filename"),
                     Description = Request.Headers.GetHeader("V-Description"),
-                    Digest = Request.Headers.GetHeader("V-Full-Digest")
+                    Digest = Request.Headers.GetHeader("V-Full-Digest"),
+                    Uploader = uid
                 };
 
                 var digest = Request.Headers.GetHeader("V-Digest");

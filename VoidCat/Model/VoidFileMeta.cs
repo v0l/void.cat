@@ -52,6 +52,12 @@ public record VoidFileMeta : IVoidFileMeta
     /// SHA-256 hash of the file
     /// </summary>
     public string? Digest { get; init; }
+    
+    /// <summary>
+    /// User who uploaded the file
+    /// </summary>
+    [JsonConverter(typeof(Base58GuidConverter))]
+    public Guid? Uploader { get; init; }
 }
 
 /// <summary>

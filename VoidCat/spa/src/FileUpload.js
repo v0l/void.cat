@@ -3,6 +3,7 @@ import {buf2hex, ConstName, FormatBytes} from "./Util";
 import {RateCalculator} from "./RateCalculator";
 
 import "./FileUpload.css";
+import {useSelector} from "react-redux";
 
 const UploadState = {
     NotStarted: 0,
@@ -15,6 +16,7 @@ const UploadState = {
 };
 
 export function FileUpload(props) {
+    const auth = useSelector(state => state.login.jwt);
     const [speed, setSpeed] = useState(0);
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState();
@@ -112,6 +114,9 @@ export function FileUpload(props) {
                 req.setRequestHeader("V-Content-Type", props.file.type);
                 req.setRequestHeader("V-Filename", props.file.name);
                 req.setRequestHeader("V-Digest", buf2hex(digest));
+                if (auth) {
+                    req.setRequestHeader("Authorization", `Bearer ${auth}`);
+                }
                 if (typeof (editSecret) === "string") {
                     req.setRequestHeader("V-EditSecret", editSecret);
                 }

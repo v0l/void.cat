@@ -3,9 +3,10 @@ import {useEffect} from "react";
 
 import {Countdown} from "./Countdown";
 import {PaywallOrderState} from "./Const";
-import {Api} from "./Api";
+import {useApi} from "./Api";
 
 export function LightningPaywall(props) {
+    const {Api} = useApi();
     const file = props.file;
     const order = props.order;
     const onPaid = props.onPaid;

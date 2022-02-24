@@ -6,6 +6,8 @@ import {HomePage} from "./HomePage";
 import {Admin} from "./Admin/Admin";
 
 import './App.css';
+import {UserLogin} from "./UserLogin";
+import {Profile} from "./Profile";
 
 function App() {
     return (
@@ -14,7 +16,9 @@ function App() {
                 <BrowserRouter>
                     <Routes>
                         <Route exact path="/" element={<HomePage/>}/>
-                        <Route path="/admin" element={<Admin/>}/>
+                        <Route exact path="/login" element={<UserLogin/>}/>
+                        <Route exact path="/u/:id" element={<Profile/>}/>
+                        <Route exact path="/admin" element={<Admin/>}/>
                         <Route exact path="/:id" element={<FilePreview/>}/>
                     </Routes>
                 </BrowserRouter>

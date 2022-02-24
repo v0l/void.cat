@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using VoidCat.Model;
 
 namespace VoidCat.Model;
 
@@ -20,6 +21,19 @@ public abstract class VoidUser
     public DateTimeOffset Created { get; init; }
 
     public DateTimeOffset LastLogin { get; set; }
+    
+    public string? Avatar { get; set; }
+
+    public PublicVoidUser ToPublic()
+    {
+        return new(Id, Email)
+        {
+            Roles = Roles,
+            Created = Created,
+            LastLogin = LastLogin,
+            Avatar = Avatar
+        };
+    }
 }
 
 public sealed class PrivateVoidUser : VoidUser

@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -5,6 +7,12 @@ namespace VoidCat.Model;
 
 public static class Extensions
 {
+    public static Guid? GetUserId(this HttpContext context)
+    {
+        var claimSub = context?.User?.Claims?.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(claimSub, out var g) ? g : null;
+    }
+
     public static Guid FromBase58Guid(this string base58)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();

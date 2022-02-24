@@ -1,11 +1,11 @@
 ﻿import {useState} from "react";
 import {useDispatch} from "react-redux";
 import {setAuth} from "./LoginState";
-
+import {useApi} from "./Api";
 import "./Login.css";
-import {Api} from "./Api";
 
 export function Login() {
+    const {Api} = useApi();
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
     const [error, setError] = useState();
@@ -19,12 +19,12 @@ export function Login() {
         if (req.ok) {
             let rsp = await req.json();
             if (rsp.jwt) {
-                dispatch(setAuth(rsp.jwt));
+                dispatch(setAuth(rsp));
             } else {
                 setError(rsp.error);
             }
         }
-        
+
         e.target.disabled = false;
     }
 

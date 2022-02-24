@@ -2,9 +2,10 @@ import {FormatCurrency} from "./Util";
 import {PaywallServices} from "./Const";
 import {useState} from "react";
 import {LightningPaywall} from "./LightningPaywall";
-import {Api} from "./Api";
+import {useApi} from "./Api";
 
 export function FilePaywall(props) {
+    const {Api} = useApi();
     const file = props.file;
     const pw = file.paywall;
     const paywallKey = `paywall-${file.id}`;

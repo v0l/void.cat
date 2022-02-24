@@ -1,2 +1,12 @@
-.app {
+.page {
+    width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 720px) {
+    .page {
+        width: 100vw;
+        white-space: nowrap;
+    }
 }

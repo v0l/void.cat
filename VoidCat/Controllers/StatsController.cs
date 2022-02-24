@@ -19,6 +19,7 @@ namespace VoidCat.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(Location = ResponseCacheLocation.Client, Duration = 60)]
         public async Task<GlobalStats> GetGlobalStats()
         {
             var bw = await _statsReporter.GetBandwidth();

@@ -36,7 +36,7 @@ public class AuthController : Controller
             var user = await _manager.Login(req.Username, req.Password);
             var token = CreateToken(user);
             var tokenWriter = new JwtSecurityTokenHandler();
-            return new(tokenWriter.WriteToken(token), null);
+            return new(tokenWriter.WriteToken(token), Profile: user.ToPublic());
         }
         catch (Exception ex)
         {
@@ -59,7 +59,7 @@ public class AuthController : Controller
             var newUser = await _manager.Register(req.Username, req.Password);
             var token = CreateToken(newUser);
             var tokenWriter = new JwtSecurityTokenHandler();
-            return new(tokenWriter.WriteToken(token), null);
+            return new(tokenWriter.WriteToken(token), Profile: newUser.ToPublic());
         }
         catch (Exception ex)
         {
@@ -74,9 +74,8 @@ public class AuthController : Controller
 
         var claims = new List<Claim>()
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString()),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Expiration, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString())
         };
         claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a)));
 
@@ -102,5 +101,5 @@ public class AuthController : Controller
         public string Password { get; init; }
     }
 
-    public record LoginResponse(string? Jwt, string? Error = null);
+    public record LoginResponse(string? Jwt, string? Error = null, VoidUser? Profile = null);
 }

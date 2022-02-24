@@ -2,11 +2,9 @@
 import {GlobalStats} from "./GlobalStats";
 import {FooterLinks} from "./FooterLinks";
 
-import "./HomePage.css";
-
 export function HomePage() {
     return (
-        <div className="home">
+        <div className="page">
             <Dropzone/>
             <GlobalStats/>
             <FooterLinks/>
