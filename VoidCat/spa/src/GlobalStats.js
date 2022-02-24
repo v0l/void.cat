@@ -20,19 +20,19 @@ export function GlobalStats(props) {
     return (
         <dl className="stats">
             <div>
-                <FeatherIcon icon="upload-cloud" />
+                <FeatherIcon icon="upload-cloud"/>
                 {FormatBytes(stats?.bandwidth?.ingress ?? 0, 2)}
             </div>
             <div>
-                <FeatherIcon icon="download-cloud" />
+                <FeatherIcon icon="download-cloud"/>
                 {FormatBytes(stats?.bandwidth?.egress ?? 0, 2)}
             </div>
             <div>
-                <FeatherIcon icon="database" />
+                <FeatherIcon icon="hard-drive"/>
                 {FormatBytes(stats?.totalBytes ?? 0, 2)}
             </div>
             <div>
-                <FeatherIcon icon="hash" />
+                <FeatherIcon icon="hash"/>
                 {stats?.count ?? 0}
             </div>
         </dl>

@@ -1,11 +1,13 @@
 import {Fragment, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {TextPreview} from "./TextPreview";
-
+import FeatherIcon from "feather-icons-react";
 import "./FilePreview.css";
 import {FileEdit} from "./FileEdit";
 import {FilePaywall} from "./FilePaywall";
 import {Api} from "./Api";
+import {Helmet} from "react-helmet";
+import {FormatBytes} from "./Util";
 
 export function FilePreview() {
     const params = useParams();
@@ -77,8 +79,22 @@ export function FilePreview() {
         <div className="preview">
             {info ? (
                 <Fragment>
-                    this.Download(<a className="btn" href={link}>{info.metadata?.name ?? info.id}</a>)
+                    <Helmet>
+                        <title>void.cat - {info.metadata?.name}</title>
+                        <meta name="description" content={info.metadata?.description}/>
+                    </Helmet>
+                    <a className="btn" href={link}>{info.metadata?.name ?? info.id}</a>
                     {renderTypes()}
+                    <div className="file-stats">
+                        <div>
+                            <FeatherIcon icon="download-cloud"/>
+                            {FormatBytes(info?.bandwidth?.egress ?? 0, 2)}
+                        </div>
+                        <div>
+                            <FeatherIcon icon="hard-drive"/>
+                            {FormatBytes(info?.metadata?.size ?? 0, 2)}
+                        </div>
+                    </div>
                     <FileEdit file={info}/>
                 </Fragment>
             ) : "Not Found"}

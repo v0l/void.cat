@@ -6,14 +6,25 @@
     margin-right: auto;
 }
 
-    .preview > a {
-        margin-bottom: 1vh;
-    }
+.preview > a {
+    margin-bottom: 1vh;
+}
 
-    .preview img {
-        width: 100%;
-    }
+.preview img {
+    width: 100%;
+}
 
-    .preview video {
-        width: 100%;
-    }
+.preview video {
+    width: 100%;
+}
+
+.file-stats {
+    line-height: 32px;
+    display: grid;
+    grid-auto-flow: column;
+}
+
+.file-stats svg {
+    vertical-align: middle;
+    margin-right: 10px;
+}
