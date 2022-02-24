@@ -12,3 +12,14 @@
 
 .stats > div {
 }
+
+@media (max-width: 720px) {
+    .stats {
+        margin: 0 10px;
+        font-size: 14px;
+    }
+    .stats svg {
+        height: 16px;
+        width: 16px;
+    }
+}

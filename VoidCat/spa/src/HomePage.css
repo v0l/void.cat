@@ -3,3 +3,10 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+@media (max-width: 720px) {
+    .home {
+        width: 100vw;
+        white-space: nowrap;
+    }
+}

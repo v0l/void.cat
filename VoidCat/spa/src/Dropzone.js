@@ -1,4 +1,4 @@
-import {Fragment, useState} from "react";
+import {Fragment, useEffect, useState} from "react";
 import {FileUpload} from "./FileUpload";
 
 import "./Dropzone.css";
@@ -16,6 +16,16 @@ export function Dropzone(props) {
         i.click();
     }
 
+    function dropFiles(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if ("dataTransfer" in e && e.dataTransfer.files.length > 0) {
+            setFiles(e.dataTransfer.files);
+        } else if ("clipboardData" in e && e.clipboardData.files.length > 0) {
+            setFiles(e.clipboardData.files);
+        }
+    }
+
     function renderUploads() {
         let fElm = [];
         for (let f of files) {
@@ -31,10 +41,19 @@ export function Dropzone(props) {
     function renderDrop() {
         return (
             <div className="drop" onClick={selectFiles}>
-                <h3>Drop files here!</h3>
+                <div>
+                    Click me!
+                    <small>Or drop files here</small>
+                </div>
             </div>
         );
     }
+
+    useEffect(() => {
+        document.addEventListener("paste", dropFiles);
+        document.addEventListener("drop", dropFiles);
+        document.addEventListener("dragover", dropFiles);
+    }, []);
 
     return files.length === 0 ? renderDrop() : renderUploads();
 }

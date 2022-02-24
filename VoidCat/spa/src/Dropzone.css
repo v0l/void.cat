@@ -1,9 +1,24 @@
 .drop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 20px;
-    border: 1px solid;
-    margin-top: 20vh;
+    border: 2px dashed;
+    margin: 10vh 2px 2px;
     text-align: center;
-    line-height: 300px;
     user-select: none;
     cursor: pointer;
+    height: 200px;
+    font-size: x-large;
+}
+
+.drop small {
+    display: block;
+    font-size: x-small;
+}
+
+@media (max-width: 720px) {
+    .drop {
+        width: 100%;
+    }
 }
