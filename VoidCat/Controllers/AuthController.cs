@@ -72,13 +72,13 @@ public class AuthController : Controller
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSettings.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        var claims = new Claim[]
+        var claims = new List<Claim>()
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString()),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-            new(ClaimTypes.Role, string.Join(",", user.Roles))
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
+        claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a)));
 
         return new JwtSecurityToken(_settings.JwtSettings.Issuer, claims: claims,
             signingCredentials: credentials);
