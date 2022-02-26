@@ -13,6 +13,6 @@ public static class Policies
 
 public static class CorsPolicy
 {
-    public const string Default = "default";
+    public const string Auth = "auth";
     public const string Upload = "upload";
 }

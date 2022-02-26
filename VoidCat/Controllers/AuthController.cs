@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using VoidCat.Model;
@@ -9,6 +10,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers;
 
+[EnableCors(CorsPolicy.Auth)]
 [Route("auth")]
 public class AuthController : Controller
 {

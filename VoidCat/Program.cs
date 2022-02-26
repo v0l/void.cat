@@ -35,7 +35,7 @@ if (useRedis)
 
 services.AddCors(opt =>
 {
-    opt.AddPolicy(CorsPolicy.Default, p =>
+    opt.AddDefaultPolicy(p =>
     {
         p.AllowAnyMethod()
             .AllowAnyHeader()
@@ -47,6 +47,14 @@ services.AddCors(opt =>
         p.AllowCredentials()
             .AllowAnyMethod()
             .WithHeaders("V-Content-Type", "V-Filename", "V-Digest", "V-EditSecret", "Content-Type", "Authorization")
+            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
+    });
+    
+    opt.AddPolicy(CorsPolicy.Auth, p =>
+    {
+        p.AllowCredentials()
+            .AllowAnyMethod()
+            .WithHeaders("Authorization")
             .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
     });
 });
@@ -130,7 +138,7 @@ app.UseStaticFiles();
 #endif
 
 app.UseRouting();
-app.UseCors(CorsPolicy.Default);
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
