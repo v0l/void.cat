@@ -4,6 +4,7 @@ import {RateCalculator} from "./RateCalculator";
 
 import "./FileUpload.css";
 import {useSelector} from "react-redux";
+import {ApiHost} from "./Const";
 
 const UploadState = {
     NotStarted: 0,
@@ -109,7 +110,7 @@ export function FileUpload(props) {
                     }
                 };
                 req.upload.onprogress = handleProgress;
-                req.open("POST", typeof (id) === "string" ? `/upload/${id}` : "/upload");
+                req.open("POST", typeof (id) === "string" ? `${ApiHost}/upload/${id}` : `${ApiHost}/upload`);
                 req.setRequestHeader("Content-Type", "application/octet-stream");
                 req.setRequestHeader("V-Content-Type", props.file.type);
                 req.setRequestHeader("V-Filename", props.file.name);
