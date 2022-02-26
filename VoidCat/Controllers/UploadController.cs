@@ -71,7 +71,7 @@ namespace VoidCat.Controllers
                 var digest = Request.Headers.GetHeader("V-Digest");
                 var vf = await _storage.Ingress(new(Request.Body, fileInfo.Metadata, digest!)
                 {
-                    EditSecret = editSecret?.FromBase58Guid(),
+                    EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
                     Id = gid
                 }, HttpContext.RequestAborted);
 

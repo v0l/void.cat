@@ -138,7 +138,7 @@ export function FileUpload(props) {
         for (let s = 0; s < segments; s++) {
             let offset = s * UploadSize;
             let slice = props.file.slice(offset, offset + UploadSize, props.file.type);
-            xhr = await xhrSegment(await slice.arrayBuffer(), xhr?.file?.id, xhr?.file?.editSecret);
+            xhr = await xhrSegment(await slice.arrayBuffer(), xhr?.file?.id, xhr?.file?.metadata?.editSecret);
             if (!xhr.ok) {
                 break;
             }

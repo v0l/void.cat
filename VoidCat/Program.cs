@@ -46,7 +46,7 @@ services.AddCors(opt =>
     {
         p.AllowCredentials()
             .AllowAnyMethod()
-            .WithHeaders("V-Content-Type", "V-Filename", "V-Digest", "Content-Type", "Authorization")
+            .WithHeaders("V-Content-Type", "V-Filename", "V-Digest", "V-EditSecret", "Content-Type", "Authorization")
             .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
     });
 });
