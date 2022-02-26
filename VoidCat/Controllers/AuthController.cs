@@ -10,7 +10,6 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers;
 
-[EnableCors(CorsPolicy.Auth)]
 [Route("auth")]
 public class AuthController : Controller
 {

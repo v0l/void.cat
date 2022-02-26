@@ -10,9 +10,3 @@ public static class Policies
 {
     public const string RequireAdmin = "RequireAdmin";
 }
-
-public static class CorsPolicy
-{
-    public const string Auth = "auth";
-    public const string Upload = "upload";
-}

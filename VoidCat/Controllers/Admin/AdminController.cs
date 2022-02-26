@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers.Admin;
 
-[EnableCors(CorsPolicy.Auth)]
 [Route("admin")]
 [Authorize(Policy = Policies.RequireAdmin)]
 public class AdminController : Controller

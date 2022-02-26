@@ -41,22 +41,6 @@ services.AddCors(opt =>
             .AllowAnyHeader()
             .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
     });
-
-    opt.AddPolicy(CorsPolicy.Upload, p =>
-    {
-        p.AllowCredentials()
-            .AllowAnyMethod()
-            .WithHeaders("V-Content-Type", "V-Filename", "V-Digest", "V-EditSecret", "Content-Type", "Authorization")
-            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
-    });
-    
-    opt.AddPolicy(CorsPolicy.Auth, p =>
-    {
-        p.AllowCredentials()
-            .AllowAnyMethod()
-            .WithHeaders("Content-Type", "Authorization")
-            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
-    });
 });
 
 services.AddRouting();
