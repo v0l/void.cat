@@ -107,7 +107,9 @@ foreach (var migration in migrations)
     await migration.Migrate();
 }
 
+#if HostSPA
 app.UseStaticFiles();
+#endif
 
 app.UseRouting();
 app.UseAuthentication();
@@ -117,7 +119,9 @@ app.UseEndpoints(ep =>
 {
     ep.MapControllers();
     ep.MapMetrics();
+#if HostSPA
     ep.MapFallbackToFile("index.html");
+#endif
 });
 
 app.Run();

@@ -1,4 +1,7 @@
 ﻿import {useSelector} from "react-redux";
+import preval from "preval.macro";
+
+const ApiHost = preval`module.exports = process.env.API_HOST || '';`;
 
 export function useApi() {
     const auth = useSelector(state => state.login.jwt);
@@ -14,7 +17,7 @@ export function useApi() {
             headers["Content-Type"] = "application/json";
         }
 
-        return await fetch(url, {
+        return await fetch(`${ApiHost}${url}`, {
             method,
             headers,
             body: body ? JSON.stringify(body) : undefined

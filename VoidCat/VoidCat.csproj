@@ -4,10 +4,11 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>126065b9-67d3-4d98-9bad-82f359a7e313</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<SpaRoot>spa\</SpaRoot>
 		<DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+		<HostSPA>True</HostSPA>
+		<DefineConstants Condition="'$(HostSPA)' == 'True'">$(DefineConstants);HostSPA</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,6 +28,9 @@
 		<Content Include="..\Dockerfile">
 		  <Link>Dockerfile</Link>
 		</Content>
+		<Content Include="..\nospa.dockerfile">
+		  <Link>nospa.dockerfile</Link>
+		</Content>
 		<None Remove="$(SpaRoot)**" />
 		<None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
 	</ItemGroup>
@@ -41,12 +45,12 @@
 		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn install" />
 	</Target>
 
-	<Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+	<Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish" Condition="'$(HostSPA)' == 'True'">
 		<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
 		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn install" />
 		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn build" />
 	</Target>
-	<Target Name="IncludeBuildFiles" AfterTargets="PublishRunWebpack">
+	<Target Name="IncludeBuildFiles" AfterTargets="PublishRunWebpack" Condition="'$(HostSPA)' == 'True'">
 		<ItemGroup>
 			<_CopyItems Include="$(SpaRoot)build\**\*.*" />
 		</ItemGroup>
