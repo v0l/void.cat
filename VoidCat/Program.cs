@@ -54,7 +54,7 @@ services.AddCors(opt =>
     {
         p.AllowCredentials()
             .AllowAnyMethod()
-            .WithHeaders("Authorization")
+            .WithHeaders("Content-Type", "Authorization")
             .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
     });
 });
