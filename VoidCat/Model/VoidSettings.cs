@@ -15,6 +15,8 @@ namespace VoidCat.Model
         public StrikeApiSettings? Strike { get; init; }
         
         public SmtpSettings? Smtp { get; init; }
+
+        public List<Uri> CorsOrigins { get; init; } = new();
     }
 
     public sealed record TorSettings(Uri TorControl, string PrivateKey, string ControlPassword);

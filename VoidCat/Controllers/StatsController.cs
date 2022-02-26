@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Prometheus;
 using VoidCat.Model;
-using VoidCat.Services;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers
@@ -19,7 +17,7 @@ namespace VoidCat.Controllers
         }
 
         [HttpGet]
-        [ResponseCache(Location = ResponseCacheLocation.Client, Duration = 60)]
+        [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60)]
         public async Task<GlobalStats> GetGlobalStats()
         {
             var bw = await _statsReporter.GetBandwidth();

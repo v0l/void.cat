@@ -1,6 +1,6 @@
 import moment from "moment";
 import {Link} from "react-router-dom";
-import {useDispatch, useSelector} from "react-redux";
+import {useDispatch} from "react-redux";
 import {useEffect, useState} from "react";
 import {FormatBytes} from "../Util";
 import {useApi} from "../Api";
@@ -8,9 +8,8 @@ import {logout} from "../LoginState";
 import {PagedSortBy, PageSortOrder} from "../Const";
 import {PageSelector} from "../PageSelector";
 
-export function FileList(props) {
+export function FileList() {
     const {AdminApi} = useApi();
-    const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
     const [files, setFiles] = useState();
     const [page, setPage] = useState(0);
@@ -24,7 +23,7 @@ export function FileList(props) {
             sortBy: PagedSortBy.Date,
             sortOrder: PageSortOrder.Dsc
         };
-        let req = await AdminApi.fileList(auth, pageReq);
+        let req = await AdminApi.fileList(pageReq);
         if (req.ok) {
             setFiles(await req.json());
         } else if (req.status === 401) {
@@ -37,7 +36,7 @@ export function FileList(props) {
     async function deleteFile(e, id) {
         e.target.disabled = true;
         if (window.confirm(`Are you sure you want to delete: ${id}?`)) {
-            let req = await AdminApi.deleteFile(auth, id);
+            let req = await AdminApi.deleteFile(id);
             if (req.ok) {
                 setFiles({
                     ...files,
@@ -75,7 +74,7 @@ export function FileList(props) {
     if (accessDenied === true) {
         return <h3>Access Denied</h3>;
     }
-    
+
     return (
         <table className="file-list">
             <thead>

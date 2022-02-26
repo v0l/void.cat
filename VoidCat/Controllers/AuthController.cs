@@ -75,7 +75,8 @@ public class AuthController : Controller
         var claims = new List<Claim>()
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Expiration, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString())
+            new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString()),
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
         claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a)));
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
@@ -8,6 +9,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers
 {
+    [EnableCors(CorsPolicy.Upload)]
     [Route("upload")]
     public class UploadController : Controller
     {
@@ -25,14 +27,6 @@ namespace VoidCat.Controllers
             _paywallFactory = paywallFactory;
         }
 
-        [HttpOptions]
-        public IActionResult UploadFileOptions()
-        {
-            // just return 200 status for pre-flight calls
-            // manging CORS headers is not managed inside void.cat
-            return Ok();
-        }
-        
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]

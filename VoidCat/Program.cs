@@ -33,6 +33,24 @@ if (useRedis)
     services.AddSingleton(cx.GetDatabase());
 }
 
+services.AddCors(opt =>
+{
+    opt.AddPolicy(CorsPolicy.Default, p =>
+    {
+        p.AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
+    });
+
+    opt.AddPolicy(CorsPolicy.Upload, p =>
+    {
+        p.AllowCredentials()
+            .AllowAnyMethod()
+            .WithHeaders("V-Content-Type", "V-Filename", "V-Digest", "Content-Type", "Authorization")
+            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
+    });
+});
+
 services.AddRouting();
 services.AddControllers().AddNewtonsoftJson((opt) =>
 {
@@ -112,6 +130,7 @@ app.UseStaticFiles();
 #endif
 
 app.UseRouting();
+app.UseCors(CorsPolicy.Default);
 app.UseAuthentication();
 app.UseAuthorization();
 

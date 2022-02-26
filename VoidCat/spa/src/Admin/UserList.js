@@ -1,4 +1,4 @@
-import {useDispatch, useSelector} from "react-redux";
+import {useDispatch} from "react-redux";
 import {useEffect, useState} from "react";
 import {PagedSortBy, PageSortOrder} from "../Const";
 import {useApi} from "../Api";
@@ -8,7 +8,6 @@ import moment from "moment";
 
 export function UserList() {
     const {AdminApi} = useApi();
-    const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
     const [users, setUsers] = useState();
     const [page, setPage] = useState(0);
@@ -22,12 +21,12 @@ export function UserList() {
             sortBy: PagedSortBy.Id,
             sortOrder: PageSortOrder.Asc
         };
-        let req = await AdminApi.userList(auth, pageReq);
+        let req = await AdminApi.userList(pageReq);
         if (req.ok) {
             setUsers(await req.json());
         } else if (req.status === 401) {
             dispatch(logout());
-        } else if(req.status === 403) {
+        } else if (req.status === 403) {
             setAccessDenied(true);
         }
     }
@@ -47,7 +46,7 @@ export function UserList() {
             </tr>
         );
     }
-    
+
     useEffect(() => {
         loadUserList();
     }, [page]);
@@ -55,7 +54,7 @@ export function UserList() {
     if (accessDenied === true) {
         return <h3>Access Denied</h3>;
     }
-    
+
     return (
         <table>
             <thead>
