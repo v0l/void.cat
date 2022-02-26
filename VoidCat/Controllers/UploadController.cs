@@ -25,6 +25,14 @@ namespace VoidCat.Controllers
             _paywallFactory = paywallFactory;
         }
 
+        [HttpOptions]
+        public IActionResult UploadFileOptions()
+        {
+            // just return 200 status for pre-flight calls
+            // manging CORS headers is not managed inside void.cat
+            return Ok();
+        }
+        
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
