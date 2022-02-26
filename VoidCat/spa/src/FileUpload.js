@@ -120,6 +120,7 @@ export function FileUpload(props) {
                 if (typeof (editSecret) === "string") {
                     req.setRequestHeader("V-EditSecret", editSecret);
                 }
+                req.withCredentials = true;
                 req.send(segment);
             } catch (e) {
                 reject(e);

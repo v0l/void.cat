@@ -1,7 +1,5 @@
 ﻿import {useSelector} from "react-redux";
-import preval from "preval.macro";
-
-const ApiHost = preval`module.exports = process.env.API_HOST || '';`;
+import {ApiHost} from "./Const";
 
 export function useApi() {
     const auth = useSelector(state => state.login.jwt);

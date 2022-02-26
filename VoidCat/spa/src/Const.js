@@ -1,3 +1,7 @@
+import preval from "preval.macro";
+
+export const ApiHost = preval`module.exports = process.env.API_HOST || '';`;
+
 /**
  * @constant {number} - Size of 1 kiB
  */

@@ -8,6 +8,7 @@ import {FilePaywall} from "./FilePaywall";
 import {useApi} from "./Api";
 import {Helmet} from "react-helmet";
 import {FormatBytes} from "./Util";
+import {ApiHost} from "./Const";
 
 export function FilePreview() {
     const {Api} = useApi();
@@ -92,9 +93,9 @@ export function FilePreview() {
             if (order) {
                 let orderObj = JSON.parse(order);
                 setOrder(orderObj);
-                setLink(`/d/${info.id}?orderId=${orderObj.id}`);
+                setLink(`${ApiHost}/d/${info.id}?orderId=${orderObj.id}`);
             } else {
-                setLink(`/d/${info.id}`);
+                setLink(`${ApiHost}/d/${info.id}`);
             }
         }
     }, [info]);
