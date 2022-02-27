@@ -13,17 +13,15 @@ public class LocalDiskFileStore : IFileStore
     private readonly VoidSettings _settings;
     private readonly IAggregateStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
-    private readonly IPaywallStore _paywallStore;
-    private readonly IStatsReporter _statsReporter;
+    private readonly IFileInfoManager _fileInfo;
 
     public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats,
-        IFileMetadataStore metadataStore, IPaywallStore paywallStore, IStatsReporter statsReporter)
+        IFileMetadataStore metadataStore, IFileInfoManager fileInfo)
     {
         _settings = settings;
         _stats = stats;
         _metadataStore = metadataStore;
-        _paywallStore = paywallStore;
-        _statsReporter = statsReporter;
+        _fileInfo = fileInfo;
         _logger = logger;
 
         if (!Directory.Exists(_settings.DataDirectory))
@@ -124,14 +122,10 @@ public class LocalDiskFileStore : IFileStore
             {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var gid)) continue;
 
-                var loaded = await _metadataStore.Get<VoidFileMeta>(gid);
+                var loaded = await _fileInfo.Get(gid);
                 if (loaded != default)
                 {
-                    yield return new()
-                    {
-                        Id = gid,
-                        Metadata = loaded
-                    };
+                    yield return loaded;
                 }
             }
         }
