@@ -20,15 +20,23 @@ namespace VoidCat.Model
         /// Optional paywall config
         /// </summary>
         public PaywallConfig? Paywall { get; init; }
+        
+        /// <summary>
+        /// User profile that uploaded the file
+        /// </summary>
+        public PublicVoidUser? Uploader { get; init; }
+        
+        /// <summary>
+        /// Traffic stats for this file
+        /// </summary>
+        public Bandwidth? Bandwidth { get; init; }
     }
 
     public sealed record PublicVoidFile : VoidFile<VoidFileMeta>
     {
-        public Bandwidth? Bandwidth { get; init; }
     }
 
     public sealed record PrivateVoidFile : VoidFile<SecretVoidFileMeta>
     {
-        public Bandwidth? Bandwidth { get; init; }
     }
 }

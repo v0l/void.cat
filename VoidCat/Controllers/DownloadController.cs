@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers;
 
@@ -10,13 +11,15 @@ namespace VoidCat.Controllers;
 public class DownloadController : Controller
 {
     private readonly IFileStore _storage;
+    private readonly IFileInfoManager _fileInfo;
     private readonly IPaywallStore _paywall;
     private readonly ILogger<DownloadController> _logger;
 
-    public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IPaywallStore paywall)
+    public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo, IPaywallStore paywall)
     {
         _storage = storage;
         _logger = logger;
+        _fileInfo = fileInfo;
         _paywall = paywall;
     }
 
@@ -37,7 +40,7 @@ public class DownloadController : Controller
         var voidFile = await SetupDownload(gid);
         if (voidFile == default) return;
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -49,10 +52,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -75,7 +78,7 @@ public class DownloadController : Controller
 
     private async Task<PublicVoidFile?> SetupDownload(Guid id)
     {
-        var meta = await _storage.Get(id);
+        var meta = await _fileInfo.Get(id);
         if (meta == null)
         {
             Response.StatusCode = 404;
@@ -88,7 +91,7 @@ public class DownloadController : Controller
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))
             {
-                Response.StatusCode = (int) HttpStatusCode.PaymentRequired;
+                Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
                 return default;
             }
         }

@@ -23,14 +23,14 @@ public class UserStore : IUserStore
         return await _cache.Get<T>(MapKey(id));
     }
 
-    public async ValueTask Set(PrivateVoidUser user)
+    public async ValueTask Set(InternalVoidUser user)
     {
         await _cache.Set(MapKey(user.Id), user);
         await _cache.AddToList(UserList, user.Id.ToString());
         await _cache.Set(MapKey(user.Email), user.Id.ToString());
     }
 
-    public async ValueTask<PagedResult<PublicVoidUser>> ListUsers(PagedRequest request)
+    public async ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request)
     {
         var users = (await _cache.GetList(UserList))?.Select(Guid.Parse);
         users = (request.SortBy, request.SortOrder) switch
@@ -40,9 +40,9 @@ public class UserStore : IUserStore
             _ => users
         };
 
-        async IAsyncEnumerable<PublicVoidUser> EnumerateUsers(IEnumerable<Guid> ids)
+        async IAsyncEnumerable<PrivateVoidUser> EnumerateUsers(IEnumerable<Guid> ids)
         {
-            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PublicVoidUser>(a)));
+            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PrivateVoidUser>(a)));
             foreach (var user in usersLoaded)
             {
                 if (user != default)

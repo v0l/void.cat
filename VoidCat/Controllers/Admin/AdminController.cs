@@ -34,7 +34,7 @@ public class AdminController : Controller
 
     [HttpPost]
     [Route("user")]
-    public async Task<RenderedResults<PublicVoidUser>> ListUsers([FromBody] PagedRequest request)
+    public async Task<RenderedResults<PrivateVoidUser>> ListUsers([FromBody] PagedRequest request)
     {
         var result = await _userStore.ListUsers(request);
         return await result.GetResults();

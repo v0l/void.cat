@@ -18,7 +18,7 @@ public class UserManager : IUserManager
         var userId = await _store.LookupUser(email);
         if (!userId.HasValue) throw new InvalidOperationException("User does not exist");
 
-        var user = await _store.Get<PrivateVoidUser>(userId.Value);
+        var user = await _store.Get<InternalVoidUser>(userId.Value);
         if (!(user?.CheckPassword(password) ?? false)) throw new InvalidOperationException("User does not exist");
 
         user.LastLogin = DateTimeOffset.UtcNow;
@@ -32,7 +32,7 @@ public class UserManager : IUserManager
         var existingUser = await _store.LookupUser(email);
         if (existingUser != Guid.Empty) throw new InvalidOperationException("User already exists");
 
-        var newUser = new PrivateVoidUser(Guid.NewGuid(), email, password.HashPassword())
+        var newUser = new InternalVoidUser(Guid.NewGuid(), email, password.HashPassword())
         {
             Created = DateTimeOffset.UtcNow,
             LastLogin = DateTimeOffset.UtcNow

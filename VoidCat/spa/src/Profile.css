@@ -1,0 +1,12 @@
+.profile {
+    
+}
+
+.profile .avatar {
+    width: 256px;
+    height: 256px;
+    border-radius: 40px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

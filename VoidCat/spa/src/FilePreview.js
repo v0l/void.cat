@@ -9,6 +9,7 @@ import {useApi} from "./Api";
 import {Helmet} from "react-helmet";
 import {FormatBytes} from "./Util";
 import {ApiHost} from "./Const";
+import {FileUploader} from "./FileUploader";
 
 export function FilePreview() {
     const {Api} = useApi();
@@ -121,6 +122,7 @@ export function FilePreview() {
                             {FormatBytes(info?.metadata?.size ?? 0, 2)}
                         </div>
                     </div>
+                    {info.uploader ? <FileUploader uploader={info.uploader}/> : null}
                     <FileEdit file={info}/>
                 </Fragment>
             ) : "Not Found"}

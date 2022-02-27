@@ -4,8 +4,7 @@ namespace VoidCat.Services.Abstractions;
 
 public interface IFileMetadataStore
 {
-    ValueTask<SecretVoidFileMeta?> Get(Guid id);
-    ValueTask<VoidFileMeta?> GetPublic(Guid id);
+    ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta;
     
     ValueTask Set(Guid id, SecretVoidFileMeta meta);
 

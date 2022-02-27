@@ -15,14 +15,16 @@ namespace VoidCat.Controllers
         private readonly IFileMetadataStore _metadata;
         private readonly IPaywallStore _paywall;
         private readonly IPaywallFactory _paywallFactory;
+        private readonly IFileInfoManager _fileInfo;
 
         public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall,
-            IPaywallFactory paywallFactory)
+            IPaywallFactory paywallFactory, IFileInfoManager fileInfo)
         {
             _storage = storage;
             _metadata = metadata;
             _paywall = paywall;
             _paywallFactory = paywallFactory;
+            _fileInfo = fileInfo;
         }
 
         [HttpPost]
@@ -33,7 +35,7 @@ namespace VoidCat.Controllers
             try
             {
                 var uid = HttpContext.GetUserId();
-                var meta = new VoidFileMeta()
+                var meta = new SecretVoidFileMeta()
                 {
                     MimeType = Request.Headers.GetHeader("V-Content-Type"),
                     Name = Request.Headers.GetHeader("V-Filename"),
@@ -62,12 +64,12 @@ namespace VoidCat.Controllers
             try
             {
                 var gid = id.FromBase58Guid();
-                var fileInfo = await _storage.Get(gid);
-                if (fileInfo == default) return UploadResult.Error("File not found");
+                var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
+                if (meta == default) return UploadResult.Error("File not found");
 
                 var editSecret = Request.Headers.GetHeader("V-EditSecret");
                 var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, fileInfo.Metadata, digest!)
+                var vf = await _storage.Ingress(new(Request.Body, meta, digest!)
                 {
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
                     Id = gid
@@ -85,7 +87,7 @@ namespace VoidCat.Controllers
         [Route("{id}")]
         public ValueTask<PublicVoidFile?> GetInfo([FromRoute] string id)
         {
-            return _storage.Get(id.FromBase58Guid());
+            return _fileInfo.Get(id.FromBase58Guid());
         }
 
         [HttpGet]
@@ -93,16 +95,16 @@ namespace VoidCat.Controllers
         public async ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
         {
             var gid = id.FromBase58Guid();
-            var file = await _storage.Get(gid);
+            var file = await _fileInfo.Get(gid);
             var config = await _paywall.GetConfig(gid);
 
             var provider = await _paywallFactory.CreateProvider(config!.Service);
             return await provider.CreateOrder(file!);
         }
-        
+
         [HttpGet]
         [Route("{id}/paywall/{order:guid}")]
-        public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute]Guid order)
+        public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
         {
             var gid = id.FromBase58Guid();
             var config = await _paywall.GetConfig(gid);
@@ -116,7 +118,7 @@ namespace VoidCat.Controllers
         public async Task<IActionResult> SetPaywallConfig([FromRoute] string id, [FromBody] SetPaywallConfigRequest req)
         {
             var gid = id.FromBase58Guid();
-            var meta = await _metadata.Get(gid);
+            var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
             if (meta == default) return NotFound();
 
             if (req.EditSecret != meta.EditSecret) return Unauthorized();

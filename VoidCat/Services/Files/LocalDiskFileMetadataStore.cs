@@ -23,14 +23,9 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         }
     }
 
-    public ValueTask<VoidFileMeta?> GetPublic(Guid id)
+    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
-        return GetMeta<VoidFileMeta>(id);
-    }
-
-    public ValueTask<SecretVoidFileMeta?> Get(Guid id)
-    {
-        return GetMeta<SecretVoidFileMeta>(id);
+        return GetMeta<TMeta>(id);
     }
 
     public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
@@ -42,7 +37,7 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
 
     public async ValueTask Update(Guid id, SecretVoidFileMeta patch)
     {
-        var oldMeta = await Get(id);
+        var oldMeta = await Get<SecretVoidFileMeta>(id);
         if (oldMeta?.EditSecret != patch.EditSecret)
         {
             throw new VoidNotAllowedException("Edit secret incorrect");

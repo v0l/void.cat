@@ -36,7 +36,8 @@ export function useApi() {
             createOrder: (id) => getJson("GET", `/upload/${id}/paywall`),
             getOrder: (file, order) => getJson("GET", `/upload/${file}/paywall/${order}`),
             login: (username, password) => getJson("POST", `/auth/login`, {username, password}),
-            register: (username, password) => getJson("POST", `/auth/register`, {username, password})
+            register: (username, password) => getJson("POST", `/auth/register`, {username, password}),
+            getUser: (id) => getJson("GET", `/user/${id}`, undefined, auth)
         }
     };
 }

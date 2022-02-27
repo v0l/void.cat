@@ -14,6 +14,17 @@ using VoidCat.Services.Redis;
 using VoidCat.Services.Stats;
 using VoidCat.Services.Users;
 
+// setup JsonConvert default settings
+JsonSerializerSettings ConfigJsonSettings(JsonSerializerSettings s)
+{
+    s.NullValueHandling = NullValueHandling.Ignore;
+    s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
+    s.MissingMemberHandling = MissingMemberHandling.Ignore;
+    return s;
+}
+
+JsonConvert.DefaultSettings = () => ConfigJsonSettings(new());
+
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
@@ -44,12 +55,7 @@ services.AddCors(opt =>
 });
 
 services.AddRouting();
-services.AddControllers().AddNewtonsoftJson((opt) =>
-{
-    opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-    opt.SerializerSettings.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
-    opt.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
-});
+services.AddControllers().AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -65,13 +71,7 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-services.AddAuthorization((opt) =>
-{
-    opt.AddPolicy(Policies.RequireAdmin, (auth) =>
-    {
-        auth.RequireRole(Roles.Admin);
-    });
-});
+services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); }); });
 
 // void.cat services
 //
@@ -80,6 +80,7 @@ services.AddVoidMigrations();
 // file storage
 services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
 services.AddTransient<IFileStore, LocalDiskFileStore>();
+services.AddTransient<IFileInfoManager, FileInfoManager>();
 
 // stats
 services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();

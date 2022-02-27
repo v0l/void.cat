@@ -32,22 +32,6 @@ public class LocalDiskFileStore : IFileStore
         }
     }
 
-    public async ValueTask<PublicVoidFile?> Get(Guid id)
-    {
-        var meta = _metadataStore.GetPublic(id);
-        var paywall = _paywallStore.GetConfig(id);
-        var bandwidth = _statsReporter.GetBandwidth(id);
-        await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask());
-
-        return new()
-        {
-            Id = id,
-            Metadata = meta.Result,
-            Paywall = paywall.Result,
-            Bandwidth = bandwidth.Result
-        };
-    }
-
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
         var path = MapPath(request.Id);
@@ -68,10 +52,9 @@ public class LocalDiskFileStore : IFileStore
     {
         var id = payload.Id ?? Guid.NewGuid();
         var fPath = MapPath(id);
-        SecretVoidFileMeta? vf = null;
+        var vf = payload.Meta;
         if (payload.IsAppend)
         {
-            vf = await _metadataStore.Get(payload.Id!.Value);
             if (vf?.EditSecret != null && vf.EditSecret != payload.EditSecret)
             {
                 throw new VoidNotAllowedException("Edit secret incorrect!");
@@ -98,13 +81,8 @@ public class LocalDiskFileStore : IFileStore
         }
         else
         {
-            vf = new SecretVoidFileMeta()
+            vf = vf! with
             {
-                Name = payload.Meta.Name,
-                Description = payload.Meta.Description,
-                Digest = payload.Meta.Digest,
-                MimeType = payload.Meta.MimeType,
-                Uploader = payload.Meta.Uploader,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = total
@@ -146,10 +124,14 @@ public class LocalDiskFileStore : IFileStore
             {
                 if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var gid)) continue;
 
-                var loaded = await Get(gid);
+                var loaded = await _metadataStore.Get<VoidFileMeta>(gid);
                 if (loaded != default)
                 {
-                    yield return loaded;
+                    yield return new()
+                    {
+                        Id = gid,
+                        Metadata = loaded
+                    };
                 }
             }
         }

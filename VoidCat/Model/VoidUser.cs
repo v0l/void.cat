@@ -1,32 +1,41 @@
 using Newtonsoft.Json;
-using VoidCat.Model;
 
 namespace VoidCat.Model;
 
 public abstract class VoidUser
 {
-    protected VoidUser(Guid id, string email)
+    protected VoidUser(Guid id)
     {
         Id = id;
-        Email = email;
     }
 
     [JsonConverter(typeof(Base58GuidConverter))]
     public Guid Id { get; }
 
-    public string Email { get; }
-
-    public HashSet<string> Roles { get; init; } = new() { Model.Roles.User };
+    public HashSet<string> Roles { get; init; } = new() {Model.Roles.User};
 
     public DateTimeOffset Created { get; init; }
 
     public DateTimeOffset LastLogin { get; set; }
-    
+
+    /// <summary>
+    /// Display avatar for user profile
+    /// </summary>
     public string? Avatar { get; set; }
+    
+    /// <summary>
+    /// Display name for user profile
+    /// </summary>
+    public string? DisplayName { get; set; } = "void user";
+
+    /// <summary>
+    /// Public profile, otherwise the profile will be hidden
+    /// </summary>
+    public bool Public { get; set; } = true;
 
     public PublicVoidUser ToPublic()
     {
-        return new(Id, Email)
+        return new(Id)
         {
             Roles = Roles,
             Created = Created,
@@ -36,9 +45,9 @@ public abstract class VoidUser
     }
 }
 
-public sealed class PrivateVoidUser : VoidUser
+public sealed class InternalVoidUser : PrivateVoidUser
 {
-    public PrivateVoidUser(Guid id, string email, string passwordHash) : base(id, email)
+    public InternalVoidUser(Guid id, string email, string passwordHash) : base(id, email)
     {
         PasswordHash = passwordHash;
     }
@@ -46,9 +55,19 @@ public sealed class PrivateVoidUser : VoidUser
     public string PasswordHash { get; }
 }
 
+public class PrivateVoidUser : VoidUser
+{
+    public PrivateVoidUser(Guid id, string email) : base(id)
+    {
+        Email = email;
+    }
+
+    public string Email { get; }
+}
+
 public sealed class PublicVoidUser : VoidUser
 {
-    public PublicVoidUser(Guid id, string email) : base(id, email)
+    public PublicVoidUser(Guid id) : base(id)
     {
     }
 }
