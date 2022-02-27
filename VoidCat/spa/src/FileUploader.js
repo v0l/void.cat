@@ -5,8 +5,12 @@ import "./FileUploader.css";
 export function FileUploader(props) {
     const uploader = props.uploader;
 
+    let avatarUrl = uploader.avatar ?? DefaultAvatar;
+    if(!avatarUrl.startsWith("http")){
+        avatarUrl = `/d/${avatarUrl}`;
+    }
     let avatarStyles = {
-        backgroundImage: `url(${uploader.avatar ?? DefaultAvatar})`
+        backgroundImage: `url(${avatarUrl})`
     };
 
     return (
