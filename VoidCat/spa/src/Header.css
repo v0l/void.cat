@@ -1,0 +1,12 @@
+.header {
+    user-select: none;
+    display: flex;
+    padding: 5px 0;
+    align-items: center;
+}
+
+.header .title {
+    font-size: 30px;
+    line-height: 2;
+    flex-grow: 1;
+}

@@ -22,6 +22,7 @@ export const LoginState = createSlice({
         },
         logout: (state) => {
             state.jwt = null;
+            state.profile = null;
             window.localStorage.removeItem(LocalStorageKey);
             window.localStorage.removeItem(LocalStorageProfileKey);
         }

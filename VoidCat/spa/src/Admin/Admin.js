@@ -1,17 +1,17 @@
 ﻿import {useDispatch, useSelector} from "react-redux";
-import {Login} from "../Login";
 import {FileList} from "./FileList";
 import {UserList} from "./UserList";
 
 import "./Admin.css";
 import {logout} from "../LoginState";
+import {Navigate} from "react-router-dom";
 
 export function Admin() {
     const auth = useSelector((state) => state.login.jwt);
     const dispatch = useDispatch();
     
     if (!auth) {
-        return <Login/>;
+        return <Navigate to="/login"/>;
     } else {
         return (
             <div className="admin">

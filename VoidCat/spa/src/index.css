@@ -29,4 +29,17 @@ a:hover {
     padding: 10px 20px;
     user-select: none;
     cursor: pointer;
+    margin: 5px;
+}
+
+.flex {
+    display: flex;
+}
+
+.flx-1 {
+    flex: 1;
+}
+
+.flex-center {
+    align-items: center;
 }

@@ -39,6 +39,10 @@
     opacity: 1;
 }
 
-.profile .roles {
-    margin: 20px 0;
+.profile .roles > span {
+    margin-right: 10px;
+}
+
+.profile dt {
+    font-weight: bold;
 }

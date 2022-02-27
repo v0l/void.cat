@@ -4,12 +4,15 @@ import {useApi} from "./Api";
 import {ApiHost, DefaultAvatar} from "./Const";
 import "./Profile.css";
 import {useDispatch, useSelector} from "react-redux";
-import {setProfile as setGlobalProfile} from "./LoginState";
+import {logout, setProfile as setGlobalProfile} from "./LoginState";
 import {DigestAlgo} from "./FileUpload";
 import {buf2hex} from "./Util";
+import moment from "moment";
+import FeatherIcon from "feather-icons-react";
 
 export function Profile() {
     const [profile, setProfile] = useState();
+    const [saved, setSaved] = useState(false);
     const auth = useSelector(state => state.login.jwt);
     const localProfile = useSelector(state => state.login.profile);
     const canEdit = localProfile?.id === profile?.id;
@@ -52,7 +55,7 @@ export function Profile() {
         const file = res[0];
         const buf = await file.arrayBuffer();
         const digest = await crypto.subtle.digest(DigestAlgo, buf);
-        
+
         let req = await fetch(`${ApiHost}/upload`, {
             mode: "cors",
             method: "POST",
@@ -65,19 +68,19 @@ export function Profile() {
                 "Authorization": `Bearer ${auth}`
             }
         });
-        
-        if(req.ok) {
+
+        if (req.ok) {
             let rsp = await req.json();
-            if(rsp.ok) {
+            if (rsp.ok) {
                 setProfile({
                     ...profile,
                     avatar: rsp.file.id
                 });
             }
         }
-        
-    } 
-    
+
+    }
+
     async function saveUser() {
         let r = await Api.updateUser({
             id: profile.id,
@@ -88,6 +91,7 @@ export function Profile() {
         if (r.ok) {
             // saved
             dispatch(setGlobalProfile(profile));
+            setSaved(true);
         }
     }
 
@@ -95,9 +99,15 @@ export function Profile() {
         loadProfile();
     }, []);
 
+    useEffect(() => {
+        if (saved === true) {
+            setTimeout(() => setSaved(false), 1000);
+        }
+    }, [saved]);
+
     if (profile) {
         let avatarUrl = profile.avatar ?? DefaultAvatar;
-        if(!avatarUrl.startsWith("http")) {
+        if (!avatarUrl.startsWith("http")) {
             // assume void-cat hosted avatar
             avatarUrl = `/d/${avatarUrl}`;
         }
@@ -113,14 +123,24 @@ export function Profile() {
                                    onChange={(e) => editUsername(e.target.value)}/>
                             : profile.displayName}
                     </div>
-                    <div className="avatar" style={avatarStyles}>
-                        {canEdit ? <div className="edit-avatar" onClick={() => changeAvatar()}>
-                            <h3>Edit</h3>
-                        </div> : null}
-                    </div>
-                    <div className="roles">
-                        <h3>Roles:</h3>
-                        {profile.roles.map(a => <span className="btn">{a}</span>)}
+                    <div className="flex">
+                        <div className="flx-1">
+                            <div className="avatar" style={avatarStyles}>
+                                {canEdit ? <div className="edit-avatar" onClick={() => changeAvatar()}>
+                                    <h3>Edit</h3>
+                                </div> : null}
+                            </div>
+                        </div>
+                        <div className="flx-1">
+                            <dl>
+                                <dt>Created</dt>
+                                <dd>{moment(profile.created).fromNow()}</dd>
+                                <dt>Roles</dt>
+                                <dd>{profile.roles.map(a => <span key={a} className="btn">{a}</span>)}</dd>
+                                <dt>Files</dt>
+                                <dd>0</dd>
+                            </dl>
+                        </div>
                     </div>
                     {canEdit ?
                         <Fragment>
@@ -129,7 +149,17 @@ export function Profile() {
                                 <input type="checkbox" checked={profile.public}
                                        onChange={(e) => editPublic(e.target.checked)}/>
                             </p>
-                            <div className="btn" onClick={saveUser}>Save</div>
+                            <div className="flex flex-center">
+                                <div>
+                                    <div className="btn" onClick={saveUser}>Save</div>
+                                </div>
+                                <div>
+                                    {saved ? <FeatherIcon icon="check-circle"/> : null}
+                                </div>
+                                <div>
+                                    <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
+                                </div>
+                            </div>
                         </Fragment> : null}
                 </div>
             </div>

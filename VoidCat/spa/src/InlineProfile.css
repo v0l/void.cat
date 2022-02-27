@@ -1,14 +1,10 @@
-.uploader-info {
-    margin-top: 10px;
-    text-align: start;
-}
 
-.uploader-info .small-profile {
+.small-profile {
     display: inline-flex;
     align-items: center;
 }
 
-.uploader-info .small-profile .avatar {
+.small-profile .avatar {
     width: 64px;
     height: 64px;
     border-radius: 16px;
@@ -17,6 +13,6 @@
     background-repeat: no-repeat;
 }
 
-.uploader-info .small-profile .name {
+.small-profile .name {
     padding-left: 15px;
 }
