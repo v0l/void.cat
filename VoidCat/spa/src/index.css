@@ -40,6 +40,14 @@ a:hover {
     flex: 1;
 }
 
+.flx-2 {
+    flex: 2;
+}
+
+.flx-grow {
+    flex-grow: 1;
+}
+
 .flex-center {
     align-items: center;
 }

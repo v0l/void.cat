@@ -1,30 +1,19 @@
 .preview {
     margin-top: 2vh;
-    width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
 }
 
-.preview > a {
-    margin-bottom: 1vh;
-}
-
-.preview img {
+.preview img, .preview video, .preview object {
     width: 100%;
 }
 
-.preview video {
-    width: 100%;
-}
-
-.file-stats {
+.preview .file-stats {
     line-height: 32px;
     display: grid;
     grid-auto-flow: column;
+    text-align: center;
 }
 
-.file-stats svg {
+.preview .file-stats svg {
     vertical-align: middle;
     margin-right: 10px;
 }

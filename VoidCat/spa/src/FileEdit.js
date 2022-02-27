@@ -34,8 +34,8 @@ export function FileEdit(props) {
 
     const meta = file.metadata;
     return (
-        <div className="file-edit">
-            <div>
+        <div className="file-edit flex">
+            <div className="flx-1">
                 <h3>File info</h3>
                 <dl>
                     <dt>Filename:</dt>
@@ -45,7 +45,7 @@ export function FileEdit(props) {
                 </dl>
 
             </div>
-            <div>
+            <div className="flx-1">
                 <h3>Paywall Config</h3>
                 Type:
                 <select onChange={(e) => setPaywall(parseInt(e.target.value))} value={paywall}>

@@ -56,6 +56,9 @@ export function FilePreview() {
                 case "application/pdf": {
                     return <object data={link}/>;
                 }
+                default: {
+                    return <h3>{info.metadata?.name ?? info.id}</h3>
+                }
             }
         }
         return null;
@@ -102,7 +105,7 @@ export function FilePreview() {
     }, [info]);
 
     return (
-        <div className="preview">
+        <div className="preview page">
             {info ? (
                 <Fragment>
                     <Helmet>
@@ -110,7 +113,14 @@ export function FilePreview() {
                         <meta name="description" content={info.metadata?.description}/>
                         {renderOpenGraphTags()}
                     </Helmet>
-                    <a className="btn" href={link}>{info.metadata?.name ?? info.id}</a>
+                    <div className="flex flex-center">
+                        <div className="flx-grow">
+                            {info.uploader ? <InlineProfile profile={info.uploader}/> : null}
+                        </div>
+                        <div>
+                            <a className="btn" href={link} download={info.metadata?.name ?? info.id}>Download</a>
+                        </div>
+                    </div>
                     {renderTypes()}
                     <div className="file-stats">
                         <div>
@@ -122,7 +132,6 @@ export function FilePreview() {
                             {FormatBytes(info?.metadata?.size ?? 0, 2)}
                         </div>
                     </div>
-                    {info.uploader ? <InlineProfile profile={info.uploader}/> : null}
                     <FileEdit file={info}/>
                 </Fragment>
             ) : "Not Found"}
