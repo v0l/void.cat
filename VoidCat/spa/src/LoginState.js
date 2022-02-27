@@ -16,6 +16,10 @@ export const LoginState = createSlice({
             window.localStorage.setItem(LocalStorageKey, state.jwt);
             window.localStorage.setItem(LocalStorageProfileKey, JSON.stringify(state.profile));
         },
+        setProfile: (state, action) => {
+            state.profile = action.payload;
+            window.localStorage.setItem(LocalStorageProfileKey, JSON.stringify(state.profile));
+        },
         logout: (state) => {
             state.jwt = null;
             window.localStorage.removeItem(LocalStorageKey);
@@ -24,5 +28,5 @@ export const LoginState = createSlice({
     }
 });
 
-export const {setAuth, logout} = LoginState.actions;
+export const {setAuth, setProfile, logout} = LoginState.actions;
 export default LoginState.reducer;

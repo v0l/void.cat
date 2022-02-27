@@ -16,6 +16,8 @@ const UploadState = {
     Challenge: 6
 };
 
+export const DigestAlgo = "SHA-256";
+
 export function FileUpload(props) {
     const auth = useSelector(state => state.login.jwt);
     const [speed, setSpeed] = useState(0);
@@ -87,7 +89,6 @@ export function FileUpload(props) {
      * @returns {Promise<any>}
      */
     async function xhrSegment(segment, id, editSecret) {
-        const DigestAlgo = "SHA-256";
         setUState(UploadState.Hashing);
         const digest = await crypto.subtle.digest(DigestAlgo, segment);
         setUState(UploadState.Uploading);

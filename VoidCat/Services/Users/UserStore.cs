@@ -60,6 +60,19 @@ public class UserStore : IUserStore
             Results = EnumerateUsers(users?.Skip(request.PageSize * request.Page).Take(request.PageSize))
         };
     }
+    
+    public async ValueTask Update(PublicVoidUser newUser)
+    {
+        var oldUser = await Get<InternalVoidUser>(newUser.Id);
+        if (oldUser == null) return;
+
+        // update only a few props
+        oldUser.Avatar = newUser.Avatar;
+        oldUser.Public = newUser.Public;
+        oldUser.DisplayName = newUser.DisplayName;
+
+        await Set(oldUser);
+    }
 
     private static string MapKey(Guid id) => $"user:{id}";
     private static string MapKey(string email) => $"user:email:{email}";

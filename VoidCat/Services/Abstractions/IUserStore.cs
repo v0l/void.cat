@@ -8,4 +8,5 @@ public interface IUserStore
     ValueTask<T?> Get<T>(Guid id) where T : VoidUser;
     ValueTask Set(InternalVoidUser user);
     ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request);
+    ValueTask Update(PublicVoidUser newUser);
 }

@@ -24,9 +24,28 @@ public class UserController : Controller
         {
             return await _store.Get<PrivateVoidUser>(id.FromBase58Guid());
         }
-        else
+
+        return await _store.Get<PublicVoidUser>(id.FromBase58Guid());
+    }
+
+    [HttpPost]
+    [Route("{id}")]
+    public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicVoidUser user)
+    {
+        var loggedUser = HttpContext.GetUserId();
+        var requestedId = id.FromBase58Guid();
+        if (requestedId != loggedUser)
         {
-            return await _store.Get<PublicVoidUser>(id.FromBase58Guid());
+            return Unauthorized();
         }
+
+        // check requested user is same as user obj
+        if (requestedId != user.Id)
+        {
+            return BadRequest();
+        }
+
+        await _store.Update(user);
+        return Ok();
     }
 }
