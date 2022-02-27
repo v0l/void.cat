@@ -36,6 +36,7 @@ export function LightningPaywall(props) {
 
     return (
         <div className="lightning-invoice" onClick={openInvoice}>
+            <h1>Pay with Lightning ⚡</h1>
             <QRCode
                 value={link}
                 size={512}

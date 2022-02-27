@@ -1,3 +1,4 @@
+import "./FilePaywall.css";
 import {FormatCurrency} from "./Util";
 import {PaywallServices} from "./Const";
 import {useState} from "react";
@@ -35,9 +36,10 @@ export function FilePaywall(props) {
     if (!order) {
         return (
             <div className="paywall">
-                <h3>You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this
-                    file.</h3>
-                <button onClick={fetchOrder}>Pay</button>
+                <h3>
+                    You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this file.
+                </h3>
+                <div className="btn" onClick={fetchOrder}>Pay</div>
             </div>
         );
     } else {
