@@ -66,3 +66,8 @@ export const PageSortOrder = {
     Asc: 0,
     Dsc: 1
 }
+
+export const UserFlags = {
+    PublicProfile: 1,
+    PublicUploads: 2
+}

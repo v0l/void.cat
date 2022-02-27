@@ -14,14 +14,16 @@ public class LocalDiskFileStore : IFileStore
     private readonly IAggregateStatsCollector _stats;
     private readonly IFileMetadataStore _metadataStore;
     private readonly IFileInfoManager _fileInfo;
+    private readonly IUserUploadsStore _userUploads;
 
     public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats,
-        IFileMetadataStore metadataStore, IFileInfoManager fileInfo)
+        IFileMetadataStore metadataStore, IFileInfoManager fileInfo, IUserUploadsStore userUploads)
     {
         _settings = settings;
         _stats = stats;
         _metadataStore = metadataStore;
         _fileInfo = fileInfo;
+        _userUploads = userUploads;
         _logger = logger;
 
         if (!Directory.Exists(_settings.DataDirectory))
@@ -50,10 +52,10 @@ public class LocalDiskFileStore : IFileStore
     {
         var id = payload.Id ?? Guid.NewGuid();
         var fPath = MapPath(id);
-        var vf = payload.Meta;
+        var meta = payload.Meta;
         if (payload.IsAppend)
         {
-            if (vf?.EditSecret != null && vf.EditSecret != payload.EditSecret)
+            if (meta?.EditSecret != null && meta.EditSecret != payload.EditSecret)
             {
                 throw new VoidNotAllowedException("Edit secret incorrect!");
             }
@@ -72,14 +74,14 @@ public class LocalDiskFileStore : IFileStore
 
         if (payload.IsAppend)
         {
-            vf = vf! with
+            meta = meta! with
             {
-                Size = vf.Size + total
+                Size = meta.Size + total
             };
         }
         else
         {
-            vf = vf! with
+            meta = meta! with
             {
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
@@ -87,13 +89,19 @@ public class LocalDiskFileStore : IFileStore
             };
         }
 
-
-        await _metadataStore.Set(id, vf);
-        return new()
+        await _metadataStore.Set(id, meta);
+        var vf = new PrivateVoidFile()
         {
             Id = id,
-            Metadata = vf
+            Metadata = meta
         };
+
+        if (meta.Uploader.HasValue)
+        {
+            await _userUploads.AddFile(meta.Uploader.Value, vf);
+        }
+
+        return vf;
     }
 
     public ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)

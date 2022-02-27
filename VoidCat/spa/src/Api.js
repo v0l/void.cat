@@ -38,7 +38,8 @@ export function useApi() {
             login: (username, password) => getJson("POST", `/auth/login`, {username, password}),
             register: (username, password) => getJson("POST", `/auth/register`, {username, password}),
             getUser: (id) => getJson("GET", `/user/${id}`, undefined, auth),
-            updateUser: (u) => getJson("POST", `/user/${u.id}`, u, auth)
+            updateUser: (u) => getJson("POST", `/user/${u.id}`, u, auth),
+            listUserFiles: (uid, pageReq) => getJson("POST", `/user/${uid}/files`, pageReq, auth)
         }
     };
 }

@@ -81,6 +81,7 @@ services.AddVoidMigrations();
 services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
 services.AddTransient<IFileStore, LocalDiskFileStore>();
 services.AddTransient<IFileInfoManager, FileInfoManager>();
+services.AddTransient<IUserUploadsStore, UserUploadStore>();
 
 // stats
 services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();

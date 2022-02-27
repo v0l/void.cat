@@ -68,12 +68,12 @@ public class UserStore : IUserStore
 
         // update only a few props
         oldUser.Avatar = newUser.Avatar;
-        oldUser.Public = newUser.Public;
+        oldUser.Flags = newUser.Flags;
         oldUser.DisplayName = newUser.DisplayName;
 
         await Set(oldUser);
     }
-
+    
     private static string MapKey(Guid id) => $"user:{id}";
     private static string MapKey(string email) => $"user:email:{email}";
 }

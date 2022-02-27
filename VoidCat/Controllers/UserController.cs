@@ -8,10 +8,12 @@ namespace VoidCat.Controllers;
 public class UserController : Controller
 {
     private readonly IUserStore _store;
+    private readonly IUserUploadsStore _userUploads;
 
-    public UserController(IUserStore store)
+    public UserController(IUserStore store, IUserUploadsStore userUploads)
     {
         _store = store;
+        _userUploads = userUploads;
     }
 
     [HttpGet]
@@ -25,7 +27,10 @@ public class UserController : Controller
             return await _store.Get<PrivateVoidUser>(id.FromBase58Guid());
         }
 
-        return await _store.Get<PublicVoidUser>(id.FromBase58Guid());
+        var user = await _store.Get<PublicVoidUser>(id.FromBase58Guid());
+        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicProfile) ?? false)) return default;
+
+        return user;
     }
 
     [HttpPost]
@@ -47,5 +52,18 @@ public class UserController : Controller
 
         await _store.Update(user);
         return Ok();
+    }
+
+    [HttpPost]
+    [Route("{id}/files")]
+    public async Task<RenderedResults<PublicVoidFile>?> ListUserFiles([FromRoute] string id, [FromBody] PagedRequest request)
+    {
+        var loggedUser = HttpContext.GetUserId();
+        var gid = id.FromBase58Guid();
+        var user = await _store.Get<PublicVoidUser>(gid);
+        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicUploads) ?? false) && loggedUser != gid) return default;
+        
+        var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
+        return await results.GetResults();
     }
 }

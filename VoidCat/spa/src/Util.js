@@ -76,3 +76,7 @@ export function FormatCurrency(value, currency) {
     }
     return value.toString();
 }
+
+export function hasFlag(value, flag) {
+    return (value & flag) !== 0;
+}

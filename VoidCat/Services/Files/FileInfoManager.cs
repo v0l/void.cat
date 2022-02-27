@@ -37,7 +37,7 @@ public class FileInfoManager : IFileInfoManager
             Metadata = meta.Result,
             Paywall = paywall.Result,
             Bandwidth = bandwidth.Result,
-            Uploader = user?.Public == true ? user : null
+            Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null
         };
     }
 }

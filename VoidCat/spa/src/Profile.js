@@ -1,17 +1,19 @@
 import {Fragment, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
 import {useApi} from "./Api";
-import {ApiHost, DefaultAvatar} from "./Const";
+import {ApiHost, DefaultAvatar, UserFlags} from "./Const";
 import "./Profile.css";
 import {useDispatch, useSelector} from "react-redux";
 import {logout, setProfile as setGlobalProfile} from "./LoginState";
 import {DigestAlgo} from "./FileUpload";
-import {buf2hex} from "./Util";
+import {buf2hex, hasFlag} from "./Util";
 import moment from "moment";
 import FeatherIcon from "feather-icons-react";
+import {FileList} from "./FileList";
 
 export function Profile() {
     const [profile, setProfile] = useState();
+    const [noProfile, setNoProfile] = useState(false);
     const [saved, setSaved] = useState(false);
     const auth = useSelector(state => state.login.jwt);
     const localProfile = useSelector(state => state.login.profile);
@@ -23,7 +25,11 @@ export function Profile() {
     async function loadProfile() {
         let p = await Api.getUser(params.id);
         if (p.ok) {
-            setProfile(await p.json());
+            if (p.status === 200) {
+                setProfile(await p.json());
+            } else {
+                setNoProfile(true);
+            }
         }
     }
 
@@ -34,10 +40,10 @@ export function Profile() {
         });
     }
 
-    function editPublic(v) {
+    function toggleFlag(v) {
         setProfile({
             ...profile,
-            public: v
+            flags: (profile.flags ^ v)
         });
     }
 
@@ -86,7 +92,7 @@ export function Profile() {
             id: profile.id,
             avatar: profile.avatar,
             displayName: profile.displayName,
-            public: profile.public
+            flags: profile.flags
         });
         if (r.ok) {
             // saved
@@ -137,18 +143,24 @@ export function Profile() {
                                 <dd>{moment(profile.created).fromNow()}</dd>
                                 <dt>Roles</dt>
                                 <dd>{profile.roles.map(a => <span key={a} className="btn">{a}</span>)}</dd>
-                                <dt>Files</dt>
-                                <dd>0</dd>
                             </dl>
                         </div>
                     </div>
                     {canEdit ?
                         <Fragment>
-                            <p>
-                                <label>Public Profile:</label>
-                                <input type="checkbox" checked={profile.public}
-                                       onChange={(e) => editPublic(e.target.checked)}/>
-                            </p>
+                            <dl>
+                                <dt>Public Profile:</dt>
+                                <dd>
+                                    <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicProfile)}
+                                           onChange={(e) => toggleFlag(UserFlags.PublicProfile)}/>
+                                </dd>
+                                <dt>Public Uploads:</dt>
+                                <dd>
+                                    <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicUploads)}
+                                           onChange={(e) => toggleFlag(UserFlags.PublicUploads)}/>
+                                </dd>
+
+                            </dl>
                             <div className="flex flex-center">
                                 <div>
                                     <div className="btn" onClick={saveUser}>Save</div>
@@ -161,7 +173,15 @@ export function Profile() {
                                 </div>
                             </div>
                         </Fragment> : null}
+                    <h1>Uploads</h1>
+                    <FileList loadPage={(req) => Api.listUserFiles(profile.id, req)}/>
                 </div>
+            </div>
+        );
+    } else if (noProfile === true) {
+        return (
+            <div className="page">
+                <h1>No profile found :(</h1>
             </div>
         );
     } else {

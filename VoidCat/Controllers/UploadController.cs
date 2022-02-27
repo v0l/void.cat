@@ -46,7 +46,7 @@ namespace VoidCat.Controllers
 
                 var digest = Request.Headers.GetHeader("V-Digest");
                 var vf = await _storage.Ingress(new(Request.Body, meta, digest!), HttpContext.RequestAborted);
-
+                
                 return UploadResult.Success(vf);
             }
             catch (Exception ex)

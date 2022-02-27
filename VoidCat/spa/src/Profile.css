@@ -22,6 +22,7 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    border: 1px solid;
 }
 
 .profile .avatar .edit-avatar {

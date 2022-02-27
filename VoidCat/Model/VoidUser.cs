@@ -29,10 +29,10 @@ public abstract class VoidUser
     public string? DisplayName { get; set; } = "void user";
 
     /// <summary>
-    /// Public profile, otherwise the profile will be hidden
+    /// Profile flags
     /// </summary>
-    public bool Public { get; set; } = true;
-
+    public VoidUserFlags Flags { get; set; } = VoidUserFlags.PublicProfile;
+    
     public PublicVoidUser ToPublic()
     {
         return new(Id)
@@ -70,4 +70,11 @@ public sealed class PublicVoidUser : VoidUser
     public PublicVoidUser(Guid id) : base(id)
     {
     }
+}
+
+[Flags]
+public enum VoidUserFlags
+{
+    PublicProfile = 1,
+    PublicUploads = 2
 }

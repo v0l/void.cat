@@ -1,20 +1,21 @@
+import "./FileList.css";
 import moment from "moment";
 import {Link} from "react-router-dom";
 import {useDispatch} from "react-redux";
 import {useEffect, useState} from "react";
-import {FormatBytes} from "../Util";
-import {useApi} from "../Api";
-import {logout} from "../LoginState";
-import {PagedSortBy, PageSortOrder} from "../Const";
-import {PageSelector} from "../PageSelector";
+import {FormatBytes} from "./Util";
+import {logout} from "./LoginState";
+import {PagedSortBy, PageSortOrder} from "./Const";
+import {PageSelector} from "./PageSelector";
 
-export function FileList() {
-    const {AdminApi} = useApi();
+export function FileList(props) {
+    const loadPage = props.loadPage;
+    const actions = props.actions;
     const dispatch = useDispatch();
     const [files, setFiles] = useState();
     const [page, setPage] = useState(0);
     const pageSize = 10;
-    const [accessDenied, setAccessDenied] = useState();
+    const [accessDenied, setAccessDenied] = useState(false);
 
     async function loadFileList() {
         let pageReq = {
@@ -23,7 +24,7 @@ export function FileList() {
             sortBy: PagedSortBy.Date,
             sortOrder: PageSortOrder.Dsc
         };
-        let req = await AdminApi.fileList(pageReq);
+        let req = await loadPage(pageReq);
         if (req.ok) {
             setFiles(await req.json());
         } else if (req.status === 401) {
@@ -31,22 +32,6 @@ export function FileList() {
         } else if (req.status === 403) {
             setAccessDenied(true);
         }
-    }
-
-    async function deleteFile(e, id) {
-        e.target.disabled = true;
-        if (window.confirm(`Are you sure you want to delete: ${id}?`)) {
-            let req = await AdminApi.deleteFile(id);
-            if (req.ok) {
-                setFiles({
-                    ...files,
-                    results: files.results.filter(a => a.id !== id)
-                });
-            } else {
-                alert("Failed to delete file!");
-            }
-        }
-        e.target.disabled = false;
     }
 
     function renderItem(i) {
@@ -60,9 +45,7 @@ export function FileList() {
                 <td>{meta?.uploaded ? moment(meta?.uploaded).fromNow() : null}</td>
                 <td>{meta?.size ? FormatBytes(meta?.size, 2) : null}</td>
                 <td>{bw ? FormatBytes(bw.egress, 2) : null}</td>
-                <td>
-                    <button onClick={(e) => deleteFile(e, i.id)}>Delete</button>
-                </td>
+                {actions ? actions(i) : null}
             </tr>
         );
     }
@@ -84,11 +67,11 @@ export function FileList() {
                 <td>Uploaded</td>
                 <td>Size</td>
                 <td>Egress</td>
-                <td>Actions</td>
+                {actions ? <td>Actions</td> : null}
             </tr>
             </thead>
             <tbody>
-            {files ? files.results.map(a => renderItem(a)) : null}
+            {files ? files.results.map(a => renderItem(a)) : <tr><td colSpan={99}>No files</td></tr>}
             </tbody>
             <tbody>
             <tr>
