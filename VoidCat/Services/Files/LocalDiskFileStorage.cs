@@ -67,7 +67,7 @@ public class LocalDiskFileStore : IFileStore
 
         var (total, hash) = await IngressInternal(id, payload.InStream, fsTemp, cts);
 
-        if (!hash.Equals(payload.Hash, StringComparison.InvariantCultureIgnoreCase))
+        if (payload.Hash != null && !hash.Equals(payload.Hash, StringComparison.InvariantCultureIgnoreCase))
         {
             throw new CryptographicException("Invalid file hash");
         }
@@ -83,6 +83,7 @@ public class LocalDiskFileStore : IFileStore
         {
             meta = meta! with
             {
+                Digest = hash,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = total

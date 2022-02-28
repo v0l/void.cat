@@ -109,8 +109,8 @@ export function FilePreview() {
             {info ? (
                 <Fragment>
                     <Helmet>
-                        <title>void.cat - {info.metadata?.name}</title>
-                        <meta name="description" content={info.metadata?.description}/>
+                        <title>void.cat - {info.metadata?.name ?? info.id}</title>
+                        {info.metadata?.description ? <meta name="description" content={info.metadata?.description}/> : null}
                         {renderOpenGraphTags()}
                     </Helmet>
                     <div className="flex flex-center">

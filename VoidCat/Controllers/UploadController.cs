@@ -30,7 +30,7 @@ namespace VoidCat.Controllers
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
-        public async Task<UploadResult> UploadFile()
+        public async Task<IActionResult> UploadFile([FromQuery] bool cli = false)
         {
             try
             {
@@ -45,13 +45,24 @@ namespace VoidCat.Controllers
                 };
 
                 var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta, digest!), HttpContext.RequestAborted);
-                
-                return UploadResult.Success(vf);
+                var vf = await _storage.Ingress(new(Request.Body, meta)
+                {
+                    Hash = digest
+                }, HttpContext.RequestAborted);
+
+                if (cli)
+                {
+                    var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host, Request.Host.Port ?? 80,
+                        $"/d/{vf.Id.ToBase58()}");
+
+                    return Content(urlBuilder.Uri.ToString(), "text/plain");
+                }
+
+                return Json(UploadResult.Success(vf));
             }
             catch (Exception ex)
             {
-                return UploadResult.Error(ex.Message);
+                return Json(UploadResult.Error(ex.Message));
             }
         }
 
@@ -69,8 +80,9 @@ namespace VoidCat.Controllers
 
                 var editSecret = Request.Headers.GetHeader("V-EditSecret");
                 var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta, digest!)
+                var vf = await _storage.Ingress(new(Request.Body, meta)
                 {
+                    Hash = digest,
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
                     Id = gid
                 }, HttpContext.RequestAborted);
