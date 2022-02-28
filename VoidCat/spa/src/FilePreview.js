@@ -35,13 +35,30 @@ export function FilePreview() {
 
         if (info.metadata) {
             switch (info.metadata.mimeType) {
+                case "image/avif":
+                case "image/bmp":
+                case "image/gif":
+                case "image/svg+xml":
+                case "image/tiff":
+                case "image/webp":
                 case "image/jpg":
                 case "image/jpeg":
                 case "image/png": {
                     return <img src={link} alt={info.metadata.name}/>;
                 }
-                case "audio/mp3":
-                case "audio/ogg":
+                case "audio/aac":
+                case "audio/opus":
+                case "audio/wav":
+                case "audio/webm":
+                case "audio/midi":
+                case "audio/mpeg":
+                case "audio/ogg": {
+                    return <audio src={link} controls/>;
+                }
+                case "video/x-msvideo":
+                case "video/mpeg":
+                case "video/ogg":
+                case "video/mp2t":
                 case "video/mp4":
                 case "video/matroksa":
                 case "video/x-matroska":
@@ -49,6 +66,10 @@ export function FilePreview() {
                 case "video/quicktime": {
                     return <video src={link} controls/>;
                 }
+                case "application/json":
+                case "text/javascript":
+                case "text/html":
+                case "text/csv":
                 case "text/css":
                 case "text/plain": {
                     return <TextPreview link={link}/>;
