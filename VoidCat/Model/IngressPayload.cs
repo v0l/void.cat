@@ -6,5 +6,5 @@ public sealed record IngressPayload(Stream InStream, SecretVoidFileMeta Meta)
     public Guid? EditSecret { get; init; }
     public string? Hash { get; init; }
     
-    public bool IsAppend => EditSecret.HasValue;
+    public bool IsAppend { get; init; }
 }

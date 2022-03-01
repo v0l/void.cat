@@ -34,7 +34,7 @@ public abstract class StreamFileStore
         }
     }
 
-    protected async ValueTask<PrivateVoidFile> IngressToStream(Stream stream, IngressPayload payload,
+    protected async ValueTask<PrivateVoidFile> IngressToStream(Stream outStream, IngressPayload payload,
         CancellationToken cts)
     {
         var id = payload.Id;
@@ -47,17 +47,23 @@ public abstract class StreamFileStore
             }
         }
 
-        var (total, hash) = await IngressInternal(id, payload.InStream, stream, cts);
+        var (total, hash) = await IngressInternal(id, payload.InStream, outStream, cts);
         if (payload.Hash != null && !hash.Equals(payload.Hash, StringComparison.InvariantCultureIgnoreCase))
         {
             throw new CryptographicException("Invalid file hash");
         }
 
+        return await HandleCompletedUpload(payload, hash, total);
+    }
+
+    protected async Task<PrivateVoidFile> HandleCompletedUpload(IngressPayload payload, string hash, ulong totalSize)
+    {
+        var meta = payload.Meta;
         if (payload.IsAppend)
         {
             meta = meta! with
             {
-                Size = meta.Size + total
+                Size = meta.Size + totalSize
             };
         }
         else
@@ -67,14 +73,14 @@ public abstract class StreamFileStore
                 Digest = hash,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
-                Size = total
+                Size = totalSize
             };
         }
 
-        await _metadataStore.Set(id, meta);
+        await _metadataStore.Set(payload.Id, meta);
         var vf = new PrivateVoidFile()
         {
-            Id = id,
+            Id = payload.Id,
             Metadata = meta
         };
 
@@ -85,8 +91,8 @@ public abstract class StreamFileStore
 
         return vf;
     }
-
-    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream fs, CancellationToken cts)
+    
+    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream outStream, CancellationToken cts)
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
         var total = 0UL;
@@ -103,7 +109,7 @@ public abstract class StreamFileStore
 
             var totalRead = readLength + offset;
             var buf = buffer.Memory[..totalRead];
-            await fs.WriteAsync(buf, cts);
+            await outStream.WriteAsync(buf, cts);
             await _stats.TrackIngress(id, (ulong) buf.Length);
             sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
             total += (ulong) buf.Length;
@@ -111,10 +117,10 @@ public abstract class StreamFileStore
         }
 
         sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        return (total, BitConverter.ToString(sha.Hash!).Replace("-", string.Empty));
+        return (total, sha.Hash!.ToHex());
     }
 
-    private async Task EgressFull(Guid id, Stream inStream, Stream outStream,
+    protected async Task EgressFull(Guid id, Stream inStream, Stream outStream,
         CancellationToken cts)
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);

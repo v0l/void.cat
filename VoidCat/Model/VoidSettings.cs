@@ -17,11 +17,32 @@ namespace VoidCat.Model
         public SmtpSettings? Smtp { get; init; }
 
         public List<Uri> CorsOrigins { get; init; } = new();
+        
+        public CloudStorageSettings? CloudStorage { get; init; }
     }
 
     public sealed record TorSettings(Uri TorControl, string PrivateKey, string ControlPassword);
 
     public sealed record JwtSettings(string Issuer, string Key);
 
-    public sealed record SmtpSettings(string Address, string Username, string Password);
+    public sealed record SmtpSettings
+    {
+        public Uri? Server { get; init; }
+        public string? Username { get; init; }
+        public string? Password { get; init; }
+    }
+
+    public sealed record CloudStorageSettings
+    {
+        public S3BlobConfig? S3 { get; set; }
+    }
+
+    public sealed record S3BlobConfig
+    {
+        public string? AccessKey { get; init; }
+        public string? SecretKey { get; init; }
+        public Uri? ServiceUrl { get; init; }
+        public string? Region { get; init; }
+        public string? BucketName { get; init; } = "void-cat";
+    }
 }

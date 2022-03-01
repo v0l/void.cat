@@ -2,11 +2,26 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 
 namespace VoidCat.Model;
 
 public static class Extensions
 {
+    public static AmazonS3Client CreateClient(this S3BlobConfig c)
+    {
+        return new AmazonS3Client(new BasicAWSCredentials(c.AccessKey, c.SecretKey),
+            new AmazonS3Config
+            {
+                RegionEndpoint = !string.IsNullOrEmpty(c.Region) ? RegionEndpoint.GetBySystemName(c.Region) : null,
+                ServiceURL = c.ServiceUrl?.ToString(),
+                UseHttp = c.ServiceUrl?.Scheme == "http",
+                ForcePathStyle = true
+            });
+    }
+
     public static Guid? GetUserId(this HttpContext context)
     {
         var claimSub = context?.User?.Claims?.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -99,7 +114,7 @@ public static class Extensions
         }
     };
 
-    private static byte[] FromHex(this string input)
+    public static byte[] FromHex(this string input)
     {
         var result = new byte[(input.Length + 1) >> 1];
         var lastCell = result.Length - 1;

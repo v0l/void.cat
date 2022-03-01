@@ -41,6 +41,7 @@ namespace VoidCat.Controllers
                     Name = Request.Headers.GetHeader("V-Filename"),
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
+                    Size = (ulong?)Request.ContentLength ?? 0UL,
                     Uploader = uid
                 };
 
@@ -84,7 +85,8 @@ namespace VoidCat.Controllers
                 {
                     Hash = digest,
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
-                    Id = gid
+                    Id = gid,
+                    IsAppend = true
                 }, HttpContext.RequestAborted);
 
                 return UploadResult.Success(vf);

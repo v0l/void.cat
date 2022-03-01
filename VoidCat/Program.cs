@@ -78,10 +78,7 @@ services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth)
 services.AddVoidMigrations();
 
 // file storage
-services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
-services.AddTransient<IFileStore, LocalDiskFileStore>();
-services.AddTransient<IFileInfoManager, FileInfoManager>();
-services.AddTransient<IUserUploadsStore, UserUploadStore>();
+services.AddStorage(voidSettings);
 
 // stats
 services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();

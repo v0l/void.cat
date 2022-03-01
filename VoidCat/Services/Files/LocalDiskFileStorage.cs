@@ -6,6 +6,7 @@ namespace VoidCat.Services.Files;
 
 public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
+    private const string FilesDir = "files-v1";
     private readonly ILogger<LocalDiskFileStore> _logger;
     private readonly VoidSettings _settings;
     private readonly IFileMetadataStore _metadataStore;
@@ -20,9 +21,10 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         _fileInfo = fileInfo;
         _logger = logger;
 
-        if (!Directory.Exists(_settings.DataDirectory))
+        var dir = Path.Combine(_settings.DataDirectory, FilesDir);
+        if (!Directory.Exists(dir))
         {
-            Directory.CreateDirectory(_settings.DataDirectory);
+            Directory.CreateDirectory(dir);
         }
     }
 
@@ -99,5 +101,5 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
     }
 
     private string MapPath(Guid id) =>
-        Path.Join(_settings.DataDirectory, id.ToString());
+        Path.Join(_settings.DataDirectory, FilesDir, id.ToString());
 }
