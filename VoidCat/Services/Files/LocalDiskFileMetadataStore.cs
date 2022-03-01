@@ -35,17 +35,6 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         await File.WriteAllTextAsync(path, json);
     }
 
-    public async ValueTask Update(Guid id, SecretVoidFileMeta patch)
-    {
-        var oldMeta = await Get<SecretVoidFileMeta>(id);
-        if (oldMeta?.EditSecret != patch.EditSecret)
-        {
-            throw new VoidNotAllowedException("Edit secret incorrect");
-        }
-
-        await Set(id, patch);
-    }
-
     public ValueTask Delete(Guid id)
     {
         var path = MapMeta(id);

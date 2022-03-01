@@ -48,11 +48,6 @@ public class S3FileMetadataStore : IFileMetadataStore
         });
     }
 
-    public ValueTask Update(Guid id, SecretVoidFileMeta patch)
-    {
-        throw new NotImplementedException();
-    }
-
     public async ValueTask Delete(Guid id)
     {
         await _client.DeleteObjectAsync(_config.BucketName, ToKey(id));
