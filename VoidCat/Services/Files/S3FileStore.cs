@@ -5,7 +5,6 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
-// ReSharper disable once InconsistentNaming
 public class S3FileStore : StreamFileStore, IFileStore
 {
     private readonly IFileInfoManager _fileInfo;

@@ -34,6 +34,7 @@ namespace VoidCat.Model
 
     public sealed record CloudStorageSettings
     {
+        public bool ServeFromCloud { get; init; }
         public S3BlobConfig? S3 { get; set; }
     }
 

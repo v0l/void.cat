@@ -114,13 +114,14 @@ export function FilePreview() {
 
     useEffect(() => {
         if (info) {
+            let fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
             let order = window.localStorage.getItem(`paywall-${info.id}`);
             if (order) {
                 let orderObj = JSON.parse(order);
                 setOrder(orderObj);
-                setLink(`${ApiHost}/d/${info.id}?orderId=${orderObj.id}`);
+                setLink(`${fileLink}?orderId=${orderObj.id}`);
             } else {
-                setLink(`${ApiHost}/d/${info.id}`);
+                setLink(fileLink);
             }
         }
     }, [info]);

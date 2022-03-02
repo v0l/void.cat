@@ -10,7 +10,7 @@ namespace VoidCat.Model
         /// </summary>
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid Id { get; init; }
-        
+
         /// <summary>
         /// Metadta related to the file
         /// </summary>
