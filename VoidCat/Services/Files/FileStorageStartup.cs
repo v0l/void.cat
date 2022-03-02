@@ -14,8 +14,11 @@ public static class FileStorageStartup
         if (settings.CloudStorage != default)
         {
             // cloud storage
-            services.AddSingleton<IFileStore, S3FileStore>();
-            services.AddSingleton<IFileMetadataStore, S3FileMetadataStore>();
+            if (settings.CloudStorage.S3 != default)
+            {
+                services.AddSingleton<IFileStore, S3FileStore>();
+                services.AddSingleton<IFileMetadataStore, S3FileMetadataStore>();
+            }
         }
         else
         {

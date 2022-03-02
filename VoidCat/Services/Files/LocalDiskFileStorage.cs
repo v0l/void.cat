@@ -47,7 +47,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
     public ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
     {
-        var files = Directory.EnumerateFiles(_settings.DataDirectory)
+        var files = Directory.EnumerateFiles(Path.Combine(_settings.DataDirectory, FilesDir))
             .Where(a => !Path.HasExtension(a));
 
         files = (request.SortBy, request.SortOrder) switch
