@@ -78,5 +78,15 @@ export function FormatCurrency(value, currency) {
 }
 
 export function hasFlag(value, flag) {
-    return (value & flag) !== 0;
+    return (value & flag) === flag;
+}
+
+export function btnDisable(btn){
+    if(btn.classList.contains("disabled")) return false;
+    btn.classList.add("disabled");
+    return true;
+}
+
+export function btnEnable(btn){
+    btn.classList.remove("disabled");
 }

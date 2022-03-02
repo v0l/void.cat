@@ -76,5 +76,6 @@ public sealed class PublicVoidUser : VoidUser
 public enum VoidUserFlags
 {
     PublicProfile = 1,
-    PublicUploads = 2
+    PublicUploads = 2,
+    EmailVerified = 4
 }

@@ -27,7 +27,18 @@ public static class Extensions
         var claimSub = context?.User?.Claims?.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(claimSub, out var g) ? g : null;
     }
+    
+    public static IEnumerable<string>? GetUserRoles(this HttpContext context)
+    {
+        return context?.User?.Claims?.Where(a => a.Type == ClaimTypes.Role)
+            ?.Select(a => a?.Value!);
+    }
 
+    public static bool IsRole(this HttpContext context, string role)
+    {
+        return GetUserRoles(context)?.Contains(role) ?? false;
+    }
+    
     public static Guid FromBase58Guid(this string base58)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();

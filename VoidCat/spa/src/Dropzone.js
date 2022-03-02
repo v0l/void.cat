@@ -53,6 +53,11 @@ export function Dropzone(props) {
         document.addEventListener("paste", dropFiles);
         document.addEventListener("drop", dropFiles);
         document.addEventListener("dragover", dropFiles);
+        return () => {
+            document.removeEventListener("paste", dropFiles);
+            document.removeEventListener("drop", dropFiles);
+            document.removeEventListener("dragover", dropFiles);
+        };
     }, []);
 
     return files.length === 0 ? renderDrop() : renderUploads();

@@ -6,14 +6,16 @@ namespace VoidCat.Services.Users;
 public class UserManager : IUserManager
 {
     private readonly IUserStore _store;
+    private readonly IEmailVerification _emailVerification;
     private static bool _checkFirstRegister;
 
-    public UserManager(IUserStore store)
+    public UserManager(IUserStore store, IEmailVerification emailVerification)
     {
         _store = store;
+        _emailVerification = emailVerification;
     }
 
-    public async ValueTask<VoidUser> Login(string email, string password)
+    public async ValueTask<InternalVoidUser> Login(string email, string password)
     {
         var userId = await _store.LookupUser(email);
         if (!userId.HasValue) throw new InvalidOperationException("User does not exist");
@@ -27,7 +29,7 @@ public class UserManager : IUserManager
         return user;
     }
 
-    public async ValueTask<VoidUser> Register(string email, string password)
+    public async ValueTask<InternalVoidUser> Register(string email, string password)
     {
         var existingUser = await _store.LookupUser(email);
         if (existingUser != Guid.Empty) throw new InvalidOperationException("User already exists");
@@ -50,6 +52,7 @@ public class UserManager : IUserManager
         }
         
         await _store.Set(newUser);
+        await _emailVerification.SendNewCode(newUser);
         return newUser;
     }
 }

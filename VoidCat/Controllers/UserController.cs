@@ -4,66 +4,110 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Controllers;
 
-[Route("user")]
+[Route("user/{id}")]
 public class UserController : Controller
 {
     private readonly IUserStore _store;
     private readonly IUserUploadsStore _userUploads;
+    private readonly IEmailVerification _emailVerification;
 
-    public UserController(IUserStore store, IUserUploadsStore userUploads)
+    public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification)
     {
         _store = store;
         _userUploads = userUploads;
+        _emailVerification = emailVerification;
     }
 
     [HttpGet]
-    [Route("{id}")]
-    public async Task<VoidUser?> GetUser([FromRoute] string id)
+    [Route("")]
+    public async Task<IActionResult> GetUser([FromRoute] string id)
     {
         var loggedUser = HttpContext.GetUserId();
         var requestedId = id.FromBase58Guid();
         if (loggedUser == requestedId)
         {
-            return await _store.Get<PrivateVoidUser>(id.FromBase58Guid());
+            return Json(await _store.Get<PrivateVoidUser>(id.FromBase58Guid()));
         }
 
         var user = await _store.Get<PublicVoidUser>(id.FromBase58Guid());
-        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicProfile) ?? false)) return default;
+        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicProfile) ?? false)) return NotFound();
 
-        return user;
+        return Json(user);
     }
 
     [HttpPost]
-    [Route("{id}")]
+    [Route("")]
     public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicVoidUser user)
     {
-        var loggedUser = HttpContext.GetUserId();
-        var requestedId = id.FromBase58Guid();
-        if (requestedId != loggedUser)
-        {
-            return Unauthorized();
-        }
+        var loggedUser = await GetAuthorizedUser(id);
+        if (loggedUser == default) return Unauthorized();
 
-        // check requested user is same as user obj
-        if (requestedId != user.Id)
-        {
-            return BadRequest();
-        }
-
+        if (!loggedUser.Flags.HasFlag(VoidUserFlags.EmailVerified)) return Forbid();
+        
         await _store.Update(user);
         return Ok();
     }
 
     [HttpPost]
-    [Route("{id}/files")]
-    public async Task<RenderedResults<PublicVoidFile>?> ListUserFiles([FromRoute] string id, [FromBody] PagedRequest request)
+    [Route("files")]
+    public async Task<IActionResult> ListUserFiles([FromRoute] string id,
+        [FromBody] PagedRequest request)
+    {
+        var loggedUser = HttpContext.GetUserId();
+        var isAdmin = HttpContext.IsRole(Roles.Admin);
+
+        var user = await GetRequestedUser(id);
+        if (user == default) return NotFound();
+
+        // not logged in user files, check public flag
+        var canViewUploads = loggedUser == user.Id || isAdmin;
+        if (!canViewUploads &&
+            !user.Flags.HasFlag(VoidUserFlags.PublicUploads)) return Forbid();
+
+        var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
+        return Json(await results.GetResults());
+    }
+
+    [HttpGet]
+    [Route("verify")]
+    public async Task<IActionResult> SendVerificationCode([FromRoute] string id)
+    {
+        var user = await GetAuthorizedUser(id);
+        if (user == default) return Unauthorized();
+
+        var isEmailVerified = (user?.Flags.HasFlag(VoidUserFlags.EmailVerified) ?? false);
+        if (isEmailVerified) return UnprocessableEntity();
+
+        await _emailVerification.SendNewCode(user!);
+        return Accepted();
+    }
+
+    [HttpPost]
+    [Route("verify")]
+    public async Task<IActionResult> VerifyCode([FromRoute] string id, [FromBody] string code)
+    {
+        var user = await GetAuthorizedUser(id);
+        if (user == default) return Unauthorized();
+
+        var token = code.FromBase58Guid();
+        if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
+
+        user.Flags |= VoidUserFlags.EmailVerified;
+        await _store.Set(user);
+        return Accepted();
+    }
+
+    private async Task<InternalVoidUser?> GetAuthorizedUser(string id)
     {
         var loggedUser = HttpContext.GetUserId();
         var gid = id.FromBase58Guid();
-        var user = await _store.Get<PublicVoidUser>(gid);
-        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicUploads) ?? false) && loggedUser != gid) return default;
-        
-        var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
-        return await results.GetResults();
+        var user = await _store.Get<InternalVoidUser>(gid);
+        return user?.Id != loggedUser ? default : user;
+    }
+
+    private async Task<InternalVoidUser?> GetRequestedUser(string id)
+    {
+        var gid = id.FromBase58Guid();
+        return await _store.Get<InternalVoidUser>(gid);
     }
 }

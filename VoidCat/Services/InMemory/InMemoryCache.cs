@@ -43,4 +43,10 @@ public class InMemoryCache : ICache
         _cache.Set(key, list.ToArray());
         return ValueTask.CompletedTask;
     }
+
+    public ValueTask Delete(string key)
+    {
+        _cache.Remove(key);
+        return ValueTask.CompletedTask;;
+    }
 }

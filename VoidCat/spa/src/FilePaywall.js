@@ -15,11 +15,14 @@ export function FilePaywall(props) {
     const [order, setOrder] = useState();
 
     async function fetchOrder(e) {
-        e.target.disabled = true;
+        if(e.target.classList.contains("disabled")) return;
+        e.target.classList.add("disabled");
+        
         let req = await Api.createOrder(file.id);
-        if (req.ok) {
+        if (req.ok && req.status === 200) {
             setOrder(await req.json());
         }
+        e.target.classList.remove("disabled");
     }
 
     function reset() {

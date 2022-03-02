@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Prometheus;
 using StackExchange.Redis;
 using VoidCat.Model;
+using VoidCat.Services;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 using VoidCat.Services.InMemory;
@@ -53,9 +54,10 @@ services.AddCors(opt =>
             .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
     });
 });
-
+services.AddRazorPages();
 services.AddRouting();
-services.AddControllers().AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
+services.AddControllers()
+    .AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -75,6 +77,7 @@ services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth)
 
 // void.cat services
 //
+services.AddTransient<RazorPartialToStringRenderer>();
 services.AddVoidMigrations();
 
 // file storage
@@ -90,6 +93,7 @@ services.AddVoidPaywall();
 // users
 services.AddTransient<IUserStore, UserStore>();
 services.AddTransient<IUserManager, UserManager>();
+services.AddTransient<IEmailVerification, EmailVerification>();
 
 if (useRedis)
 {
@@ -129,6 +133,7 @@ app.UseEndpoints(ep =>
 {
     ep.MapControllers();
     ep.MapMetrics();
+    ep.MapRazorPages();
 #if HostSPA
     ep.MapFallbackToFile("index.html");
 #endif

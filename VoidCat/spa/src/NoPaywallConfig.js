@@ -1,5 +1,6 @@
 ﻿import FeatherIcon from "feather-icons-react";
 import {useState} from "react";
+import {btnDisable, btnEnable} from "./Util";
 
 export function NoPaywallConfig(props) {
     const [saveStatus, setSaveStatus] = useState();
@@ -7,7 +8,8 @@ export function NoPaywallConfig(props) {
     const onSaveConfig = props.onSaveConfig;
 
     async function saveConfig(e) {
-        e.target.disabled = true;
+        if(!btnDisable(e.target)) return;
+        
         let cfg = {
             editSecret: privateFile.metadata.editSecret
         };
@@ -15,12 +17,12 @@ export function NoPaywallConfig(props) {
         if (typeof onSaveConfig === "function") {
             setSaveStatus(await onSaveConfig(cfg));
         }
-        e.target.disabled = false;
+        btnEnable(e.target);
     }
 
     return (
         <div>
-            <button onClick={saveConfig}>Save</button>
+            <div className="btn" onClick={saveConfig}>Save</div>
             {saveStatus ? <FeatherIcon icon={saveStatus === true ? "check-circle" : "alert-circle"}/> : null}
         </div>
     )

@@ -1,21 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
 
 body {
-  margin: 0;
-  font-family: 'Source Code Pro', monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: black;
-  color: white;
+    margin: 0;
+    font-family: 'Source Code Pro', monospace;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: black;
+    color: white;
 }
 
 a {
-  color: white;
-  text-decoration: none;
+    color: white;
+    text-decoration: none;
 }
 
 a:hover {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .btn {
@@ -30,6 +30,10 @@ a:hover {
     user-select: none;
     cursor: pointer;
     margin: 5px;
+}
+
+.btn.disabled {
+    background-color: #666;
 }
 
 .flex {
@@ -50,4 +54,13 @@ a:hover {
 
 .flex-center {
     align-items: center;
+}
+
+input[type="text"], input[type="number"], input[type="password"], select {
+    display: inline-block;
+    line-height: 1.1;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin: 5px;
+    border: 0;
 }

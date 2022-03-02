@@ -6,7 +6,7 @@ import "./Profile.css";
 import {useDispatch, useSelector} from "react-redux";
 import {logout, setProfile as setGlobalProfile} from "./LoginState";
 import {DigestAlgo} from "./FileUpload";
-import {buf2hex, hasFlag} from "./Util";
+import {btnDisable, btnEnable, buf2hex, hasFlag} from "./Util";
 import moment from "moment";
 import FeatherIcon from "feather-icons-react";
 import {FileList} from "./FileList";
@@ -15,9 +15,16 @@ export function Profile() {
     const [profile, setProfile] = useState();
     const [noProfile, setNoProfile] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [emailCode, setEmailCode] = useState("");
+    const [emailCodeError, setEmailCodeError] = useState("");
+    const [newCodeSent, setNewCodeSent] = useState(false);
     const auth = useSelector(state => state.login.jwt);
     const localProfile = useSelector(state => state.login.profile);
+
     const canEdit = localProfile?.id === profile?.id;
+    const needsEmailVerify = canEdit && (profile?.flags & UserFlags.EmailVerified) !== UserFlags.EmailVerified;
+    const cantEditProfile = canEdit && !needsEmailVerify;
+
     const {Api} = useApi();
     const params = useParams();
     const dispatch = useDispatch();
@@ -87,7 +94,9 @@ export function Profile() {
 
     }
 
-    async function saveUser() {
+    async function saveUser(e) {
+        if(!btnDisable(e.target)) return;
+        
         let r = await Api.updateUser({
             id: profile.id,
             avatar: profile.avatar,
@@ -99,6 +108,76 @@ export function Profile() {
             dispatch(setGlobalProfile(profile));
             setSaved(true);
         }
+        btnEnable(e.target);
+    }
+
+    async function submitCode(e) {
+        if(!btnDisable(e.target)) return;
+        
+        let r = await Api.submitVerifyCode(profile.id, emailCode);
+        if (r.ok) {
+            await loadProfile();
+        } else {
+            setEmailCodeError("Invalid or expired code.");
+        }
+        btnEnable(e.target);
+    }
+
+    async function sendNewCode() {
+        setNewCodeSent(true);
+        let r = await Api.sendNewCode(profile.id);
+        if (!r.ok) {
+            setNewCodeSent(false);
+        }
+    }
+
+    function renderEmailVerify() {
+        return (
+            <Fragment>
+                <h2>Please enter email verification code</h2>
+                <small>Your account will automatically be deleted in 7 days if you do not verify your email
+                    address.</small>
+                <br/>
+                <input type="text" placeholder="Verification code" value={emailCode}
+                       onChange={(e) => setEmailCode(e.target.value)}/>
+                <div className="btn" onClick={submitCode}>Submit</div>
+                <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
+                <br/>
+                {emailCodeError ? <b>{emailCodeError}</b> : null}
+                {emailCodeError && !newCodeSent ? <a onClick={sendNewCode}>Send verfication email</a> : null}
+            </Fragment>
+        );
+    }
+
+    function renderProfileEdit() {
+        return (
+            <Fragment>
+                <dl>
+                    <dt>Public Profile:</dt>
+                    <dd>
+                        <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicProfile)}
+                               onChange={(e) => toggleFlag(UserFlags.PublicProfile)}/>
+                    </dd>
+                    <dt>Public Uploads:</dt>
+                    <dd>
+                        <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicUploads)}
+                               onChange={(e) => toggleFlag(UserFlags.PublicUploads)}/>
+                    </dd>
+
+                </dl>
+                <div className="flex flex-center">
+                    <div>
+                        <div className="btn" onClick={saveUser}>Save</div>
+                    </div>
+                    <div>
+                        {saved ? <FeatherIcon icon="check-circle"/> : null}
+                    </div>
+                    <div>
+                        <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
+                    </div>
+                </div>
+            </Fragment>
+        );
     }
 
     useEffect(() => {
@@ -124,7 +203,7 @@ export function Profile() {
             <div className="page">
                 <div className="profile">
                     <div className="name">
-                        {canEdit ?
+                        {cantEditProfile ?
                             <input value={profile.displayName}
                                    onChange={(e) => editUsername(e.target.value)}/>
                             : profile.displayName}
@@ -132,7 +211,7 @@ export function Profile() {
                     <div className="flex">
                         <div className="flx-1">
                             <div className="avatar" style={avatarStyles}>
-                                {canEdit ? <div className="edit-avatar" onClick={() => changeAvatar()}>
+                                {cantEditProfile ? <div className="edit-avatar" onClick={() => changeAvatar()}>
                                     <h3>Edit</h3>
                                 </div> : null}
                             </div>
@@ -146,33 +225,8 @@ export function Profile() {
                             </dl>
                         </div>
                     </div>
-                    {canEdit ?
-                        <Fragment>
-                            <dl>
-                                <dt>Public Profile:</dt>
-                                <dd>
-                                    <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicProfile)}
-                                           onChange={(e) => toggleFlag(UserFlags.PublicProfile)}/>
-                                </dd>
-                                <dt>Public Uploads:</dt>
-                                <dd>
-                                    <input type="checkbox" checked={hasFlag(profile.flags, UserFlags.PublicUploads)}
-                                           onChange={(e) => toggleFlag(UserFlags.PublicUploads)}/>
-                                </dd>
-
-                            </dl>
-                            <div className="flex flex-center">
-                                <div>
-                                    <div className="btn" onClick={saveUser}>Save</div>
-                                </div>
-                                <div>
-                                    {saved ? <FeatherIcon icon="check-circle"/> : null}
-                                </div>
-                                <div>
-                                    <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
-                                </div>
-                            </div>
-                        </Fragment> : null}
+                    {cantEditProfile ? renderProfileEdit() : null}
+                    {needsEmailVerify ? renderEmailVerify() : null}
                     <h1>Uploads</h1>
                     <FileList loadPage={(req) => Api.listUserFiles(profile.id, req)}/>
                 </div>

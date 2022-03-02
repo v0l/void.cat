@@ -7,4 +7,6 @@ public interface ICache
     
     ValueTask<string[]> GetList(string key);
     ValueTask AddToList(string key, string value);
+
+    ValueTask Delete(string key);
 }
