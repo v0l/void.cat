@@ -5,6 +5,9 @@
 .preview img, .preview video, .preview object {
     width: 100%;
 }
+.preview object {
+    height: 1018px;
+}
 
 .preview .file-stats {
     line-height: 32px;
