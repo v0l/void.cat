@@ -19,31 +19,32 @@ public class UserController : Controller
     }
 
     [HttpGet]
-    [Route("")]
     public async Task<IActionResult> GetUser([FromRoute] string id)
     {
         var loggedUser = HttpContext.GetUserId();
-        var requestedId = id.FromBase58Guid();
+        var isMe = id.Equals("me", StringComparison.InvariantCultureIgnoreCase);
+        if (isMe && !loggedUser.HasValue) return Unauthorized();
+        
+        var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         if (loggedUser == requestedId)
         {
-            return Json(await _store.Get<PrivateVoidUser>(id.FromBase58Guid()));
+            return Json(await _store.Get<PrivateVoidUser>(requestedId));
         }
 
-        var user = await _store.Get<PublicVoidUser>(id.FromBase58Guid());
+        var user = await _store.Get<PublicVoidUser>(requestedId);
         if (!(user?.Flags.HasFlag(VoidUserFlags.PublicProfile) ?? false)) return NotFound();
 
         return Json(user);
     }
 
     [HttpPost]
-    [Route("")]
     public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicVoidUser user)
     {
         var loggedUser = await GetAuthorizedUser(id);
         if (loggedUser == default) return Unauthorized();
 
         if (!loggedUser.Flags.HasFlag(VoidUserFlags.EmailVerified)) return Forbid();
-        
+
         await _store.UpdateProfile(user);
         return Ok();
     }

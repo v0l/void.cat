@@ -1,10 +1,31 @@
 import "./Header.css";
 import {Link} from "react-router-dom";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {InlineProfile} from "./InlineProfile";
+import {useApi} from "./Api";
+import {logout, setProfile} from "./LoginState";
+import {useEffect} from "react";
 
 export function Header() {
-    const profile = useSelector(state => state.login.profile);
+    const dispatch = useDispatch();
+    const jwt = useSelector(state => state.login.jwt);
+    const profile = useSelector(state => state.login.profile)
+    const {Api} = useApi();
+
+    async function initProfile() {
+        if (jwt && !profile) {
+            let rsp = await Api.getUser("me");
+            if (rsp.ok) {
+                dispatch(setProfile(await rsp.json()));
+            } else {
+                dispatch(logout());
+            }
+        }
+    }
+
+    useEffect(() => {
+        initProfile();
+    }, []);
 
     return (
         <div className="header page">
