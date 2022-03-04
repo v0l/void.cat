@@ -7,6 +7,7 @@ public interface IPaywallStore
     ValueTask<PaywallOrder?> GetOrder(Guid id);
     ValueTask SaveOrder(PaywallOrder order);
 
-    ValueTask<PaywallConfig?> GetConfig(Guid id);
-    ValueTask SetConfig(Guid id, PaywallConfig config);
+    ValueTask<PaywallConfig?> Get(Guid id);
+    ValueTask Set(Guid id, PaywallConfig config);
+    ValueTask Delete(Guid id);
 }

@@ -31,12 +31,10 @@ export function Profile() {
 
     async function loadProfile() {
         let p = await Api.getUser(params.id);
-        if (p.ok) {
-            if (p.status === 200) {
-                setProfile(await p.json());
-            } else {
-                setNoProfile(true);
-            }
+        if (p.ok && p.status === 200) {
+            setProfile(await p.json());
+        } else {
+            setNoProfile(true);
         }
     }
 
@@ -95,8 +93,8 @@ export function Profile() {
     }
 
     async function saveUser(e) {
-        if(!btnDisable(e.target)) return;
-        
+        if (!btnDisable(e.target)) return;
+
         let r = await Api.updateUser({
             id: profile.id,
             avatar: profile.avatar,
@@ -112,8 +110,8 @@ export function Profile() {
     }
 
     async function submitCode(e) {
-        if(!btnDisable(e.target)) return;
-        
+        if (!btnDisable(e.target)) return;
+
         let r = await Api.submitVerifyCode(profile.id, emailCode);
         if (r.ok) {
             await loadProfile();

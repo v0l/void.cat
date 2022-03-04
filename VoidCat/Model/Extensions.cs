@@ -27,7 +27,7 @@ public static class Extensions
         var claimSub = context?.User?.Claims?.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(claimSub, out var g) ? g : null;
     }
-    
+
     public static IEnumerable<string>? GetUserRoles(this HttpContext context)
     {
         return context?.User?.Claims?.Where(a => a.Type == ClaimTypes.Role)
@@ -38,7 +38,7 @@ public static class Extensions
     {
         return GetUserRoles(context)?.Contains(role) ?? false;
     }
-    
+
     public static Guid FromBase58Guid(this string base58)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();
@@ -140,14 +140,29 @@ public static class Extensions
 
     public static string HashPassword(this string password)
     {
-        return password.HashPassword("pbkdf2");
+        return password.Hash("pbkdf2");
     }
 
-    public static string HashPassword(this string password, string algo, string? saltHex = null)
+    public static string Hash(this string password, string algo, string? saltHex = null)
     {
         var bytes = Encoding.UTF8.GetBytes(password);
+        return Hash(bytes, algo, saltHex);
+    }
+
+    public static string Hash(this byte[] bytes, string algo, string? saltHex = null)
+    {
         switch (algo)
         {
+            case "md5":
+            {
+                var hash = MD5.Create().ComputeHash(bytes);
+                return $"md5:{hash.ToHex()}";
+            }
+            case "sha1":
+            {
+                var hash = SHA1.Create().ComputeHash(bytes);
+                return $"sha1:{hash.ToHex()}";
+            }
             case "sha256":
             {
                 var hash = SHA256.Create().ComputeHash(bytes);
@@ -184,6 +199,6 @@ public static class Extensions
     public static bool CheckPassword(this InternalVoidUser vu, string password)
     {
         var hashParts = vu.PasswordHash.Split(":");
-        return vu.PasswordHash == password.HashPassword(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
+        return vu.PasswordHash == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
     }
 }

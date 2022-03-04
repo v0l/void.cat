@@ -35,6 +35,11 @@ public class RedisCache : ICache
         await _db.SetAddAsync(key, value);
     }
 
+    public async ValueTask RemoveFromList(string key, string value)
+    {
+        await _db.SetRemoveAsync(key, value);
+    }
+
     public async ValueTask Delete(string key)
     {
         await _db.KeyDeleteAsync(key);

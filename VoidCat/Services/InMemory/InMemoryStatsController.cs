@@ -34,6 +34,12 @@ public class InMemoryStatsController : IStatsCollector, IStatsReporter
     public ValueTask<Bandwidth> GetBandwidth(Guid id)
         => ValueTask.FromResult(GetBandwidthInternal(id));
 
+    public ValueTask Delete(Guid id)
+    {
+        _cache.Remove(EgressKey(id));
+        return ValueTask.CompletedTask;
+    }
+
     private Bandwidth GetBandwidthInternal(Guid id)
     {
         var i = _cache.Get(IngressKey(id)) as ulong?;

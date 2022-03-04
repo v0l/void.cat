@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace VoidCat.Model;
@@ -13,7 +14,12 @@ public class Base58GuidConverter : JsonConverter<Guid>
     {
         if (reader.TokenType == JsonToken.String && existingValue == Guid.Empty)
         {
-            return (reader.Value as string)?.FromBase58Guid() ?? existingValue;
+            var str = reader.Value as string;
+            if ((str?.Contains('-') ?? false) && Guid.TryParse(str, out var g))
+            {
+                return g;
+            }
+            return str?.FromBase58Guid() ?? existingValue;
         }
 
         return existingValue;

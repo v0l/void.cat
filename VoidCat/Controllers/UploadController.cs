@@ -110,7 +110,7 @@ namespace VoidCat.Controllers
         {
             var gid = id.FromBase58Guid();
             var file = await _fileInfo.Get(gid);
-            var config = await _paywall.GetConfig(gid);
+            var config = await _paywall.Get(gid);
 
             var provider = await _paywallFactory.CreateProvider(config!.Service);
             return await provider.CreateOrder(file!);
@@ -121,7 +121,7 @@ namespace VoidCat.Controllers
         public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
         {
             var gid = id.FromBase58Guid();
-            var config = await _paywall.GetConfig(gid);
+            var config = await _paywall.Get(gid);
 
             var provider = await _paywallFactory.CreateProvider(config!.Service);
             return await provider.GetOrderStatus(order);
@@ -139,12 +139,12 @@ namespace VoidCat.Controllers
 
             if (req.Strike != default)
             {
-                await _paywall.SetConfig(gid, req.Strike!);
+                await _paywall.Set(gid, req.Strike!);
                 return Ok();
             }
 
             // if none set, set NoPaywallConfig
-            await _paywall.SetConfig(gid, new NoPaywallConfig());
+            await _paywall.Set(gid, new NoPaywallConfig());
             return Ok();
         }
     }

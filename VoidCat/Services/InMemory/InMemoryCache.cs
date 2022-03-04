@@ -44,6 +44,14 @@ public class InMemoryCache : ICache
         return ValueTask.CompletedTask;
     }
 
+    public ValueTask RemoveFromList(string key, string value)
+    {
+        var list = new HashSet<string>(GetList(key).Result);
+        list.Remove(value);
+        _cache.Set(key, list.ToArray());
+        return ValueTask.CompletedTask;
+    }
+
     public ValueTask Delete(string key)
     {
         _cache.Remove(key);

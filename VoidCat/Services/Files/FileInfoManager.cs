@@ -22,7 +22,7 @@ public class FileInfoManager : IFileInfoManager
     public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
         var meta = _metadataStore.Get<VoidFileMeta>(id);
-        var paywall = _paywallStore.GetConfig(id);
+        var paywall = _paywallStore.Get(id);
         var bandwidth = _statsReporter.GetBandwidth(id);
         await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask());
 
@@ -39,5 +39,12 @@ public class FileInfoManager : IFileInfoManager
             Bandwidth = bandwidth.Result,
             Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null
         };
+    }
+
+    public async ValueTask Delete(Guid id)
+    {
+        await _metadataStore.Delete(id);
+        await _paywallStore.Delete(id);
+        await _statsReporter.Delete(id);
     }
 }

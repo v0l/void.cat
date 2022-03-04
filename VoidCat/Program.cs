@@ -7,6 +7,7 @@ using StackExchange.Redis;
 using VoidCat.Model;
 using VoidCat.Services;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Background;
 using VoidCat.Services.Files;
 using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
@@ -94,6 +95,9 @@ services.AddVoidPaywall();
 services.AddTransient<IUserStore, UserStore>();
 services.AddTransient<IUserManager, UserManager>();
 services.AddTransient<IEmailVerification, EmailVerification>();
+
+// background services
+services.AddHostedService<DeleteUnverifiedAccounts>();
 
 if (useRedis)
 {

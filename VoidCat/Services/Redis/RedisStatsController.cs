@@ -33,6 +33,12 @@ public class RedisStatsController : IStatsReporter, IStatsCollector
         return new((ulong)ingress.Result, (ulong)egress.Result);
     }
 
+    public async ValueTask Delete(Guid id)
+    {
+        await _redis.KeyDeleteAsync(formatEgressKey(id));
+        await _redis.KeyDeleteAsync(formatIngressKey(id));
+    }
+
     public async ValueTask TrackIngress(Guid id, ulong amount)
     {
         await Task.WhenAll(

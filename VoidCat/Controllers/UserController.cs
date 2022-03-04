@@ -44,7 +44,7 @@ public class UserController : Controller
 
         if (!loggedUser.Flags.HasFlag(VoidUserFlags.EmailVerified)) return Forbid();
         
-        await _store.Update(user);
+        await _store.UpdateProfile(user);
         return Ok();
     }
 

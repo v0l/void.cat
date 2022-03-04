@@ -12,7 +12,7 @@ public class PaywallStore : IPaywallStore
         _cache = database;
     }
 
-    public async ValueTask<PaywallConfig?> GetConfig(Guid id)
+    public async ValueTask<PaywallConfig?> Get(Guid id)
     {
         var cfg = await _cache.Get<NoPaywallConfig>(ConfigKey(id));
         return cfg?.Service switch
@@ -23,9 +23,14 @@ public class PaywallStore : IPaywallStore
         };
     }
 
-    public async ValueTask SetConfig(Guid id, PaywallConfig config)
+    public ValueTask Set(Guid id, PaywallConfig config)
     {
-        await _cache.Set(ConfigKey(id), config);
+        return _cache.Set(ConfigKey(id), config);
+    }
+
+    public ValueTask Delete(Guid id)
+    {
+        return _cache.Delete(ConfigKey(id));
     }
 
     public async ValueTask<PaywallOrder?> GetOrder(Guid id)
@@ -33,9 +38,9 @@ public class PaywallStore : IPaywallStore
         return await _cache.Get<PaywallOrder>(OrderKey(id));
     }
 
-    public async ValueTask SaveOrder(PaywallOrder order)
+    public ValueTask SaveOrder(PaywallOrder order)
     {
-        await _cache.Set(OrderKey(order.Id), order,
+        return _cache.Set(OrderKey(order.Id), order,
             order.Status == PaywallOrderStatus.Paid ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(5));
     }
 
