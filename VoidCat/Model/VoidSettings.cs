@@ -54,5 +54,9 @@ namespace VoidCat.Model
         public ClamAVSettings? ClamAV { get; init; } 
     }
 
-    public sealed record ClamAVSettings(Uri Endpoint, long? MaxStreamSize);
+    public sealed record ClamAVSettings
+    {
+        public Uri? Endpoint { get; init; }
+        public long? MaxStreamSize { get; init; }
+    }
 }
