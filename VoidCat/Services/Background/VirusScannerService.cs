@@ -1,4 +1,5 @@
 ﻿using VoidCat.Services.Abstractions;
+using VoidCat.Services.VirusScanner.Exceptions;
 
 namespace VoidCat.Services.Background;
 
@@ -41,6 +42,12 @@ public class VirusScannerService : BackgroundService
                         {
                             var result = await _scanner.ScanFile(file.Id, stoppingToken);
                             await _scanStore.Set(file.Id, result);
+                        }
+                        catch (RateLimitedException rx)
+                        {
+                            var sleep = rx.RetryAfter ?? DateTimeOffset.UtcNow.AddMinutes(10);
+                            _logger.LogWarning("VirusScanner was rate limited, sleeping until {Time}", sleep);
+                            await Task.Delay(sleep - DateTimeOffset.UtcNow, stoppingToken);
                         }
                         catch (Exception ex)
                         {

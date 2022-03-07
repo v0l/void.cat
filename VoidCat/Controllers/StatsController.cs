@@ -29,7 +29,8 @@ namespace VoidCat.Controllers
                 bytes += vf.Metadata?.Size ?? 0;
                 count++;
             }
-            return new(bw, bytes, count);
+
+            return new(bw, bytes, count, BuildInfo.GetBuildInfo());
         }
 
         [HttpGet]
@@ -41,6 +42,7 @@ namespace VoidCat.Controllers
         }
     }
 
-    public sealed record GlobalStats(Bandwidth Bandwidth, ulong TotalBytes, int Count);
+    public sealed record GlobalStats(Bandwidth Bandwidth, ulong TotalBytes, int Count, BuildInfo BuildInfo);
+
     public sealed record FileStats(Bandwidth Bandwidth);
 }
