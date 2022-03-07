@@ -47,6 +47,7 @@ if (useRedis)
     services.AddSingleton(cx.GetDatabase());
 }
 
+services.AddHttpClient();
 services.AddCors(opt =>
 {
     opt.AddDefaultPolicy(p =>
