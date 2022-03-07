@@ -51,6 +51,8 @@ namespace VoidCat.Model
 
     public sealed record VirusScannerSettings
     {
-        public Uri? ClamAV { get; init; } 
+        public ClamAVSettings? ClamAV { get; init; } 
     }
+
+    public sealed record ClamAVSettings(Uri Endpoint, long? MaxStreamSize);
 }
