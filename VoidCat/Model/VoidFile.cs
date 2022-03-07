@@ -30,6 +30,11 @@ namespace VoidCat.Model
         /// Traffic stats for this file
         /// </summary>
         public Bandwidth? Bandwidth { get; init; }
+        
+        /// <summary>
+        /// Virus scanner results
+        /// </summary>
+        public VirusScanResult? VirusScan { get; init; }
     }
 
     public sealed record PublicVoidFile : VoidFile<VoidFileMeta>

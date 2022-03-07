@@ -9,14 +9,16 @@ public class FileInfoManager : IFileInfoManager
     private readonly IPaywallStore _paywallStore;
     private readonly IStatsReporter _statsReporter;
     private readonly IUserStore _userStore;
+    private readonly IVirusScanStore _virusScanStore;
 
     public FileInfoManager(IFileMetadataStore metadataStore, IPaywallStore paywallStore, IStatsReporter statsReporter,
-        IUserStore userStore)
+        IUserStore userStore, IVirusScanStore virusScanStore)
     {
         _metadataStore = metadataStore;
         _paywallStore = paywallStore;
         _statsReporter = statsReporter;
         _userStore = userStore;
+        _virusScanStore = virusScanStore;
     }
 
     public async ValueTask<PublicVoidFile?> Get(Guid id)
@@ -24,7 +26,8 @@ public class FileInfoManager : IFileInfoManager
         var meta = _metadataStore.Get<VoidFileMeta>(id);
         var paywall = _paywallStore.Get(id);
         var bandwidth = _statsReporter.GetBandwidth(id);
-        await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask());
+        var virusScan = _virusScanStore.Get(id);
+        await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask(), virusScan.AsTask());
 
         if (meta.Result == default) return default;
         
@@ -37,7 +40,8 @@ public class FileInfoManager : IFileInfoManager
             Metadata = meta.Result,
             Paywall = paywall.Result,
             Bandwidth = bandwidth.Result,
-            Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null
+            Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null,
+            VirusScan = virusScan.Result
         };
     }
 
@@ -46,5 +50,6 @@ public class FileInfoManager : IFileInfoManager
         await _metadataStore.Delete(id);
         await _paywallStore.Delete(id);
         await _statsReporter.Delete(id);
+        await _virusScanStore.Delete(id);
     }
 }

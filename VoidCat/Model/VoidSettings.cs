@@ -19,6 +19,8 @@ namespace VoidCat.Model
         public List<Uri> CorsOrigins { get; init; } = new();
         
         public CloudStorageSettings? CloudStorage { get; init; }
+        
+        public VirusScannerSettings? VirusScanner { get; init; }
     }
 
     public sealed record TorSettings(Uri TorControl, string PrivateKey, string ControlPassword);
@@ -45,5 +47,10 @@ namespace VoidCat.Model
         public Uri? ServiceUrl { get; init; }
         public string? Region { get; init; }
         public string? BucketName { get; init; } = "void-cat";
+    }
+
+    public sealed record VirusScannerSettings
+    {
+        public Uri? ClamAV { get; init; } 
     }
 }
