@@ -40,7 +40,7 @@ public class S3FileStore : StreamFileStore, IFileStore
             },
             Headers =
             {
-                ContentLength = (long)payload.Meta.Size
+                ContentLength = (long) payload.Meta.Size
             }
         };
 
@@ -50,19 +50,8 @@ public class S3FileStore : StreamFileStore, IFileStore
 
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
-        var req = new GetObjectRequest()
-        {
-            BucketName = _config.BucketName,
-            Key = request.Id.ToString()
-        };
-        if (request.Ranges.Any())
-        {
-            var r = request.Ranges.First();
-            req.ByteRange = new ByteRange(r.OriginalString);
-        }
-
-        var obj = await _client.GetObjectAsync(req, cts);
-        await EgressFull(request.Id, obj.ResponseStream, outStream, cts);
+        await using var stream = await Open(request, cts);
+        await EgressFull(request.Id, stream, outStream, cts);
     }
 
     public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
@@ -123,5 +112,22 @@ public class S3FileStore : StreamFileStore, IFileStore
     public async ValueTask DeleteFile(Guid id)
     {
         await _client.DeleteObjectAsync(_config.BucketName, id.ToString());
+    }
+
+    public async ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)
+    {
+        var req = new GetObjectRequest()
+        {
+            BucketName = _config.BucketName,
+            Key = request.Id.ToString()
+        };
+        if (request.Ranges.Any())
+        {
+            var r = request.Ranges.First();
+            req.ByteRange = new ByteRange(r.OriginalString);
+        }
+
+        var obj = await _client.GetObjectAsync(req, cts);
+        return obj.ResponseStream;
     }
 }

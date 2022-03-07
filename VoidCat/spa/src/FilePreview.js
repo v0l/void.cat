@@ -108,6 +108,23 @@ export function FilePreview() {
         return tags;
     }
 
+    function renderVirusWarning() {
+        if(info.virusScan && info.virusScan.isVirus === true) {
+            let scanResult = info.virusScan;
+            return (
+                <div className="virus-warning">
+                    <p>
+                        This file apears to be a virus, take care when downloading this file.
+                    </p>
+                    Detected as:
+                    <pre>
+                        {scanResult.virusNames.join('\n')}
+                    </pre>
+                </div>
+            );
+        }    
+    }
+    
     useEffect(() => {
         loadInfo();
     }, []);
@@ -135,6 +152,7 @@ export function FilePreview() {
                         {info.metadata?.description ? <meta name="description" content={info.metadata?.description}/> : null}
                         {renderOpenGraphTags()}
                     </Helmet>
+                    {renderVirusWarning()}
                     <div className="flex flex-center">
                         <div className="flx-grow">
                             {info.uploader ? <InlineProfile profile={info.uploader}/> : null}

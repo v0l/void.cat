@@ -30,10 +30,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
-        var path = MapPath(request.Id);
-        if (!File.Exists(path)) throw new VoidFileNotFoundException(request.Id);
-
-        await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+        await using var fs = await Open(request, cts);
         await EgressFromStream(fs, request, outStream, cts);
     }
 
@@ -98,6 +95,14 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         }
 
         await _metadataStore.Delete(id);
+    }
+
+    public ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)
+    {
+        var path = MapPath(request.Id);
+        if (!File.Exists(path)) throw new VoidFileNotFoundException(request.Id);
+
+        return ValueTask.FromResult<Stream>(new FileStream(path, FileMode.Open, FileAccess.Read));
     }
 
     private string MapPath(Guid id) =>

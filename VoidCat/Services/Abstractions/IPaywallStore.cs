@@ -2,12 +2,8 @@ using VoidCat.Model.Paywall;
 
 namespace VoidCat.Services.Abstractions;
 
-public interface IPaywallStore
+public interface IPaywallStore : IBasicStore<PaywallConfig>
 {
     ValueTask<PaywallOrder?> GetOrder(Guid id);
     ValueTask SaveOrder(PaywallOrder order);
-
-    ValueTask<PaywallConfig?> Get(Guid id);
-    ValueTask Set(Guid id, PaywallConfig config);
-    ValueTask Delete(Guid id);
 }

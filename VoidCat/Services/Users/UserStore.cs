@@ -20,6 +20,11 @@ public class UserStore : IUserStore
         return await _cache.Get<Guid>(MapKey(email));
     }
 
+    public async ValueTask<VoidUser?> Get(Guid id)
+    {
+        return await Get<PublicVoidUser>(id);
+    }
+
     public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
     {
         try
@@ -34,8 +39,10 @@ public class UserStore : IUserStore
         return default;
     }
 
-    public async ValueTask Set(InternalVoidUser user)
+    public async ValueTask Set(Guid id, InternalVoidUser user)
     {
+        if (id != user.Id) throw new InvalidOperationException();
+
         await _cache.Set(MapKey(user.Id), user);
         await _cache.AddToList(UserList, user.Id.ToString());
         await _cache.Set(MapKey(user.Email), user.Id.ToString());
@@ -84,7 +91,14 @@ public class UserStore : IUserStore
         oldUser.Flags = newUser.Flags;
         oldUser.DisplayName = newUser.DisplayName;
 
-        await Set(oldUser);
+        await Set(newUser.Id, oldUser);
+    }
+
+    public async ValueTask Delete(Guid id)
+    {
+        var user = await Get<InternalVoidUser>(id);
+        if (user == default) throw new InvalidOperationException();
+        await Delete(user);
     }
 
     public async ValueTask Delete(PrivateVoidUser user)

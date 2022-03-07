@@ -28,7 +28,9 @@ public class UserController : Controller
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         if (loggedUser == requestedId)
         {
-            return Json(await _store.Get<PrivateVoidUser>(requestedId));
+            var pUser = await _store.Get<PrivateVoidUser>(requestedId);
+            if (pUser == default) return NotFound();
+            return Json(pUser);
         }
 
         var user = await _store.Get<PublicVoidUser>(requestedId);
@@ -94,7 +96,7 @@ public class UserController : Controller
         if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
 
         user.Flags |= VoidUserFlags.EmailVerified;
-        await _store.Set(user);
+        await _store.Set(user.Id, user);
         return Accepted();
     }
 

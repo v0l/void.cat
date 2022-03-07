@@ -15,6 +15,7 @@ using VoidCat.Services.Paywall;
 using VoidCat.Services.Redis;
 using VoidCat.Services.Stats;
 using VoidCat.Services.Users;
+using VoidCat.Services.VirusScanner;
 
 // setup JsonConvert default settings
 JsonSerializerSettings ConfigJsonSettings(JsonSerializerSettings s)
@@ -98,6 +99,9 @@ services.AddTransient<IEmailVerification, EmailVerification>();
 
 // background services
 services.AddHostedService<DeleteUnverifiedAccounts>();
+
+// virus scanner
+services.AddVirusScanner(voidSettings);
 
 if (useRedis)
 {

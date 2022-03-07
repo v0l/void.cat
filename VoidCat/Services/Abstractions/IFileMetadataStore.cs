@@ -2,11 +2,7 @@ using VoidCat.Model;
 
 namespace VoidCat.Services.Abstractions;
 
-public interface IFileMetadataStore
+public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVoidFileMeta>
 {
     ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta;
-    
-    ValueTask Set(Guid id, SecretVoidFileMeta meta);
-
-    ValueTask Delete(Guid id);
 }

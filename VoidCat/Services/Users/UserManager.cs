@@ -24,7 +24,7 @@ public class UserManager : IUserManager
         if (!(user?.CheckPassword(password) ?? false)) throw new InvalidOperationException("User does not exist");
 
         user.LastLogin = DateTimeOffset.UtcNow;
-        await _store.Set(user);
+        await _store.Set(user.Id, user);
 
         return user;
     }
@@ -51,7 +51,7 @@ public class UserManager : IUserManager
             }
         }
         
-        await _store.Set(newUser);
+        await _store.Set(newUser.Id, newUser);
         await _emailVerification.SendNewCode(newUser);
         return newUser;
     }

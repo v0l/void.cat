@@ -11,4 +11,6 @@ public interface IFileStore
     ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request);
 
     ValueTask DeleteFile(Guid id);
+
+    ValueTask<Stream> Open(EgressRequest request, CancellationToken cts);
 }

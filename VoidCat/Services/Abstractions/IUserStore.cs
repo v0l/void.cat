@@ -2,12 +2,12 @@
 
 namespace VoidCat.Services.Abstractions;
 
-public interface IUserStore
+public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
 {
-    ValueTask<Guid?> LookupUser(string email);
     ValueTask<T?> Get<T>(Guid id) where T : VoidUser;
-    ValueTask Set(InternalVoidUser user);
+    ValueTask Delete(PrivateVoidUser user);
+    
+    ValueTask<Guid?> LookupUser(string email);
     ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request);
     ValueTask UpdateProfile(PublicVoidUser newUser);
-    ValueTask Delete(PrivateVoidUser user);
 }

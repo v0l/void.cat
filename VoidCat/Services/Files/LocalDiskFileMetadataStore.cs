@@ -28,6 +28,11 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         return GetMeta<TMeta>(id);
     }
 
+    public ValueTask<VoidFileMeta?> Get(Guid id)
+    {
+        return GetMeta<VoidFileMeta>(id);
+    }
+
     public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
     {
         var path = MapMeta(id);

@@ -34,6 +34,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
                 await _userStore.Delete(account);
 
                 var files = await _userUploads.ListFiles(account.Id, new(0, Int32.MinValue));
+                // ReSharper disable once UseCancellationTokenForIAsyncEnumerable
                 await foreach (var file in files.Results)
                 {
                     await _fileStore.DeleteFile(file.Id);

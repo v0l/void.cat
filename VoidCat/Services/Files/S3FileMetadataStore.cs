@@ -20,7 +20,33 @@ public class S3FileMetadataStore : IFileMetadataStore
         _client = _config.CreateClient();
     }
 
-    public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
+    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
+    {
+        return GetMeta<TMeta>(id);
+    }
+
+    public ValueTask<VoidFileMeta?> Get(Guid id)
+    {
+        return GetMeta<VoidFileMeta>(id);
+    }
+
+    public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
+    {
+        await _client.PutObjectAsync(new()
+        {
+            BucketName = _config.BucketName,
+            Key = ToKey(id),
+            ContentBody = JsonConvert.SerializeObject(meta),
+            ContentType = "application/json"
+        });
+    }
+
+    public async ValueTask Delete(Guid id)
+    {
+        await _client.DeleteObjectAsync(_config.BucketName, ToKey(id));
+    }
+
+    private async ValueTask<TMeta?> GetMeta<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
         try
         {
@@ -48,22 +74,6 @@ public class S3FileMetadataStore : IFileMetadataStore
 
         return default;
     }
-
-    public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
-    {
-        await _client.PutObjectAsync(new()
-        {
-            BucketName = _config.BucketName,
-            Key = ToKey(id),
-            ContentBody = JsonConvert.SerializeObject(meta),
-            ContentType = "application/json"
-        });
-    }
-
-    public async ValueTask Delete(Guid id)
-    {
-        await _client.DeleteObjectAsync(_config.BucketName, ToKey(id));
-    }
-
+    
     private static string ToKey(Guid id) => $"{id}-metadata";
 }
