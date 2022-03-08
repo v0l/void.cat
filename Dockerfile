@@ -11,9 +11,9 @@ COPY VoidCat/spa/package.json VoidCat/spa/yarn.lock spa/
 RUN cd spa && npx yarn install
 
 # Copy everything else and build
-COPY VoidCat .
-RUN rm -rf appsettings.*.json
-RUN dotnet publish -c Release -o out VoidCat.csproj
+COPY . .
+RUN rm -rf VoidCat/appsettings.*.json
+RUN dotnet publish -c Release -o out VoidCat/VoidCat.csproj
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
