@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -49,6 +50,12 @@ if (useRedis)
     services.AddSingleton(cx.GetDatabase());
 }
 
+services.AddHttpLogging((o) =>
+{
+    o.LoggingFields = HttpLoggingFields.All;
+    o.RequestBodyLogLimit = 4096;
+    o.ResponseBodyLogLimit = 4096;
+});
 services.AddHttpClient();
 services.AddSwaggerGen(c =>
 {
@@ -164,6 +171,7 @@ foreach (var migration in migrations)
 app.UseStaticFiles();
 #endif
 
+app.UseHttpLogging(); 
 app.UseRouting();
 app.UseCors();
 app.UseSwagger();
