@@ -39,7 +39,7 @@ export function GlobalStats(props) {
                     {stats?.count ?? 0}
                 </div>
             </dl>
-            {stats.buildInfo ? <div className="build-info">
+            {stats?.buildInfo ? <div className="build-info">
                 {stats.buildInfo.version}-{stats.buildInfo.gitHash}
                 <br/>
                 {moment(stats.buildInfo.buildTime).fromNow()}
