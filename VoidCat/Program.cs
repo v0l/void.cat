@@ -1,6 +1,8 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Prometheus;
 using StackExchange.Redis;
@@ -48,6 +50,32 @@ if (useRedis)
 }
 
 services.AddHttpClient();
+services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please insert JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+    var path = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+    c.IncludeXmlComments(path);
+});
 services.AddCors(opt =>
 {
     opt.AddDefaultPolicy(p =>
@@ -76,7 +104,10 @@ services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); }); });
+services.AddAuthorization((opt) =>
+{
+    opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); });
+});
 
 // void.cat services
 //
@@ -135,6 +166,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseCors();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
 

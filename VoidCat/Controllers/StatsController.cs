@@ -16,6 +16,11 @@ namespace VoidCat.Controllers
             _fileStore = fileStore;
         }
 
+        
+        /// <summary>
+        /// Return system info
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60)]
         public async Task<GlobalStats> GetGlobalStats()
@@ -33,6 +38,11 @@ namespace VoidCat.Controllers
             return new(bw, bytes, count, BuildInfo.GetBuildInfo());
         }
 
+        /// <summary>
+        /// Get stats for a specific file
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{id}")]
         public async Task<FileStats> GetFileStats([FromRoute] string id)

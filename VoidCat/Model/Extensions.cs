@@ -1,10 +1,10 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using VoidCat.Model.Exceptions;
 
 namespace VoidCat.Model;
 
@@ -42,7 +42,9 @@ public static class Extensions
     public static Guid FromBase58Guid(this string base58)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();
-        return new Guid(enc.DecodeData(base58));
+        var guidBytes = enc.DecodeData(base58);
+        if (guidBytes.Length != 16) throw new VoidInvalidIdException(base58);
+        return new Guid(guidBytes);
     }
 
     public static string ToBase58(this Guid id)

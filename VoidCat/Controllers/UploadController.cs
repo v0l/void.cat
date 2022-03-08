@@ -27,6 +27,20 @@ namespace VoidCat.Controllers
             _fileInfo = fileInfo;
         }
 
+        /// <summary>
+        /// Primary upload endpoint
+        /// </summary>
+        /// <remarks>
+        /// Additional optional headers can be included to provide details about the file being uploaded:
+        ///
+        /// `V-Content-Type` - Sets the `mimeType` of the file and is used on the preview page to display the file.
+        /// `V-Filename` - Sets the filename of the file.
+        /// `V-Description` - Sets the description of the file.
+        /// `V-Full-Digest` - Include a SHA256 hash of the entire file for verification purposes.
+        /// `V-Digest` - A SHA256 hash of the data you are sending in this request.
+        /// </remarks>
+        /// <param name="cli">True if you want to return only the url of the file in the response</param>
+        /// <returns>Returns <see cref="UploadResult"/></returns>
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
@@ -67,6 +81,18 @@ namespace VoidCat.Controllers
             }
         }
 
+        /// <summary>
+        /// Append data onto a file
+        /// </summary>
+        /// <remarks>
+        /// This endpoint is mainly used to bypass file upload limits enforced by CloudFlare.
+        /// Clients should split their uploads into segments, upload the first segment to the regular
+        /// upload endpoint, use the `editSecret` to append data to the file.
+        ///
+        /// Set the edit secret in the header `V-EditSecret` otherwise you will not be able to append data.
+        /// </remarks>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
@@ -97,6 +123,11 @@ namespace VoidCat.Controllers
             }
         }
 
+        /// <summary>
+        /// Return information about a specific file
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{id}")]
         public ValueTask<PublicVoidFile?> GetInfo([FromRoute] string id)
@@ -104,6 +135,11 @@ namespace VoidCat.Controllers
             return _fileInfo.Get(id.FromBase58Guid());
         }
 
+        /// <summary>
+        /// Create a paywall order to pay
+        /// </summary>
+        /// <param name="id">File id</param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{id}/paywall")]
         public async ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
@@ -116,6 +152,12 @@ namespace VoidCat.Controllers
             return await provider.CreateOrder(file!);
         }
 
+        /// <summary>
+        /// Return the status of an order
+        /// </summary>
+        /// <param name="id">File id</param>
+        /// <param name="order">Order id</param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{id}/paywall/{order:guid}")]
         public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
@@ -127,6 +169,12 @@ namespace VoidCat.Controllers
             return await provider.GetOrderStatus(order);
         }
 
+        /// <summary>
+        /// Update the paywall config
+        /// </summary>
+        /// <param name="id">File id</param>
+        /// <param name="req">Requested config to set on the file</param>
+        /// <returns></returns>
         [HttpPost]
         [Route("{id}/paywall")]
         public async Task<IActionResult> SetPaywallConfig([FromRoute] string id, [FromBody] SetPaywallConfigRequest req)

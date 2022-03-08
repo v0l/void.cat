@@ -20,6 +20,11 @@ public class AdminController : Controller
         _fileInfo = fileInfo;
     }
 
+    /// <summary>
+    /// List all files in the system
+    /// </summary>
+    /// <param name="request">Page request</param>
+    /// <returns></returns>
     [HttpPost]
     [Route("file")]
     public async Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
@@ -27,6 +32,10 @@ public class AdminController : Controller
         return await (await _fileStore.ListFiles(request)).GetResults();
     }
 
+    /// <summary>
+    /// Delete a file from the system
+    /// </summary>
+    /// <param name="id">Id of the file to delete</param>
     [HttpDelete]
     [Route("file/{id}")]
     public async Task DeleteFile([FromRoute] string id)
@@ -36,6 +45,11 @@ public class AdminController : Controller
         await _fileInfo.Delete(gid);
     }
 
+    /// <summary>
+    /// List all users in the system
+    /// </summary>
+    /// <param name="request">Page request</param>
+    /// <returns></returns>
     [HttpPost]
     [Route("user")]
     public async Task<RenderedResults<PrivateVoidUser>> ListUsers([FromBody] PagedRequest request)

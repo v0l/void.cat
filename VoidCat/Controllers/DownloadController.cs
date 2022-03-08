@@ -31,6 +31,10 @@ public class DownloadController : Controller
         return SetupDownload(gid);
     }
 
+    /// <summary>
+    /// Download a specific file by Id
+    /// </summary>
+    /// <param name="id"></param>
     [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 86400)]
     [HttpGet]
     [Route("{id}")]

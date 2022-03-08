@@ -9,6 +9,7 @@
 		<DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
 		<HostSPA>True</HostSPA>
 		<DefineConstants Condition="'$(HostSPA)' == 'True'">$(DefineConstants);HostSPA</DefineConstants>
+		<DocumentationFile>$(AssemblyName).xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>

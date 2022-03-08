@@ -22,6 +22,11 @@ public class AuthController : Controller
         _settings = settings;
     }
 
+    /// <summary>
+    /// Login to a user account
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost]
     [Route("login")]
     public async Task<LoginResponse> Login([FromBody] LoginRequest req)
@@ -45,6 +50,11 @@ public class AuthController : Controller
         }
     }
 
+    /// <summary>
+    /// Register a new account
+    /// </summary>
+    /// <param name="req"></param>
+    /// <returns></returns>
     [HttpPost]
     [Route("register")]
     public async Task<LoginResponse> Register([FromBody] LoginRequest req)

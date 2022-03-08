@@ -18,13 +18,23 @@ public class UserController : Controller
         _emailVerification = emailVerification;
     }
 
+    /// <summary>
+    /// Return user profile
+    /// </summary>
+    /// <remarks>
+    /// You do not need to be logged in to return a user profile if their profile is set to public.
+    ///
+    /// You may also use `me` as the `id` to get the logged in users profile.
+    /// </remarks>
+    /// <param name="id">User id to load</param>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> GetUser([FromRoute] string id)
     {
         var loggedUser = HttpContext.GetUserId();
         var isMe = id.Equals("me", StringComparison.InvariantCultureIgnoreCase);
         if (isMe && !loggedUser.HasValue) return Unauthorized();
-        
+
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         if (loggedUser == requestedId)
         {
@@ -39,6 +49,13 @@ public class UserController : Controller
         return Json(user);
     }
 
+    /// <summary>
+    /// Update profile settings
+    /// </summary>
+    /// 
+    /// <param name="id">User id</param>
+    /// <param name="user"></param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicVoidUser user)
     {
@@ -51,6 +68,16 @@ public class UserController : Controller
         return Ok();
     }
 
+    /// <summary>
+    /// Return a list of files which the user has uploaded
+    /// </summary>
+    /// <remarks>
+    /// This will return files if the profile has public uploads set on their profile.
+    /// Otherwise you can return your own uploaded files if you are logged in. 
+    /// </remarks>
+    /// <param name="id">User id</param>
+    /// <param name="request">Page request</param>
+    /// <returns></returns>
     [HttpPost]
     [Route("files")]
     public async Task<IActionResult> ListUserFiles([FromRoute] string id,
@@ -71,6 +98,11 @@ public class UserController : Controller
         return Json(await results.GetResults());
     }
 
+    /// <summary>
+    /// Send a verification code for a specific user
+    /// </summary>
+    /// <param name="id">User id to send code for</param>
+    /// <returns></returns>
     [HttpGet]
     [Route("verify")]
     public async Task<IActionResult> SendVerificationCode([FromRoute] string id)
@@ -85,6 +117,12 @@ public class UserController : Controller
         return Accepted();
     }
 
+    /// <summary>
+    /// Confirm email verification code
+    /// </summary>
+    /// <param name="id">User id to verify</param>
+    /// <param name="code">Verification code to check</param>
+    /// <returns></returns>
     [HttpPost]
     [Route("verify")]
     public async Task<IActionResult> VerifyCode([FromRoute] string id, [FromBody] string code)

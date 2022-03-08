@@ -86,9 +86,12 @@ public class UserStore : IUserStore
         var oldUser = await Get<InternalVoidUser>(newUser.Id);
         if (oldUser == null) return;
 
+        //retain flags
+        var isEmailVerified = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified);
+        
         // update only a few props
         oldUser.Avatar = newUser.Avatar;
-        oldUser.Flags = newUser.Flags;
+        oldUser.Flags = newUser.Flags | (isEmailVerified ? VoidUserFlags.EmailVerified : 0);
         oldUser.DisplayName = newUser.DisplayName;
 
         await Set(newUser.Id, oldUser);
