@@ -1,7 +1,6 @@
 **/.classpath
 **/.dockerignore
 **/.env
-**/.git
 **/.gitignore
 **/.project
 **/.settings
@@ -23,3 +22,4 @@
 **/values.dev.yaml
 LICENSE
 README.md
+**/appsettings.*.json
