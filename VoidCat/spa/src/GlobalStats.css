@@ -18,8 +18,23 @@
         margin: 0 10px;
         font-size: 14px;
     }
+
     .stats svg {
         height: 16px;
         width: 16px;
     }
+
+    .build-info {
+        width: 100vw;
+    }
+}
+
+.build-info {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    color: #888;
+    text-align: center;
+    font-size: x-small;
+    padding: 10px;
 }
