@@ -30,7 +30,7 @@ export function Header() {
     return (
         <div className="header page">
             <div className="title">
-                <Link to="/">void.cat</Link>
+                <Link to="/">{window.location.hostname}</Link>
             </div>
             {profile ?
                 <InlineProfile profile={profile} options={{
