@@ -52,9 +52,10 @@ if (useRedis)
 
 services.AddHttpLogging((o) =>
 {
-    o.LoggingFields = HttpLoggingFields.All;
+    o.LoggingFields = HttpLoggingFields.RequestHeaders | HttpLoggingFields.ResponseHeaders | HttpLoggingFields.Response;
     o.RequestBodyLogLimit = 4096;
     o.ResponseBodyLogLimit = 4096;
+    o.MediaTypeOptions.AddText("application/json");
 });
 services.AddHttpClient();
 services.AddSwaggerGen(c =>
