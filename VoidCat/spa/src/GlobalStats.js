@@ -5,20 +5,12 @@ import {FormatBytes} from "./Util";
 import "./GlobalStats.css";
 import {useApi} from "./Api";
 import moment from "moment";
+import {useSelector} from "react-redux";
 
 export function GlobalStats(props) {
     const {Api} = useApi();
-    let [stats, setStats] = useState();
-
-    async function loadStats() {
-        let req = await Api.stats();
-        if (req.ok) {
-            setStats(await req.json());
-        }
-    }
-
-    useEffect(() => loadStats(), []);
-
+    let stats = useSelector(state => state.info.stats);
+    
     return (
         <Fragment>
             <dl className="stats">

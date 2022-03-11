@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using VoidCat.Model;
@@ -15,11 +14,13 @@ public class AuthController : Controller
 {
     private readonly IUserManager _manager;
     private readonly VoidSettings _settings;
+    private readonly ICaptchaVerifier _captchaVerifier;
 
-    public AuthController(IUserManager userStore, VoidSettings settings)
+    public AuthController(IUserManager userStore, VoidSettings settings, ICaptchaVerifier captchaVerifier)
     {
         _manager = userStore;
         _settings = settings;
+        _captchaVerifier = captchaVerifier;
     }
 
     /// <summary>
@@ -37,6 +38,12 @@ public class AuthController : Controller
             {
                 var error = ControllerContext.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage;
                 return new(null, error);
+            }
+            
+            // check captcha
+            if (!await _captchaVerifier.Verify(req.Captcha))
+            {
+                return new(null, "Captcha verification failed");
             }
             
             var user = await _manager.Login(req.Username, req.Password);
@@ -65,6 +72,12 @@ public class AuthController : Controller
             {
                 var error = ControllerContext.ModelState.FirstOrDefault().Value?.Errors.FirstOrDefault()?.ErrorMessage;
                 return new(null, error);
+            }
+            
+            // check captcha
+            if (!await _captchaVerifier.Verify(req.Captcha))
+            {
+                return new(null, "Captcha verification failed");
             }
             
             var newUser = await _manager.Register(req.Username, req.Password);
@@ -96,7 +109,7 @@ public class AuthController : Controller
     }
 
 
-    public class LoginRequest
+    public sealed class LoginRequest
     {
         public LoginRequest(string username, string password)
         {
@@ -106,12 +119,14 @@ public class AuthController : Controller
 
         [Required]
         [EmailAddress]
-        public string Username { get; init; }
+        public string Username { get; }
         
         [Required]
         [MinLength(6)]
-        public string Password { get; init; }
+        public string Password { get; }
+
+        public string? Captcha { get; init; }
     }
 
-    public record LoginResponse(string? Jwt, string? Error = null, VoidUser? Profile = null);
+    public sealed record LoginResponse(string? Jwt, string? Error = null, VoidUser? Profile = null);
 }

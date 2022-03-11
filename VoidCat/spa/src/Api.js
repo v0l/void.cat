@@ -30,13 +30,13 @@ export function useApi() {
             userList: (pageReq) => getJson("POST", `/admin/user`, pageReq, auth)
         },
         Api: {
-            stats: () => getJson("GET", "/stats"),
+            info: () => getJson("GET", "/info"),
             fileInfo: (id) => getJson("GET", `/upload/${id}`),
             setPaywallConfig: (id, cfg) => getJson("POST", `/upload/${id}/paywall`, cfg, auth),
             createOrder: (id) => getJson("GET", `/upload/${id}/paywall`),
             getOrder: (file, order) => getJson("GET", `/upload/${file}/paywall/${order}`),
-            login: (username, password) => getJson("POST", `/auth/login`, {username, password}),
-            register: (username, password) => getJson("POST", `/auth/register`, {username, password}),
+            login: (username, password, captcha) => getJson("POST", `/auth/login`, {username, password, captcha}),
+            register: (username, password, captcha) => getJson("POST", `/auth/register`, {username, password, captcha}),
             getUser: (id) => getJson("GET", `/user/${id}`, undefined, auth),
             updateUser: (u) => getJson("POST", `/user/${u.id}`, u, auth),
             listUserFiles: (uid, pageReq) => getJson("POST", `/user/${uid}/files`, pageReq, auth),

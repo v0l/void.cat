@@ -25,6 +25,10 @@ namespace VoidCat.Model
         public CloudStorageSettings? CloudStorage { get; init; }
 
         public VirusScannerSettings? VirusScanner { get; init; }
+        
+        public IEnumerable<string>? RequestHeadersLog { get; init; }
+        
+        public CaptchaSettings? CaptchaSettings { get; init; }
     }
 
     public sealed class TorSettings
@@ -77,5 +81,11 @@ namespace VoidCat.Model
     public sealed class VirusTotalConfig
     {
         public string? ApiKey { get; init; }
+    }
+
+    public sealed class CaptchaSettings
+    {
+        public string? SiteKey { get; init; }
+        public string? Secret { get; init; }
     }
 }

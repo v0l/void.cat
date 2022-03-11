@@ -11,6 +11,7 @@ using VoidCat.Model;
 using VoidCat.Services;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Background;
+using VoidCat.Services.Captcha;
 using VoidCat.Services.Files;
 using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
@@ -52,10 +53,17 @@ if (useRedis)
 
 services.AddHttpLogging((o) =>
 {
-    o.LoggingFields = HttpLoggingFields.RequestHeaders | HttpLoggingFields.ResponseHeaders | HttpLoggingFields.Response;
+    o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders;
     o.RequestBodyLogLimit = 4096;
     o.ResponseBodyLogLimit = 4096;
+    
+    o.MediaTypeOptions.Clear();
     o.MediaTypeOptions.AddText("application/json");
+    
+    foreach (var h in voidSettings.RequestHeadersLog ?? Enumerable.Empty<string>())
+    {
+        o.RequestHeaders.Add(h);
+    }
 });
 services.AddHttpClient();
 services.AddSwaggerGen(c =>
@@ -143,6 +151,9 @@ services.AddHostedService<DeleteUnverifiedAccounts>();
 // virus scanner
 services.AddVirusScanner(voidSettings);
 
+// captcha
+services.AddCaptcha(voidSettings);
+
 if (useRedis)
 {
     services.AddTransient<ICache, RedisCache>();
@@ -172,7 +183,7 @@ foreach (var migration in migrations)
 app.UseStaticFiles();
 #endif
 
-app.UseHttpLogging(); 
+app.UseHttpLogging();
 app.UseRouting();
 app.UseCors();
 app.UseSwagger();
