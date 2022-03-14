@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Model.Paywall;
@@ -49,13 +50,23 @@ namespace VoidCat.Controllers
             try
             {
                 var uid = HttpContext.GetUserId();
+                var mime = Request.Headers.GetHeader("V-Content-Type");
+                var filename = Request.Headers.GetHeader("V-Filename");
+                if (string.IsNullOrEmpty(mime) && !string.IsNullOrEmpty(filename))
+                {
+                    if (new FileExtensionContentTypeProvider().TryGetContentType(filename, out var contentType))
+                    {
+                        mime = contentType;
+                    }
+                }
+
                 var meta = new SecretVoidFileMeta()
                 {
-                    MimeType = Request.Headers.GetHeader("V-Content-Type"),
-                    Name = Request.Headers.GetHeader("V-Filename"),
+                    MimeType = mime,
+                    Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
-                    Size = (ulong?)Request.ContentLength ?? 0UL,
+                    Size = (ulong?) Request.ContentLength ?? 0UL,
                     Uploader = uid
                 };
 
@@ -67,7 +78,8 @@ namespace VoidCat.Controllers
 
                 if (cli)
                 {
-                    var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host, Request.Host.Port ?? 80,
+                    var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host,
+                        Request.Host.Port ?? 80,
                         $"/d/{vf.Id.ToBase58()}");
 
                     return Content(urlBuilder.Uri.ToString(), "text/plain");
