@@ -6,10 +6,11 @@ import "./Profile.css";
 import {useDispatch, useSelector} from "react-redux";
 import {logout, setProfile as setGlobalProfile} from "./LoginState";
 import {DigestAlgo} from "./FileUpload";
-import {btnDisable, btnEnable, buf2hex, hasFlag} from "./Util";
+import {buf2hex, hasFlag} from "./Util";
 import moment from "moment";
 import FeatherIcon from "feather-icons-react";
 import {FileList} from "./FileList";
+import {VoidButton} from "./VoidButton";
 
 export function Profile() {
     const [profile, setProfile] = useState();
@@ -93,8 +94,6 @@ export function Profile() {
     }
 
     async function saveUser(e) {
-        if (!btnDisable(e.target)) return;
-
         let r = await Api.updateUser({
             id: profile.id,
             avatar: profile.avatar,
@@ -106,19 +105,15 @@ export function Profile() {
             dispatch(setGlobalProfile(profile));
             setSaved(true);
         }
-        btnEnable(e.target);
     }
 
     async function submitCode(e) {
-        if (!btnDisable(e.target)) return;
-
         let r = await Api.submitVerifyCode(profile.id, emailCode);
         if (r.ok) {
             await loadProfile();
         } else {
             setEmailCodeError("Invalid or expired code.");
         }
-        btnEnable(e.target);
     }
 
     async function sendNewCode() {
@@ -138,8 +133,8 @@ export function Profile() {
                 <br/>
                 <input type="text" placeholder="Verification code" value={emailCode}
                        onChange={(e) => setEmailCode(e.target.value)}/>
-                <div className="btn" onClick={submitCode}>Submit</div>
-                <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
+                <VoidButton onClick={submitCode}>Submit</VoidButton>
+                <VoidButton onClick={() => dispatch(logout())}>Logout</VoidButton>
                 <br/>
                 {emailCodeError ? <b>{emailCodeError}</b> : null}
                 {emailCodeError && !newCodeSent ? <a onClick={sendNewCode}>Send verfication email</a> : null}
@@ -165,13 +160,13 @@ export function Profile() {
                 </dl>
                 <div className="flex flex-center">
                     <div>
-                        <div className="btn" onClick={saveUser}>Save</div>
+                        <VoidButton onClick={saveUser}>Save</VoidButton>
                     </div>
                     <div>
                         {saved ? <FeatherIcon icon="check-circle"/> : null}
                     </div>
                     <div>
-                        <div className="btn" onClick={() => dispatch(logout())}>Logout</div>
+                        <VoidButton onClick={() => dispatch(logout())}>Logout</VoidButton>
                     </div>
                 </div>
             </Fragment>

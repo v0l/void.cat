@@ -4,6 +4,7 @@ import {PaywallServices} from "./Const";
 import {useState} from "react";
 import {LightningPaywall} from "./LightningPaywall";
 import {useApi} from "./Api";
+import {VoidButton} from "./VoidButton";
 
 export function FilePaywall(props) {
     const {Api} = useApi();
@@ -14,15 +15,11 @@ export function FilePaywall(props) {
 
     const [order, setOrder] = useState();
 
-    async function fetchOrder(e) {
-        if(e.target.classList.contains("disabled")) return;
-        e.target.classList.add("disabled");
-        
+    async function fetchOrder() {
         let req = await Api.createOrder(file.id);
         if (req.ok && req.status === 200) {
             setOrder(await req.json());
         }
-        e.target.classList.remove("disabled");
     }
 
     function reset() {
@@ -42,7 +39,7 @@ export function FilePaywall(props) {
                 <h3>
                     You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this file.
                 </h3>
-                <div className="btn" onClick={fetchOrder}>Pay</div>
+                <VoidButton onClick={fetchOrder}>Pay</VoidButton>
             </div>
         );
     } else {

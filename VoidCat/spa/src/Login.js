@@ -3,8 +3,8 @@ import {useDispatch, useSelector} from "react-redux";
 import {setAuth} from "./LoginState";
 import {useApi} from "./Api";
 import "./Login.css";
-import {btnDisable, btnEnable} from "./Util";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
+import {VoidButton} from "./VoidButton";
 
 export function Login() {
     const {Api} = useApi();
@@ -15,8 +15,7 @@ export function Login() {
     const captchaKey = useSelector(state => state.info.stats.captchaSiteKey);
     const dispatch = useDispatch();
 
-    async function login(e, fnLogin) {
-        if(!btnDisable(e.target)) return;
+    async function login(fnLogin) {
         setError(null);
 
         let req = await fnLogin(username, password, captchaResponse);
@@ -28,8 +27,6 @@ export function Login() {
                 setError(rsp.error);
             }
         }
-
-        btnEnable(e.target);
     }
 
     return (
@@ -42,8 +39,8 @@ export function Login() {
                 <dd><input type="password" onChange={(e) => setPassword(e.target.value)}/></dd>
             </dl>
             {captchaKey ? <HCaptcha sitekey={captchaKey} onVerify={setCaptchaResponse}/> : null}
-            <div className="btn" onClick={(e) => login(e, Api.login)}>Login</div>
-            <div className="btn" onClick={(e) => login(e, Api.register)}>Register</div>
+            <VoidButton onClick={() => login(Api.login)}>Login</VoidButton>
+            <VoidButton onClick={() => login(Api.register)}>Register</VoidButton>
             {error ? <div className="error-msg">{error}</div> : null}
         </div>
     );

@@ -1,7 +1,7 @@
 import {useState} from "react";
 import FeatherIcon from "feather-icons-react";
 import {PaywallCurrencies} from "./Const";
-import {btnDisable, btnEnable} from "./Util";
+import {VoidButton} from "./VoidButton";
 
 export function StrikePaywallConfig(props) {
     const file = props.file;
@@ -16,8 +16,6 @@ export function StrikePaywallConfig(props) {
     const [saveStatus, setSaveStatus] = useState();
 
     async function saveStrikeConfig(e) {
-        if(!btnDisable(e.target)) return;
-        
         let cfg = {
             editSecret,
             strike: {
@@ -37,7 +35,6 @@ export function StrikePaywallConfig(props) {
                 setSaveStatus(false);
             }
         }
-        btnEnable(e.target);
     }
 
     return (
@@ -57,7 +54,7 @@ export function StrikePaywallConfig(props) {
                 <dt>Price:</dt>
                 <dd><input type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value))}/></dd>
             </dl>
-            <div className="btn" onClick={saveStrikeConfig}>Save</div>
+            <VoidButton onClick={saveStrikeConfig}>Save</VoidButton>
             {saveStatus ? <FeatherIcon icon="check-circle"/> : null}
         </div>
     );

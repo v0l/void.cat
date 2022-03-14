@@ -1,16 +1,14 @@
-﻿import {Fragment, useEffect, useState} from "react";
+﻿import {Fragment} from "react";
 import FeatherIcon from "feather-icons-react";
 import {FormatBytes} from "./Util";
 
 import "./GlobalStats.css";
-import {useApi} from "./Api";
 import moment from "moment";
 import {useSelector} from "react-redux";
 
-export function GlobalStats(props) {
-    const {Api} = useApi();
+export function GlobalStats() {
     let stats = useSelector(state => state.info.stats);
-    
+
     return (
         <Fragment>
             <dl className="stats">
