@@ -14,11 +14,12 @@ public static class VirusScannerStartup
         var avSettings = settings.VirusScanner;
         if (avSettings != default)
         {
-            services.AddHostedService<Background.VirusScannerService>();
+            var loadService = false;
 
             // load ClamAV scanner
             if (avSettings.ClamAV != default)
             {
+                loadService = true;
                 services.AddTransient<IClamClient>((_) =>
                     new ClamClient(avSettings.ClamAV.Endpoint.Host, avSettings.ClamAV.Endpoint.Port)
                     {
@@ -30,9 +31,15 @@ public static class VirusScannerStartup
             // load VirusTotal
             if (avSettings.VirusTotal != default)
             {
+                loadService = true;
                 services.AddTransient((svc) =>
                     new VirusTotalClient(svc.GetRequiredService<IHttpClientFactory>(), avSettings.VirusTotal));
                 services.AddTransient<IVirusScanner, VirusTotalScanner>();
+            }
+
+            if (loadService)
+            {
+                services.AddHostedService<Background.VirusScannerService>();
             }
         }
     }
