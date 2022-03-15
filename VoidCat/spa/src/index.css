@@ -40,6 +40,10 @@ a:hover {
     display: flex;
 }
 
+.flex-inline { 
+    display: inline-flex;
+}
+
 .flx-1 {
     flex: 1;
 }

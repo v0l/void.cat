@@ -61,6 +61,12 @@ public static class Extensions
         return !string.IsNullOrEmpty(h.Value.ToString()) ? h.Value.ToString() : default;
     }
 
+    public static bool CanEdit(this SecretVoidFileMeta file, Guid? editSecret, HttpContext context)
+    {
+        return file.EditSecret == editSecret
+               || file.Uploader == context.GetUserId();
+    }
+    
     public static string ToHex(this byte[] data)
     {
         return BitConverter.ToString(data).Replace("-", string.Empty).ToLower();

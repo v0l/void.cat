@@ -26,7 +26,7 @@ public record VoidFileMeta : IVoidFileMeta
     /// <summary>
     /// Filename
     /// </summary>
-    public string? Name { get; init; }
+    public string? Name { get; set; }
 
     /// <summary>
     /// Size of the file in storage
@@ -41,12 +41,12 @@ public record VoidFileMeta : IVoidFileMeta
     /// <summary>
     /// Description about the file
     /// </summary>
-    public string? Description { get; init; }
+    public string? Description { get; set; }
 
     /// <summary>
     /// The content type of the file
     /// </summary>
-    public string? MimeType { get; init; }
+    public string? MimeType { get; set; }
 
     /// <summary>
     /// SHA-256 hash of the file

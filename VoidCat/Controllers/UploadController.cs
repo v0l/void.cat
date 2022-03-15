@@ -194,8 +194,7 @@ namespace VoidCat.Controllers
             var gid = id.FromBase58Guid();
             var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
             if (meta == default) return NotFound();
-
-            if (req.EditSecret != meta.EditSecret) return Unauthorized();
+            if (!meta.CanEdit(req.EditSecret, HttpContext)) return Unauthorized();
 
             if (req.Strike != default)
             {
@@ -205,6 +204,28 @@ namespace VoidCat.Controllers
 
             // if none set, set NoPaywallConfig
             await _paywall.Set(gid, new NoPaywallConfig());
+            return Ok();
+        }
+
+        /// <summary>
+        /// Update metadata about file
+        /// </summary>
+        /// <param name="id">Id of file to edit</param>
+        /// <param name="fileMeta">New metadata to update</param>
+        /// <returns></returns>
+        /// <remarks>
+        /// You can only change `Name`, `Description` and `MimeType`
+        /// </remarks>
+        [HttpPost]
+        [Route("{id}/meta")]
+        public async Task<IActionResult> UpdateFileMeta([FromRoute] string id, [FromBody] SecretVoidFileMeta fileMeta)
+        {
+            var gid = id.FromBase58Guid();
+            var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
+            if (meta == default) return NotFound();
+            if (!meta.CanEdit(fileMeta.EditSecret, HttpContext)) return Unauthorized();
+
+            await _metadata.Update(gid, fileMeta);
             return Ok();
         }
     }

@@ -5,6 +5,7 @@ import {NoPaywallConfig} from "./NoPaywallConfig";
 import {useApi} from "./Api";
 import "./FileEdit.css";
 import {useSelector} from "react-redux";
+import {VoidButton} from "./VoidButton";
 
 export function FileEdit(props) {
     const {Api} = useApi();
@@ -25,6 +26,15 @@ export function FileEdit(props) {
         return req.ok;
     }
 
+    async function saveMeta() {
+        let meta = {
+            name,
+            description,
+            editSecret: privateFile?.metadata?.editSecret
+        };
+        await Api.updateMetadata(file.id, meta);        
+    }
+    
     function renderPaywallConfig() {
         switch (paywall) {
             case 0: {
@@ -47,7 +57,7 @@ export function FileEdit(props) {
                     <dt>Description:</dt>
                     <dd><input type="text" value={description} onChange={(e) => setDescription(e.target.value)}/></dd>
                 </dl>
-
+                <VoidButton onClick={(e) => saveMeta()} options={{showSuccess: true}}>Save</VoidButton>
             </div>
             <div className="flx-1">
                 <h3>Paywall Config</h3>

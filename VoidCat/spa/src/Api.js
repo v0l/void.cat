@@ -41,7 +41,8 @@ export function useApi() {
             updateUser: (u) => getJson("POST", `/user/${u.id}`, u, auth),
             listUserFiles: (uid, pageReq) => getJson("POST", `/user/${uid}/files`, pageReq, auth),
             submitVerifyCode: (uid, code) => getJson("POST", `/user/${uid}/verify`, code, auth),
-            sendNewCode: (uid) => getJson("GET", `/user/${uid}/verify`, undefined, auth)
+            sendNewCode: (uid) => getJson("GET", `/user/${uid}/verify`, undefined, auth),
+            updateMetadata: (id, meta) => getJson("POST", `/upload/${id}/meta`, meta, auth)
         }
     };
 }

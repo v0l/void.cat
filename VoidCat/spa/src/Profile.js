@@ -8,14 +8,12 @@ import {logout, setProfile as setGlobalProfile} from "./LoginState";
 import {DigestAlgo} from "./FileUpload";
 import {buf2hex, hasFlag} from "./Util";
 import moment from "moment";
-import FeatherIcon from "feather-icons-react";
 import {FileList} from "./FileList";
 import {VoidButton} from "./VoidButton";
 
 export function Profile() {
     const [profile, setProfile] = useState();
     const [noProfile, setNoProfile] = useState(false);
-    const [saved, setSaved] = useState(false);
     const [emailCode, setEmailCode] = useState("");
     const [emailCodeError, setEmailCodeError] = useState("");
     const [newCodeSent, setNewCodeSent] = useState(false);
@@ -103,7 +101,6 @@ export function Profile() {
         if (r.ok) {
             // saved
             dispatch(setGlobalProfile(profile));
-            setSaved(true);
         }
     }
 
@@ -160,10 +157,7 @@ export function Profile() {
                 </dl>
                 <div className="flex flex-center">
                     <div>
-                        <VoidButton onClick={saveUser}>Save</VoidButton>
-                    </div>
-                    <div>
-                        {saved ? <FeatherIcon icon="check-circle"/> : null}
+                        <VoidButton onClick={saveUser} options={{showSuccess: true}}>Save</VoidButton>
                     </div>
                     <div>
                         <VoidButton onClick={() => dispatch(logout())}>Logout</VoidButton>
@@ -176,12 +170,6 @@ export function Profile() {
     useEffect(() => {
         loadProfile();
     }, []);
-
-    useEffect(() => {
-        if (saved === true) {
-            setTimeout(() => setSaved(false), 1000);
-        }
-    }, [saved]);
 
     if (profile) {
         let avatarUrl = profile.avatar ?? DefaultAvatar;

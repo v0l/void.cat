@@ -25,6 +25,18 @@ public class S3FileMetadataStore : IFileMetadataStore
         return GetMeta<TMeta>(id);
     }
 
+    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
+    {
+        var oldMeta = await GetMeta<SecretVoidFileMeta>(id);
+        if (oldMeta == default) return;
+        
+        oldMeta.Description = meta.Description ?? oldMeta.Description;
+        oldMeta.Name = meta.Name ?? oldMeta.Name;
+        oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
+        
+        await Set(id, oldMeta);
+    }
+
     public ValueTask<VoidFileMeta?> Get(Guid id)
     {
         return GetMeta<VoidFileMeta>(id);
