@@ -88,7 +88,7 @@ public class UserStore : IUserStore
 
         //retain flags
         var isEmailVerified = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified);
-        
+
         // update only a few props
         oldUser.Avatar = newUser.Avatar;
         oldUser.Flags = newUser.Flags | (isEmailVerified ? VoidUserFlags.EmailVerified : 0);

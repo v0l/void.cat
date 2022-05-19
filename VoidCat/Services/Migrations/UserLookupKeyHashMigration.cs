@@ -12,7 +12,7 @@ public class UserLookupKeyHashMigration : IMigration
     {
         _database = database;
     }
-    
+
     public async ValueTask Migrate()
     {
         var users = await _database.SetMembersAsync("users");

@@ -13,7 +13,7 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
         _settings = settings;
         _logger = logger;
     }
-    
+
     public async ValueTask Migrate()
     {
         var newMeta = Path.Combine(_settings.DataDirectory, OldPath);
@@ -21,7 +21,7 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
         {
             Directory.CreateDirectory(newMeta);
         }
-        
+
         foreach (var fe in Directory.EnumerateFiles(_settings.DataDirectory))
         {
             var filename = Path.GetFileNameWithoutExtension(fe);
@@ -35,13 +35,13 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
                 {
                     var oldJson = await File.ReadAllTextAsync(fp);
                     if (!ShouldMigrate(oldJson)) continue;
-                    
+
                     var old = JsonConvert.DeserializeObject<TOld>(oldJson);
-                    if(old == null) continue;
-                    
+                    if (old == null) continue;
+
                     var newObj = MigrateModel(old);
                     await File.WriteAllTextAsync(MapNewMeta(id), JsonConvert.SerializeObject(newObj));
-                    
+
                     // delete old metadata
                     File.Delete(fp);
                 }
@@ -58,9 +58,10 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
 
     protected abstract bool ShouldMigrate(string json);
     protected abstract TNew MigrateModel(TOld old);
-    
+
     private string MapOldMeta(Guid id) =>
         Path.ChangeExtension(Path.Join(_settings.DataDirectory, OldPath, id.ToString()), ".json");
+
     private string MapNewMeta(Guid id) =>
         Path.ChangeExtension(Path.Join(_settings.DataDirectory, NewPath, id.ToString()), ".json");
 }

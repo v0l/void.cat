@@ -128,7 +128,6 @@ services.AddAuthorization((opt) =>
 // void.cat services
 //
 services.AddTransient<RazorPartialToStringRenderer>();
-services.AddVoidMigrations();
 
 // file storage
 services.AddStorage(voidSettings);
@@ -160,6 +159,9 @@ if (useRedis)
     services.AddTransient<RedisStatsController>();
     services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
     services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
+    
+    // redis specific migrations
+    services.AddTransient<IMigration, UserLookupKeyHashMigration>();
 }
 else
 {

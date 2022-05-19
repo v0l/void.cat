@@ -16,7 +16,7 @@ public class InMemoryCache : ICache
     {
         return ValueTask.FromResult(_cache.Get<T?>(key));
     }
-    
+
     public ValueTask Set<T>(string key, T value, TimeSpan? expire = null)
     {
         if (expire.HasValue)
@@ -30,12 +30,12 @@ public class InMemoryCache : ICache
 
         return ValueTask.CompletedTask;
     }
-    
+
     public ValueTask<string[]> GetList(string key)
     {
-        return ValueTask.FromResult(_cache.Get<string[]>(key));
+        return ValueTask.FromResult(_cache.Get<string[]>(key) ?? Array.Empty<string>());
     }
-    
+
     public ValueTask AddToList(string key, string value)
     {
         var list = new HashSet<string>(GetList(key).Result);
@@ -55,6 +55,7 @@ public class InMemoryCache : ICache
     public ValueTask Delete(string key)
     {
         _cache.Remove(key);
-        return ValueTask.CompletedTask;;
+        return ValueTask.CompletedTask;
+        ;
     }
 }
