@@ -3,4 +3,5 @@
     padding: 10px;
     border-radius: 10px;
     text-align: initial;
+    overflow: auto;
 }
