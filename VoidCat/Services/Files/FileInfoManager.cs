@@ -30,7 +30,7 @@ public class FileInfoManager : IFileInfoManager
         await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask(), virusScan.AsTask());
 
         if (meta.Result == default) return default;
-        
+
         var uploader = meta.Result?.Uploader;
         var user = uploader.HasValue ? await _userStore.Get<PublicVoidUser>(uploader.Value) : null;
 
@@ -43,6 +43,21 @@ public class FileInfoManager : IFileInfoManager
             Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null,
             VirusScan = virusScan.Result
         };
+    }
+
+    public async ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids)
+    {
+        var ret = new List<PublicVoidFile>();
+        foreach (var id in ids)
+        {
+            var v = await Get(id);
+            if (v != default)
+            {
+                ret.Add(v);
+            }
+        }
+
+        return ret;
     }
 
     public async ValueTask Delete(Guid id)

@@ -14,7 +14,7 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
         _logger = logger;
     }
 
-    public async ValueTask Migrate()
+    public async ValueTask Migrate(string[] args)
     {
         var newMeta = Path.Combine(_settings.DataDirectory, OldPath);
         if (!Directory.Exists(newMeta))
@@ -64,4 +64,6 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
 
     private string MapNewMeta(Guid id) =>
         Path.ChangeExtension(Path.Join(_settings.DataDirectory, NewPath, id.ToString()), ".json");
+
+    public bool ExitOnComplete => false;
 }

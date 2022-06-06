@@ -27,16 +27,57 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         return GetMeta<TMeta>(id);
     }
 
+    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
+    {
+        var ret = new List<TMeta>();
+        foreach (var id in ids)
+        {
+            var r = await GetMeta<TMeta>(id);
+            if (r != null)
+            {
+                ret.Add(r);
+            }
+        }
+
+        return ret;
+    }
+
     public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
     {
-        var oldMeta = await GetMeta<SecretVoidFileMeta>(id);
+        var oldMeta = await Get<SecretVoidFileMeta>(id);
         if (oldMeta == default) return;
-        
+
         oldMeta.Description = meta.Description ?? oldMeta.Description;
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
-        
+
         await Set(id, oldMeta);
+    }
+
+    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    {
+        var count = 0;
+        var size = 0UL;
+        foreach (var metaFile in Directory.EnumerateFiles(Path.Join(_settings.DataDirectory, MetadataDir), "*.json"))
+        {
+            try
+            {
+                var json = await File.ReadAllTextAsync(metaFile);
+                var meta = JsonConvert.DeserializeObject<VoidFileMeta>(json);
+
+                if (meta != null)
+                {
+                    count++;
+                    size += meta.Size;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load metadata file: {File}", metaFile);
+            }
+        }
+
+        return new(count, size);
     }
 
     public ValueTask<VoidFileMeta?> Get(Guid id)

@@ -1,10 +1,13 @@
+using System.Data;
 using System.Reflection;
 using System.Text;
+using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using Npgsql;
 using Prometheus;
 using StackExchange.Redis;
 using VoidCat.Model;
@@ -56,10 +59,10 @@ services.AddHttpLogging((o) =>
     o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders;
     o.RequestBodyLogLimit = 4096;
     o.ResponseBodyLogLimit = 4096;
-    
+
     o.MediaTypeOptions.Clear();
     o.MediaTypeOptions.AddText("application/json");
-    
+
     foreach (var h in voidSettings.RequestHeadersLog ?? Enumerable.Empty<string>())
     {
         o.RequestHeaders.Add(h);
@@ -140,9 +143,7 @@ services.AddTransient<IStatsCollector, PrometheusStatsCollector>();
 services.AddVoidPaywall();
 
 // users
-services.AddTransient<IUserStore, UserStore>();
-services.AddTransient<IUserManager, UserManager>();
-services.AddTransient<IEmailVerification, EmailVerification>();
+services.AddUserServices(voidSettings);
 
 // background services
 services.AddHostedService<DeleteUnverifiedAccounts>();
@@ -153,13 +154,30 @@ services.AddVirusScanner(voidSettings);
 // captcha
 services.AddCaptcha(voidSettings);
 
+// postgres
+if (!string.IsNullOrEmpty(voidSettings.Postgres))
+{
+    services.AddScoped<OpenDatabase>();
+    services.AddScoped((_) => new NpgsqlConnection(voidSettings.Postgres));
+    services.AddScoped<IDbConnection>((svc) => svc.GetRequiredService<NpgsqlConnection>());
+
+    // fluent migrations
+    services.AddTransient<IMigration, FluentMigrationRunner>();
+    services.AddFluentMigratorCore()
+        .ConfigureRunner(r =>
+            r.AddPostgres11_0()
+                .WithGlobalConnectionString(voidSettings.Postgres)
+                .ScanIn(typeof(Program).Assembly).For.Migrations())
+        .AddLogging(l => l.AddFluentMigratorConsole());
+}
+
 if (useRedis)
 {
     services.AddTransient<ICache, RedisCache>();
     services.AddTransient<RedisStatsController>();
     services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
     services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
-    
+
     // redis specific migrations
     services.AddTransient<IMigration, UserLookupKeyHashMigration>();
 }
@@ -175,10 +193,17 @@ else
 var app = builder.Build();
 
 // run migrations
-var migrations = app.Services.GetServices<IMigration>();
-foreach (var migration in migrations)
+using (var migrationScope = app.Services.CreateScope())
 {
-    await migration.Migrate();
+    var migrations = migrationScope.ServiceProvider.GetServices<IMigration>();
+    foreach (var migration in migrations)
+    {
+        await migration.Migrate(args);
+        if (migration.ExitOnComplete)
+        {
+            return;
+        }
+    }
 }
 
 #if HostSPA
@@ -192,6 +217,11 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (!string.IsNullOrEmpty(voidSettings.Postgres))
+{
+    app.UseMiddleware<OpenDatabase>();
+}
 
 app.UseEndpoints(ep =>
 {

@@ -8,13 +8,13 @@ namespace VoidCat.Controllers;
 public class InfoController : Controller
 {
     private readonly IStatsReporter _statsReporter;
-    private readonly IFileStore _fileStore;
+    private readonly IFileMetadataStore _fileMetadata;
     private readonly VoidSettings _settings;
 
-    public InfoController(IStatsReporter statsReporter, IFileStore fileStore, VoidSettings settings)
+    public InfoController(IStatsReporter statsReporter, IFileMetadataStore fileMetadata, VoidSettings settings)
     {
         _statsReporter = statsReporter;
-        _fileStore = fileStore;
+        _fileMetadata = fileMetadata;
         _settings = settings;
     }
 
@@ -27,18 +27,11 @@ public class InfoController : Controller
     public async Task<GlobalInfo> GetGlobalStats()
     {
         var bw = await _statsReporter.GetBandwidth();
-        var bytes = 0UL;
-        var count = 0;
-        var files = await _fileStore.ListFiles(new(0, Int32.MaxValue));
-        await foreach (var vf in files.Results)
-        {
-            bytes += vf.Metadata?.Size ?? 0;
-            count++;
-        }
-
-        return new(bw, bytes, count, BuildInfo.GetBuildInfo(), _settings.CaptchaSettings?.SiteKey);
+        var storeStats = await _fileMetadata.Stats();
+        
+        return new(bw, (ulong)storeStats.Size, storeStats.Files, BuildInfo.GetBuildInfo(), _settings.CaptchaSettings?.SiteKey);
     }
 
-    public sealed record GlobalInfo(Bandwidth Bandwidth, ulong TotalBytes, int Count, BuildInfo BuildInfo,
+    public sealed record GlobalInfo(Bandwidth Bandwidth, ulong TotalBytes, long Count, BuildInfo BuildInfo,
         string? CaptchaSiteKey);
 }

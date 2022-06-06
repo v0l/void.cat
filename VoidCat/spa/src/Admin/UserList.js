@@ -18,7 +18,7 @@ export function UserList() {
         let pageReq = {
             page: page,
             pageSize,
-            sortBy: PagedSortBy.Id,
+            sortBy: PagedSortBy.Date,
             sortOrder: PageSortOrder.Asc
         };
         let req = await AdminApi.userList(pageReq);
@@ -33,7 +33,7 @@ export function UserList() {
 
     function renderUser(u) {
         return (
-            <tr>
+            <tr key={u.id}>
                 <td><a href={`/u/${u.id}`}>{u.id.substring(0, 4)}..</a></td>
                 <td>{moment(u.created).fromNow()}</td>
                 <td>{moment(u.lastLogin).fromNow()}</td>

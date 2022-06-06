@@ -6,43 +6,54 @@ namespace VoidCat.Services.Background;
 public class DeleteUnverifiedAccounts : BackgroundService
 {
     private readonly ILogger<DeleteUnverifiedAccounts> _logger;
-    private readonly IUserStore _userStore;
-    private readonly IUserUploadsStore _userUploads;
-    private readonly IFileInfoManager _fileInfo;
-    private readonly IFileStore _fileStore;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public DeleteUnverifiedAccounts(ILogger<DeleteUnverifiedAccounts> logger, IUserStore userStore,
-        IUserUploadsStore uploadsStore, IFileInfoManager fileInfo, IFileStore fileStore)
+    public DeleteUnverifiedAccounts(ILogger<DeleteUnverifiedAccounts> logger, IServiceScopeFactory scopeFactory)
     {
-        _userStore = userStore;
         _logger = logger;
-        _userUploads = uploadsStore;
-        _fileInfo = fileInfo;
-        _fileStore = fileStore;
+        _scopeFactory = scopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var accounts = await _userStore.ListUsers(new(0, Int32.MaxValue));
-
-        await foreach (var account in accounts.Results.WithCancellation(stoppingToken))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            if (!account.Flags.HasFlag(VoidUserFlags.EmailVerified) &&
-                account.Created.AddDays(7) < DateTimeOffset.UtcNow)
+            try
             {
-                _logger.LogInformation("Deleting un-verified account: {Id}", account.Id.ToBase58());
-                await _userStore.Delete(account);
+                using var scope = _scopeFactory.CreateScope();
+                var userStore = scope.ServiceProvider.GetRequiredService<IUserStore>();
+                var userUploads = scope.ServiceProvider.GetRequiredService<IUserUploadsStore>();
+                var fileStore = scope.ServiceProvider.GetRequiredService<IFileStore>();
+                var fileInfoManager = scope.ServiceProvider.GetRequiredService<IFileInfoManager>();
 
-                var files = await _userUploads.ListFiles(account.Id, new(0, Int32.MinValue));
-                // ReSharper disable once UseCancellationTokenForIAsyncEnumerable
-                await foreach (var file in files.Results)
+                var accounts = await userStore.ListUsers(new(0, Int32.MaxValue));
+
+                await foreach (var account in accounts.Results.WithCancellation(stoppingToken))
                 {
-                    await _fileStore.DeleteFile(file.Id);
-                    await _fileInfo.Delete(file.Id);
+                    if (!account.Flags.HasFlag(VoidUserFlags.EmailVerified) &&
+                        account.Created.AddDays(7) < DateTimeOffset.UtcNow)
+                    {
+                        _logger.LogInformation("Deleting un-verified account: {Id}", account.Id.ToBase58());
+                        await userStore.Delete(account.Id);
+
+                        var files = await userUploads.ListFiles(account.Id, new(0, Int32.MinValue));
+                        // ReSharper disable once UseCancellationTokenForIAsyncEnumerable
+                        await foreach (var file in files.Results)
+                        {
+                            await fileStore.DeleteFile(file.Id);
+                            await fileInfoManager.Delete(file.Id);
+                        }
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete unverified accounts");
+            }
+            finally
+            {
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+            }
         }
-
-        await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
     }
 }

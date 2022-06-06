@@ -2,5 +2,6 @@
 
 public interface IMigration
 {
-    ValueTask Migrate();
+    ValueTask Migrate(string[] args);
+    bool ExitOnComplete { get; }
 }

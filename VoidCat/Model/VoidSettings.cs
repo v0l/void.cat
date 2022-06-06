@@ -29,6 +29,8 @@ namespace VoidCat.Model
         public IEnumerable<string>? RequestHeadersLog { get; init; }
         
         public CaptchaSettings? CaptchaSettings { get; init; }
+        
+        public string? Postgres { get; init; }
     }
 
     public sealed class TorSettings

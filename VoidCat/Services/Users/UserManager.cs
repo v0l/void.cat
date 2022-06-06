@@ -32,7 +32,7 @@ public class UserManager : IUserManager
     public async ValueTask<InternalVoidUser> Register(string email, string password)
     {
         var existingUser = await _store.LookupUser(email);
-        if (existingUser != Guid.Empty) throw new InvalidOperationException("User already exists");
+        if (existingUser != Guid.Empty && existingUser != null) throw new InvalidOperationException("User already exists");
 
         var newUser = new InternalVoidUser(Guid.NewGuid(), email, password.HashPassword())
         {
@@ -50,7 +50,7 @@ public class UserManager : IUserManager
                 newUser.Roles.Add(Roles.Admin);
             }
         }
-        
+
         await _store.Set(newUser.Id, newUser);
         await _emailVerification.SendNewCode(newUser);
         return newUser;

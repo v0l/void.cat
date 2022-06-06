@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using VoidCat.Services.Abstractions;
 
+// ReSharper disable InconsistentNaming
+
 namespace VoidCat.Model;
 
 /// <summary>
@@ -9,7 +11,7 @@ namespace VoidCat.Model;
 public interface IVoidFileMeta
 {
     const int CurrentVersion = 3;
-    
+
     int Version { get; init; }
 }
 
@@ -22,7 +24,7 @@ public record VoidFileMeta : IVoidFileMeta
     /// Metadata version
     /// </summary>
     public int Version { get; init; } = IVoidFileMeta.CurrentVersion;
-    
+
     /// <summary>
     /// Filename
     /// </summary>
@@ -52,12 +54,12 @@ public record VoidFileMeta : IVoidFileMeta
     /// SHA-256 hash of the file
     /// </summary>
     public string? Digest { get; init; }
-    
+
     /// <summary>
     /// Url to download the file
     /// </summary>
     public Uri? Url { get; set; }
-    
+
     /// <summary>
     /// User who uploaded the file
     /// </summary>

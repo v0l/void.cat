@@ -32,3 +32,14 @@ curl -X POST \
 
 This command will return the direct download URL only. 
 To get the json output simply remove the `?cli=true` from the url.
+
+### Development
+To run postgres in local use:
+```
+docker run --rm -it -p 5432:5432 -e POSTGRES_DB=void -e POSTGRES_PASSWORD=postgres postgres -d postgres
+```
+
+To run MinIO in local use:
+```
+docker run --rm -it -p 9000:9000 -p 9001:9001 minio/minio -- server /data --console-address ":9001"
+```

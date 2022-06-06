@@ -9,5 +9,12 @@ namespace VoidCat.Services.Abstractions;
 public interface IFileInfoManager
 {
     ValueTask<PublicVoidFile?> Get(Guid id);
+    ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids);
+    
+    /// <summary>
+    /// Deletes all file metadata
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     ValueTask Delete(Guid id);
 }

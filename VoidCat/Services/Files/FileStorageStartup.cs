@@ -9,10 +9,11 @@ public static class FileStorageStartup
     public static void AddStorage(this IServiceCollection services, VoidSettings settings)
     {
         services.AddTransient<IFileInfoManager, FileInfoManager>();
-        services.AddTransient<IUserUploadsStore, UserUploadStore>();
 
         if (settings.CloudStorage != default)
         {
+            services.AddTransient<IUserUploadsStore, UserUploadStore>();
+            
             // cloud storage
             if (settings.CloudStorage.S3 != default)
             {
@@ -20,8 +21,15 @@ public static class FileStorageStartup
                 services.AddSingleton<IFileMetadataStore, S3FileMetadataStore>();
             }
         }
+        else if (!string.IsNullOrEmpty(settings.Postgres))
+        {
+            services.AddTransient<IUserUploadsStore, PostgresUserUploadStore>();
+            services.AddTransient<IFileStore, LocalDiskFileStore>();
+            services.AddTransient<IFileMetadataStore, PostgreFileMetadataStore>();
+        }
         else
         {
+            services.AddTransient<IUserUploadsStore, UserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
             services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
         }

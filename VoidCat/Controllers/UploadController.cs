@@ -60,7 +60,7 @@ namespace VoidCat.Controllers
                     }
                 }
 
-                var meta = new SecretVoidFileMeta()
+                var meta = new SecretVoidFileMeta
                 {
                     MimeType = mime,
                     Name = filename,

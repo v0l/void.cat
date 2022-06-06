@@ -25,16 +25,63 @@ public class S3FileMetadataStore : IFileMetadataStore
         return GetMeta<TMeta>(id);
     }
 
+    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
+    {
+        var ret = new List<TMeta>();
+        foreach (var id in ids)
+        {
+            var r = await GetMeta<TMeta>(id);
+            if (r != null)
+            {
+                ret.Add(r);
+            }
+        }
+
+        return ret;
+    }
+
     public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
     {
         var oldMeta = await GetMeta<SecretVoidFileMeta>(id);
         if (oldMeta == default) return;
-        
+
         oldMeta.Description = meta.Description ?? oldMeta.Description;
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
-        
+
         await Set(id, oldMeta);
+    }
+
+    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    {
+        var count = 0;
+        var size = 0UL;
+        try
+        {
+            var obj = await _client.ListObjectsV2Async(new()
+            {
+                BucketName = _config.BucketName,
+            });
+
+            foreach (var file in obj.S3Objects)
+            {
+                if (file.Key.EndsWith("-metadata") && Guid.TryParse(file.Key.Split('-')[0], out var id))
+                {
+                    var meta = await GetMeta<VoidFileMeta>(id);
+                    if (meta != default)
+                    {
+                        count++;
+                        size += meta.Size;
+                    }
+                }
+            }
+        }
+        catch (AmazonS3Exception aex)
+        {
+            _logger.LogError(aex, "Failed to list files: {Error}", aex.Message);
+        }
+
+        return new(count, size);
     }
 
     public ValueTask<VoidFileMeta?> Get(Guid id)
@@ -86,6 +133,6 @@ public class S3FileMetadataStore : IFileMetadataStore
 
         return default;
     }
-    
+
     private static string ToKey(Guid id) => $"{id}-metadata";
 }

@@ -4,6 +4,8 @@ public interface IBasicStore<T>
 {
     ValueTask<T?> Get(Guid id);
     
+    ValueTask<IReadOnlyList<T>> Get(Guid[] ids);
+    
     ValueTask Set(Guid id, T obj);
 
     ValueTask Delete(Guid id);

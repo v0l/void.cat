@@ -10,6 +10,11 @@ public interface IFileStore
 
     ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request);
 
+    /// <summary>
+    /// Deletes file data only, metadata must be deleted with <see cref="IFileInfoManager.Delete"/>
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     ValueTask DeleteFile(Guid id);
 
     ValueTask<Stream> Open(EgressRequest request, CancellationToken cts);

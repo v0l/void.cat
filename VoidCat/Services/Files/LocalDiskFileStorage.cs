@@ -85,7 +85,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         });
     }
 
-    public async ValueTask DeleteFile(Guid id)
+    public ValueTask DeleteFile(Guid id)
     {
         var fp = MapPath(id);
         if (File.Exists(fp))
@@ -93,8 +93,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             _logger.LogInformation("Deleting file: {Path}", fp);
             File.Delete(fp);
         }
-
-        await _metadataStore.Delete(id);
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)

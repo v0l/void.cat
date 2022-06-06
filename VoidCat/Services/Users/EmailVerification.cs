@@ -12,7 +12,8 @@ public class EmailVerification : IEmailVerification
     private readonly ILogger<EmailVerification> _logger;
     private readonly RazorPartialToStringRenderer _renderer;
 
-    public EmailVerification(ICache cache, ILogger<EmailVerification> logger, VoidSettings settings, RazorPartialToStringRenderer renderer)
+    public EmailVerification(ICache cache, ILogger<EmailVerification> logger, VoidSettings settings,
+        RazorPartialToStringRenderer renderer)
     {
         _cache = cache;
         _logger = logger;
@@ -30,7 +31,7 @@ public class EmailVerification : IEmailVerification
         };
         await _cache.Set(MapToken(code.Id), code, TimeSpan.FromHours(codeExpire));
         _logger.LogInformation("Saved email verification token for User={Id} Token={Token}", user.Id, code.Id);
-        
+
         // send email
         try
         {
@@ -40,7 +41,7 @@ public class EmailVerification : IEmailVerification
             sc.Port = conf?.Server?.Port ?? 25;
             sc.EnableSsl = conf?.Server?.Scheme == "tls";
             sc.Credentials = new NetworkCredential(conf?.Username, conf?.Password);
-            
+
             var msgContent = await _renderer.RenderPartialToStringAsync("~/Pages/EmailCode.cshtml", code);
             var msg = new MailMessage();
             msg.From = new MailAddress(conf?.Username ?? "no-reply@void.cat");
@@ -65,7 +66,7 @@ public class EmailVerification : IEmailVerification
     {
         var token = await _cache.Get<EmailVerificationCode>(MapToken(code));
         if (token == default) return false;
-        
+
         var isValid = user.Id == token.UserId && token.Expires > DateTimeOffset.UtcNow;
         if (isValid)
         {

@@ -13,7 +13,7 @@ public class UserLookupKeyHashMigration : IMigration
         _database = database;
     }
 
-    public async ValueTask Migrate()
+    public async ValueTask Migrate(string[] args)
     {
         var users = await _database.SetMembersAsync("users");
         foreach (var userId in users)
@@ -41,4 +41,6 @@ public class UserLookupKeyHashMigration : IMigration
 
         public string Email { get; init; }
     }
+
+    public bool ExitOnComplete => false;
 }

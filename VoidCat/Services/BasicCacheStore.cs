@@ -16,6 +16,21 @@ public abstract class BasicCacheStore<TStore> : IBasicStore<TStore>
         return _cache.Get<TStore>(MapKey(id));
     }
 
+    public virtual async ValueTask<IReadOnlyList<TStore>> Get(Guid[] ids)
+    {
+        var ret = new List<TStore>();
+        foreach (var id in ids)
+        {
+            var r = await _cache.Get<TStore>(MapKey(id));
+            if (r != null)
+            {
+                ret.Add(r);
+            }
+        }
+
+        return ret;
+    }
+
     public virtual ValueTask Set(Guid id, TStore obj)
     {
         return _cache.Set(MapKey(id), obj);
