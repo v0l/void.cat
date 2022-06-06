@@ -61,11 +61,13 @@ public class S3FileMetadataStore : IFileMetadataStore
             var obj = await _client.ListObjectsV2Async(new()
             {
                 BucketName = _config.BucketName,
+                Prefix = "metadata_",
+                MaxKeys = 5_000
             });
 
             foreach (var file in obj.S3Objects)
             {
-                if (file.Key.EndsWith("-metadata") && Guid.TryParse(file.Key.Split('-')[0], out var id))
+                if (Guid.TryParse(file.Key.Split("metadata_")[1], out var id))
                 {
                     var meta = await GetMeta<VoidFileMeta>(id);
                     if (meta != default)
@@ -134,5 +136,5 @@ public class S3FileMetadataStore : IFileMetadataStore
         return default;
     }
 
-    private static string ToKey(Guid id) => $"{id}-metadata";
+    private static string ToKey(Guid id) => $"metadata_{id}";
 }
