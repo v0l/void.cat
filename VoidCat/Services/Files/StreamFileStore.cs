@@ -6,19 +6,17 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <summary>
+/// File store based on <see cref="Stream"/> objects
+/// </summary>
 public abstract class StreamFileStore
 {
     private const int BufferSize = 1_048_576;
     private readonly IAggregateStatsCollector _stats;
-    private readonly IFileMetadataStore _metadataStore;
-    private readonly IUserUploadsStore _userUploads;
 
-    protected StreamFileStore(IAggregateStatsCollector stats, IFileMetadataStore metadataStore,
-        IUserUploadsStore userUploads)
+    protected StreamFileStore(IAggregateStatsCollector stats)
     {
         _stats = stats;
-        _metadataStore = metadataStore;
-        _userUploads = userUploads;
     }
 
     protected async ValueTask EgressFromStream(Stream stream, EgressRequest request, Stream outStream,
@@ -77,22 +75,17 @@ public abstract class StreamFileStore
             };
         }
 
-        await _metadataStore.Set(payload.Id, meta);
         var vf = new PrivateVoidFile()
         {
             Id = payload.Id,
             Metadata = meta
         };
 
-        if (meta.Uploader.HasValue)
-        {
-            await _userUploads.AddFile(meta.Uploader.Value, vf);
-        }
-
         return vf;
     }
-    
-    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream outStream, CancellationToken cts)
+
+    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream outStream,
+        CancellationToken cts)
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
         var total = 0UL;

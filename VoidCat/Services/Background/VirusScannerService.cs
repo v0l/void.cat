@@ -1,4 +1,5 @@
-﻿using VoidCat.Services.Abstractions;
+﻿using VoidCat.Model;
+using VoidCat.Services.Abstractions;
 using VoidCat.Services.VirusScanner.Exceptions;
 
 namespace VoidCat.Services.Background;
@@ -7,11 +8,11 @@ public class VirusScannerService : BackgroundService
 {
     private readonly ILogger<VirusScannerService> _logger;
     private readonly IVirusScanner _scanner;
-    private readonly IFileStore _fileStore;
+    private readonly IFileMetadataStore _fileStore;
     private readonly IVirusScanStore _scanStore;
 
     public VirusScannerService(ILogger<VirusScannerService> logger, IVirusScanner scanner, IVirusScanStore scanStore,
-        IFileStore fileStore)
+        IFileMetadataStore fileStore)
     {
         _scanner = scanner;
         _logger = logger;
@@ -28,7 +29,7 @@ public class VirusScannerService : BackgroundService
             var page = 0;
             while (true)
             {
-                var files = await _fileStore.ListFiles(new(page, 10));
+                var files = await _fileStore.ListFiles<VoidFileMeta>(new(page, 10));
                 if (files.Pages < page) break;
                 page++;
 

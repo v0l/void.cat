@@ -8,14 +8,16 @@ public static class UsersStartup
     public static void AddUserServices(this IServiceCollection services, VoidSettings settings)
     {
         services.AddTransient<IUserManager, UserManager>();
-        services.AddTransient<IEmailVerification, EmailVerification>();
+
         if (settings.Postgres != default)
         {
             services.AddTransient<IUserStore, PostgresUserStore>();
+            services.AddTransient<IEmailVerification, PostgresEmailVerification>();
         }
         else
         {
-            services.AddTransient<IUserStore, UserStore>();
+            services.AddTransient<IUserStore, CacheUserStore>();
+            services.AddTransient<IEmailVerification, CacheEmailVerification>();
         }
     }
 }

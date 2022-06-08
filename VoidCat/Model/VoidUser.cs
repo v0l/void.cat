@@ -9,16 +9,11 @@ namespace VoidCat.Model;
 /// </summary>
 public abstract class VoidUser
 {
-    protected VoidUser(Guid id)
-    {
-        Id = id;
-    }
-
     /// <summary>
     /// Unique Id of the user
     /// </summary>
     [JsonConverter(typeof(Base58GuidConverter))]
-    public Guid Id { get; }
+    public Guid Id { get; init; }
 
     /// <summary>
     /// Roles assigned to this user which grant them extra permissions
@@ -56,12 +51,14 @@ public abstract class VoidUser
     /// <returns></returns>
     public PublicVoidUser ToPublic()
     {
-        return new(Id)
+        return new()
         {
+            Id = Id,
             Roles = Roles,
             Created = Created,
             LastLogin = LastLogin,
-            Avatar = Avatar
+            Avatar = Avatar,
+            Flags = Flags
         };
     }
 }
@@ -71,24 +68,10 @@ public abstract class VoidUser
 /// </summary>
 public sealed class InternalVoidUser : PrivateVoidUser
 {
-    /// <inheritdoc />
-    public InternalVoidUser(Guid id, string email, string passwordHash) : base(id, email)
-    {
-        PasswordHash = passwordHash;
-    }
-
-    /// <inheritdoc />
-    public InternalVoidUser(Guid Id, string Email, string Password, DateTime Created, DateTime LastLogin,
-        string Avatar,
-        string DisplayName, int Flags) : base(Id, Email)
-    {
-        PasswordHash = Password;
-    }
-
     /// <summary>
     /// A password hash for the user in the format <see cref="Extensions.HashPassword"/>
     /// </summary>
-    public string PasswordHash { get; }
+    public string Password { get; init; } = null!;
 }
 
 /// <summary>
@@ -96,44 +79,15 @@ public sealed class InternalVoidUser : PrivateVoidUser
 /// </summary>
 public class PrivateVoidUser : VoidUser
 {
-    /// <inheritdoc />
-    public PrivateVoidUser(Guid id, string email) : base(id)
-    {
-        Email = email;
-    }
-
     /// <summary>
-    /// Full constructor for Dapper
+    /// Users email address
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="email"></param>
-    /// <param name="password"></param>
-    /// <param name="created"></param>
-    /// <param name="last_login"></param>
-    /// <param name="avatar"></param>
-    /// <param name="display_name"></param>
-    /// <param name="flags"></param>
-    public PrivateVoidUser(Guid Id, String Email, string Password, DateTime Created, DateTime LastLogin, string Avatar,
-        string DisplayName, int Flags) : base(Id)
-    {
-        this.Email = Email;
-        this.Created = Created;
-        this.LastLogin = LastLogin;
-        this.Avatar = Avatar;
-        this.DisplayName = DisplayName;
-        this.Flags = (VoidUserFlags) Flags;
-    }
-
-    public string Email { get; }
+    public string Email { get; init; } = null!;
 }
 
 /// <inheritdoc />
 public sealed class PublicVoidUser : VoidUser
 {
-    /// <inheritdoc />
-    public PublicVoidUser(Guid id) : base(id)
-    {
-    }
 }
 
 [Flags]

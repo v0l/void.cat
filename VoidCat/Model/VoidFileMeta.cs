@@ -26,6 +26,12 @@ public record VoidFileMeta : IVoidFileMeta
     public int Version { get; init; } = IVoidFileMeta.CurrentVersion;
 
     /// <summary>
+    /// Internal Id of the file
+    /// </summary>
+    [JsonConverter(typeof(Base58GuidConverter))]
+    public Guid Id { get; set; }
+    
+    /// <summary>
     /// Filename
     /// </summary>
     public string? Name { get; set; }

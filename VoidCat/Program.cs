@@ -131,6 +131,7 @@ services.AddAuthorization((opt) =>
 // void.cat services
 //
 services.AddTransient<RazorPartialToStringRenderer>();
+services.AddTransient<IMigration, PopulateMetadataId>();
 
 // file storage
 services.AddStorage(voidSettings);
@@ -167,8 +168,7 @@ if (!string.IsNullOrEmpty(voidSettings.Postgres))
         .ConfigureRunner(r =>
             r.AddPostgres11_0()
                 .WithGlobalConnectionString(voidSettings.Postgres)
-                .ScanIn(typeof(Program).Assembly).For.Migrations())
-        .AddLogging(l => l.AddFluentMigratorConsole());
+                .ScanIn(typeof(Program).Assembly).For.Migrations());
 }
 
 if (useRedis)
@@ -196,10 +196,13 @@ var app = builder.Build();
 using (var migrationScope = app.Services.CreateScope())
 {
     var migrations = migrationScope.ServiceProvider.GetServices<IMigration>();
+    var logger = migrationScope.ServiceProvider.GetRequiredService<ILogger<IMigration>>();
     foreach (var migration in migrations)
     {
-        await migration.Migrate(args);
-        if (migration.ExitOnComplete)
+        logger.LogInformation("Running migration: {Migration}", migration.GetType().Name);
+        var res = await migration.Migrate(args);
+        logger.LogInformation("== Result: {Result}", res.ToString());
+        if (res == IMigration.MigrationResult.ExitCompleted)
         {
             return;
         }

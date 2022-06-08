@@ -5,32 +5,28 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
 
-public class EmailVerification : IEmailVerification
+/// <inheritdoc />
+public abstract class BaseEmailVerification : IEmailVerification
 {
-    private readonly ICache _cache;
+    public const int HoursExpire = 1;
     private readonly VoidSettings _settings;
-    private readonly ILogger<EmailVerification> _logger;
+    private readonly ILogger<BaseEmailVerification> _logger;
     private readonly RazorPartialToStringRenderer _renderer;
 
-    public EmailVerification(ICache cache, ILogger<EmailVerification> logger, VoidSettings settings,
+    protected BaseEmailVerification(ILogger<BaseEmailVerification> logger, VoidSettings settings,
         RazorPartialToStringRenderer renderer)
     {
-        _cache = cache;
         _logger = logger;
         _settings = settings;
         _renderer = renderer;
     }
 
+    /// <inheritdoc />
     public async ValueTask<EmailVerificationCode> SendNewCode(PrivateVoidUser user)
     {
-        const int codeExpire = 1;
-        var code = new EmailVerificationCode()
-        {
-            UserId = user.Id,
-            Expires = DateTimeOffset.UtcNow.AddHours(codeExpire)
-        };
-        await _cache.Set(MapToken(code.Id), code, TimeSpan.FromHours(codeExpire));
-        _logger.LogInformation("Saved email verification token for User={Id} Token={Token}", user.Id, code.Id);
+        var token = new EmailVerificationCode(user.Id, Guid.NewGuid(), DateTime.UtcNow.AddHours(HoursExpire));
+        await SaveToken(token);
+        _logger.LogInformation("Saved email verification token for User={Id} Token={Token}", user.Id, token.Code);
 
         // send email
         try
@@ -42,7 +38,7 @@ public class EmailVerification : IEmailVerification
             sc.EnableSsl = conf?.Server?.Scheme == "tls";
             sc.Credentials = new NetworkCredential(conf?.Username, conf?.Password);
 
-            var msgContent = await _renderer.RenderPartialToStringAsync("~/Pages/EmailCode.cshtml", code);
+            var msgContent = await _renderer.RenderPartialToStringAsync("~/Pages/EmailCode.cshtml", token);
             var msg = new MailMessage();
             msg.From = new MailAddress(conf?.Username ?? "no-reply@void.cat");
             msg.To.Add(user.Email);
@@ -59,22 +55,26 @@ public class EmailVerification : IEmailVerification
             _logger.LogError(ex, "Failed to send email verification code {Error}", ex.Message);
         }
 
-        return code;
+        return token;
     }
 
+    /// <inheritdoc />
     public async ValueTask<bool> VerifyCode(PrivateVoidUser user, Guid code)
     {
-        var token = await _cache.Get<EmailVerificationCode>(MapToken(code));
+        var token = await GetToken(user.Id, code);
         if (token == default) return false;
 
-        var isValid = user.Id == token.UserId && token.Expires > DateTimeOffset.UtcNow;
+        var isValid = user.Id == token.User &&
+                      DateTime.SpecifyKind(token.Expires, DateTimeKind.Utc) > DateTimeOffset.UtcNow;
         if (isValid)
         {
-            await _cache.Delete(MapToken(code));
+            await DeleteToken(user.Id, code);
         }
 
         return isValid;
     }
 
-    private static string MapToken(Guid id) => $"email-code:{id}";
+    protected abstract ValueTask SaveToken(EmailVerificationCode code);
+    protected abstract ValueTask<EmailVerificationCode?> GetToken(Guid user, Guid code);
+    protected abstract ValueTask DeleteToken(Guid user, Guid code);
 }

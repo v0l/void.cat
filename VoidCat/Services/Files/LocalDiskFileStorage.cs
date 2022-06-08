@@ -4,21 +4,17 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <inheritdoc cref="IFileStore"/>
 public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
     private const string FilesDir = "files-v1";
     private readonly ILogger<LocalDiskFileStore> _logger;
     private readonly VoidSettings _settings;
-    private readonly IFileMetadataStore _metadataStore;
-    private readonly IFileInfoManager _fileInfo;
 
-    public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats,
-        IFileMetadataStore metadataStore, IFileInfoManager fileInfo, IUserUploadsStore userUploads)
-        : base(stats, metadataStore, userUploads)
+    public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats)
+        : base(stats)
     {
         _settings = settings;
-        _metadataStore = metadataStore;
-        _fileInfo = fileInfo;
         _logger = logger;
 
         var dir = Path.Combine(_settings.DataDirectory, FilesDir);
@@ -28,12 +24,14 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         }
     }
 
+    /// <inheritdoc />
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
         await using var fs = await Open(request, cts);
         await EgressFromStream(fs, request, outStream, cts);
     }
 
+    /// <inheritdoc />
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var fPath = MapPath(payload.Id);
@@ -42,49 +40,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         return await IngressToStream(fsTemp, payload, cts);
     }
 
-    public ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
-    {
-        var files = Directory.EnumerateFiles(Path.Combine(_settings.DataDirectory, FilesDir))
-            .Where(a => !Path.HasExtension(a));
-
-        files = (request.SortBy, request.SortOrder) switch
-        {
-            (PagedSortBy.Id, PageSortOrder.Asc) => files.OrderBy(a =>
-                Guid.TryParse(Path.GetFileNameWithoutExtension(a), out var g) ? g : Guid.Empty),
-            (PagedSortBy.Id, PageSortOrder.Dsc) => files.OrderByDescending(a =>
-                Guid.TryParse(Path.GetFileNameWithoutExtension(a), out var g) ? g : Guid.Empty),
-            (PagedSortBy.Name, PageSortOrder.Asc) => files.OrderBy(Path.GetFileNameWithoutExtension),
-            (PagedSortBy.Name, PageSortOrder.Dsc) => files.OrderByDescending(Path.GetFileNameWithoutExtension),
-            (PagedSortBy.Size, PageSortOrder.Asc) => files.OrderBy(a => new FileInfo(a).Length),
-            (PagedSortBy.Size, PageSortOrder.Dsc) => files.OrderByDescending(a => new FileInfo(a).Length),
-            (PagedSortBy.Date, PageSortOrder.Asc) => files.OrderBy(File.GetCreationTimeUtc),
-            (PagedSortBy.Date, PageSortOrder.Dsc) => files.OrderByDescending(File.GetCreationTimeUtc),
-            _ => files
-        };
-
-        async IAsyncEnumerable<PublicVoidFile> EnumeratePage(IEnumerable<string> page)
-        {
-            foreach (var file in page)
-            {
-                if (!Guid.TryParse(Path.GetFileNameWithoutExtension(file), out var gid)) continue;
-
-                var loaded = await _fileInfo.Get(gid);
-                if (loaded != default)
-                {
-                    yield return loaded;
-                }
-            }
-        }
-
-        return ValueTask.FromResult(new PagedResult<PublicVoidFile>()
-        {
-            Page = request.Page,
-            PageSize = request.PageSize,
-            TotalResults = files.Count(),
-            Results = EnumeratePage(files.Skip(request.PageSize * request.Page).Take(request.PageSize))
-        });
-    }
-
+    /// <inheritdoc />
     public ValueTask DeleteFile(Guid id)
     {
         var fp = MapPath(id);
@@ -93,9 +49,11 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             _logger.LogInformation("Deleting file: {Path}", fp);
             File.Delete(fp);
         }
+
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc />
     public ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)
     {
         var path = MapPath(request.Id);

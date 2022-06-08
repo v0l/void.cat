@@ -5,6 +5,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <inheritdoc />
 public class S3FileMetadataStore : IFileMetadataStore
 {
     private readonly ILogger<S3FileMetadataStore> _logger;
@@ -20,11 +21,13 @@ public class S3FileMetadataStore : IFileMetadataStore
         _client = _config.CreateClient();
     }
 
+    /// <inheritdoc />
     public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
         return GetMeta<TMeta>(id);
     }
 
+    /// <inheritdoc />
     public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
     {
         var ret = new List<TMeta>();
@@ -40,6 +43,7 @@ public class S3FileMetadataStore : IFileMetadataStore
         return ret;
     }
 
+    /// <inheritdoc />
     public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
     {
         var oldMeta = await GetMeta<SecretVoidFileMeta>(id);
@@ -52,11 +56,10 @@ public class S3FileMetadataStore : IFileMetadataStore
         await Set(id, oldMeta);
     }
 
-    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    /// <inheritdoc />
+    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
     {
-        var count = 0;
-        var size = 0UL;
-        try
+        async IAsyncEnumerable<TMeta> Enumerate()
         {
             var obj = await _client.ListObjectsV2Async(new()
             {
@@ -69,28 +72,45 @@ public class S3FileMetadataStore : IFileMetadataStore
             {
                 if (Guid.TryParse(file.Key.Split("metadata_")[1], out var id))
                 {
-                    var meta = await GetMeta<VoidFileMeta>(id);
+                    var meta = await GetMeta<TMeta>(id);
                     if (meta != default)
                     {
-                        count++;
-                        size += meta.Size;
+                        yield return meta;
                     }
                 }
             }
         }
-        catch (AmazonS3Exception aex)
-        {
-            _logger.LogError(aex, "Failed to list files: {Error}", aex.Message);
-        }
 
-        return new(count, size);
+        return ValueTask.FromResult(new PagedResult<TMeta>
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            Results = Enumerate().Skip(request.PageSize * request.Page).Take(request.PageSize)
+        });
     }
 
+    /// <inheritdoc />
+    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    {
+        var files = await ListFiles<VoidFileMeta>(new(0, Int32.MaxValue));
+        var count = await files.Results.CountAsync();
+        var size = await files.Results.SumAsync(a => (long) a.Size);
+        return new(count, (ulong) size);
+    }
+
+    /// <inheritdoc />
     public ValueTask<VoidFileMeta?> Get(Guid id)
     {
         return GetMeta<VoidFileMeta>(id);
     }
 
+    /// <inheritdoc />
+    public ValueTask<SecretVoidFileMeta?> GetPrivate(Guid id)
+    {
+        return GetMeta<SecretVoidFileMeta>(id);
+    }
+
+    /// <inheritdoc />
     public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
     {
         await _client.PutObjectAsync(new()
@@ -102,6 +122,7 @@ public class S3FileMetadataStore : IFileMetadataStore
         });
     }
 
+    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         await _client.DeleteObjectAsync(_config.BucketName, ToKey(id));
@@ -116,14 +137,18 @@ public class S3FileMetadataStore : IFileMetadataStore
             using var sr = new StreamReader(obj.ResponseStream);
             var json = await sr.ReadToEndAsync();
             var ret = JsonConvert.DeserializeObject<TMeta>(json);
-            if (ret != default && _includeUrl)
+            if (ret != default)
             {
-                var ub = new UriBuilder(_config.ServiceUrl!)
+                ret.Id = id;
+                if (_includeUrl)
                 {
-                    Path = $"/{_config.BucketName}/{id}"
-                };
+                    var ub = new UriBuilder(_config.ServiceUrl!)
+                    {
+                        Path = $"/{_config.BucketName}/{id}"
+                    };
 
-                ret.Url = ub.Uri;
+                    ret.Url = ub.Uri;
+                }
             }
 
             return ret;

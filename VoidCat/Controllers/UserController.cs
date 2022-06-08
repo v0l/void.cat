@@ -134,7 +134,7 @@ public class UserController : Controller
         if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
 
         user.Flags |= VoidUserFlags.EmailVerified;
-        await _store.Set(user.Id, user);
+        await _store.UpdateProfile(user.ToPublic());
         return Accepted();
     }
 

@@ -2,6 +2,23 @@
 
 public interface IMigration
 {
-    ValueTask Migrate(string[] args);
-    bool ExitOnComplete { get; }
+    ValueTask<MigrationResult> Migrate(string[] args);
+
+    public enum MigrationResult
+    {
+        /// <summary>
+        /// Migration was not run
+        /// </summary>
+        Skipped,
+        
+        /// <summary>
+        /// Migration completed successfully, continue to startup
+        /// </summary>
+        Completed,
+        
+        /// <summary>
+        /// Migration completed Successfully, exit application
+        /// </summary>
+        ExitCompleted
+    }
 }

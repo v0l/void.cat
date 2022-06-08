@@ -3,6 +3,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <inheritdoc />
 public class FileInfoManager : IFileInfoManager
 {
     private readonly IFileMetadataStore _metadataStore;
@@ -21,6 +22,7 @@ public class FileInfoManager : IFileInfoManager
         _virusScanStore = virusScanStore;
     }
 
+    /// <inheritdoc />
     public async ValueTask<PublicVoidFile?> Get(Guid id)
     {
         var meta = _metadataStore.Get<VoidFileMeta>(id);
@@ -45,6 +47,7 @@ public class FileInfoManager : IFileInfoManager
         };
     }
 
+    /// <inheritdoc />
     public async ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids)
     {
         var ret = new List<PublicVoidFile>();
@@ -60,6 +63,7 @@ public class FileInfoManager : IFileInfoManager
         return ret;
     }
 
+    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         await _metadataStore.Delete(id);

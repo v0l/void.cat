@@ -12,8 +12,7 @@ public class S3FileStore : StreamFileStore, IFileStore
     private readonly S3BlobConfig _config;
     private readonly IAggregateStatsCollector _statsCollector;
 
-    public S3FileStore(VoidSettings settings, IAggregateStatsCollector stats, IFileMetadataStore metadataStore,
-        IUserUploadsStore userUploads, IFileInfoManager fileInfo) : base(stats, metadataStore, userUploads)
+    public S3FileStore(VoidSettings settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo) : base(stats)
     {
         _fileInfo = fileInfo;
         _statsCollector = stats;

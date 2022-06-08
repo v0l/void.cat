@@ -5,20 +5,29 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
-public class PostgreFileMetadataStore : IFileMetadataStore
+/// <inheritdoc />
+public class PostgresFileMetadataStore : IFileMetadataStore
 {
     private readonly NpgsqlConnection _connection;
 
-    public PostgreFileMetadataStore(NpgsqlConnection connection)
+    public PostgresFileMetadataStore(NpgsqlConnection connection)
     {
         _connection = connection;
     }
 
+    /// <inheritdoc />
     public ValueTask<VoidFileMeta?> Get(Guid id)
     {
         return Get<VoidFileMeta>(id);
     }
 
+    /// <inheritdoc />
+    public ValueTask<SecretVoidFileMeta?> GetPrivate(Guid id)
+    {
+        return Get<SecretVoidFileMeta>(id);
+    }
+
+    /// <inheritdoc />
     public async ValueTask Set(Guid id, SecretVoidFileMeta obj)
     {
         await _connection.ExecuteAsync(
@@ -38,23 +47,27 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
             });
     }
 
+    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         await _connection.ExecuteAsync("delete from \"Files\" where \"Id\" = :id", new {id});
     }
 
+    /// <inheritdoc />
     public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
         return await _connection.QuerySingleOrDefaultAsync<TMeta?>(@"select * from ""Files"" where ""Id"" = :id",
             new {id});
     }
 
+    /// <inheritdoc />
     public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
     {
         var ret = await _connection.QueryAsync<TMeta>("select * from \"Files\" where \"Id\" in :ids", new {ids});
         return ret.ToList();
     }
 
+    /// <inheritdoc />
     public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
     {
         var oldMeta = await Get<SecretVoidFileMeta>(id);
@@ -67,6 +80,43 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
         await Set(id, oldMeta);
     }
 
+    /// <inheritdoc />
+    public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
+    {
+        var qInner = @"select {0} from ""Files"" order by ""{1}"" {2}";
+        var orderBy = request.SortBy switch
+        {
+            PagedSortBy.Date => "Uploaded",
+            PagedSortBy.Name => "Name",
+            PagedSortBy.Size => "Size",
+            _ => "Id"
+        };
+        var orderDirection = request.SortOrder == PageSortOrder.Asc ? "asc" : "desc";
+        var count = await _connection.ExecuteScalarAsync<int>(string.Format(qInner, "count(*)", orderBy,
+            orderDirection));
+
+        async IAsyncEnumerable<TMeta> Enumerate()
+        {
+            var results = await _connection.QueryAsync<TMeta>(
+                $"{string.Format(qInner, "*", orderBy, orderDirection)} offset @offset limit @limit",
+                new {offset = request.PageSize * request.Page, limit = request.PageSize});
+
+            foreach (var meta in results)
+            {
+                yield return meta;
+            }
+        }
+
+        return new()
+        {
+            TotalResults = count,
+            PageSize = request.PageSize,
+            Page = request.Page,
+            Results = Enumerate()
+        };
+    }
+
+    /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
         var v = await _connection.QuerySingleAsync<(long Files, long Size)>(

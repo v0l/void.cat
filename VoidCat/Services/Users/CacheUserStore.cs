@@ -3,28 +3,26 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
 
-public class UserStore : IUserStore
+/// <inheritdoc />
+public class CacheUserStore : IUserStore
 {
     private const string UserList = "users";
-    private readonly ILogger<UserStore> _logger;
+    private readonly ILogger<CacheUserStore> _logger;
     private readonly ICache _cache;
 
-    public UserStore(ICache cache, ILogger<UserStore> logger)
+    public CacheUserStore(ICache cache, ILogger<CacheUserStore> logger)
     {
         _cache = cache;
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public async ValueTask<Guid?> LookupUser(string email)
     {
         return await _cache.Get<Guid>(MapKey(email));
     }
 
-    public async ValueTask<VoidUser?> Get(Guid id)
-    {
-        return await Get<PublicVoidUser>(id);
-    }
-
+    /// <inheritdoc />
     public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
     {
         try
@@ -39,6 +37,19 @@ public class UserStore : IUserStore
         return default;
     }
 
+    /// <inheritdoc />
+    public ValueTask<VoidUser?> Get(Guid id)
+    {
+        return Get<VoidUser>(id);
+    }
+
+    /// <inheritdoc />
+    public ValueTask<InternalVoidUser?> GetPrivate(Guid id)
+    {
+        return Get<InternalVoidUser>(id);
+    }
+
+    /// <inheritdoc />
     public async ValueTask Set(Guid id, InternalVoidUser user)
     {
         if (id != user.Id) throw new InvalidOperationException();
@@ -48,6 +59,7 @@ public class UserStore : IUserStore
         await _cache.Set(MapKey(user.Email), user.Id.ToString());
     }
 
+    /// <inheritdoc />
     public async ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request)
     {
         var users = (await _cache.GetList(UserList))
@@ -81,6 +93,7 @@ public class UserStore : IUserStore
         };
     }
 
+    /// <inheritdoc />
     public async ValueTask UpdateProfile(PublicVoidUser newUser)
     {
         var oldUser = await Get<InternalVoidUser>(newUser.Id);
@@ -97,6 +110,18 @@ public class UserStore : IUserStore
         await Set(newUser.Id, oldUser);
     }
 
+    /// <inheritdoc />
+    public async ValueTask UpdateLastLogin(Guid id, DateTime timestamp)
+    {
+        var user = await Get<InternalVoidUser>(id);
+        if (user != default)
+        {
+            user.LastLogin = timestamp;
+            await Set(user.Id, user);
+        }
+    }
+
+    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         var user = await Get<InternalVoidUser>(id);
@@ -104,7 +129,7 @@ public class UserStore : IUserStore
         await Delete(user);
     }
 
-    public async ValueTask Delete(PrivateVoidUser user)
+    private async ValueTask Delete(PrivateVoidUser user)
     {
         await _cache.Delete(MapKey(user.Id));
         await _cache.RemoveFromList(UserList, user.Id.ToString());

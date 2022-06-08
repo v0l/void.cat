@@ -10,14 +10,17 @@ namespace VoidCat.Controllers.Admin;
 public class AdminController : Controller
 {
     private readonly IFileStore _fileStore;
+    private readonly IFileMetadataStore _fileMetadata;
     private readonly IFileInfoManager _fileInfo;
     private readonly IUserStore _userStore;
 
-    public AdminController(IFileStore fileStore, IUserStore userStore, IFileInfoManager fileInfo)
+    public AdminController(IFileStore fileStore, IUserStore userStore, IFileInfoManager fileInfo,
+        IFileMetadataStore fileMetadata)
     {
         _fileStore = fileStore;
         _userStore = userStore;
         _fileInfo = fileInfo;
+        _fileMetadata = fileMetadata;
     }
 
     /// <summary>
@@ -29,7 +32,15 @@ public class AdminController : Controller
     [Route("file")]
     public async Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
     {
-        return await (await _fileStore.ListFiles(request)).GetResults();
+        var files = await _fileMetadata.ListFiles<VoidFileMeta>(request);
+
+        return new()
+        {
+            Page = files.Page,
+            PageSize = files.PageSize,
+            TotalResults = files.TotalResults,
+            Results = (await files.Results.SelectAwait(a => _fileInfo.Get(a.Id)).ToListAsync())!
+        };
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
 
+/// <inheritdoc />
 public class UserManager : IUserManager
 {
     private readonly IUserStore _store;
@@ -15,27 +16,33 @@ public class UserManager : IUserManager
         _emailVerification = emailVerification;
     }
 
+    /// <inheritdoc />
     public async ValueTask<InternalVoidUser> Login(string email, string password)
     {
         var userId = await _store.LookupUser(email);
         if (!userId.HasValue) throw new InvalidOperationException("User does not exist");
 
-        var user = await _store.Get<InternalVoidUser>(userId.Value);
+        var user = await _store.GetPrivate(userId.Value);
         if (!(user?.CheckPassword(password) ?? false)) throw new InvalidOperationException("User does not exist");
-
+        
         user.LastLogin = DateTimeOffset.UtcNow;
-        await _store.Set(user.Id, user);
+        await _store.UpdateLastLogin(user.Id, DateTime.UtcNow);
 
         return user;
     }
 
+    /// <inheritdoc />
     public async ValueTask<InternalVoidUser> Register(string email, string password)
     {
         var existingUser = await _store.LookupUser(email);
-        if (existingUser != Guid.Empty && existingUser != null) throw new InvalidOperationException("User already exists");
+        if (existingUser != Guid.Empty && existingUser != null)
+            throw new InvalidOperationException("User already exists");
 
-        var newUser = new InternalVoidUser(Guid.NewGuid(), email, password.HashPassword())
+        var newUser = new InternalVoidUser
         {
+            Id = Guid.NewGuid(),
+            Email = email,
+            Password = password.HashPassword(),
             Created = DateTimeOffset.UtcNow,
             LastLogin = DateTimeOffset.UtcNow
         };

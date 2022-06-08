@@ -4,6 +4,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <inheritdoc />
 public class LocalDiskFileMetadataStore : IFileMetadataStore
 {
     private const string MetadataDir = "metadata-v3";
@@ -22,11 +23,13 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         }
     }
 
+    /// <inheritdoc />
     public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
         return GetMeta<TMeta>(id);
     }
 
+    /// <inheritdoc />
     public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
     {
         var ret = new List<TMeta>();
@@ -42,6 +45,7 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         return ret;
     }
 
+    /// <inheritdoc />
     public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
     {
         var oldMeta = await Get<SecretVoidFileMeta>(id);
@@ -54,37 +58,69 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         await Set(id, oldMeta);
     }
 
-    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    /// <inheritdoc />
+    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
     {
-        var count = 0;
-        var size = 0UL;
-        foreach (var metaFile in Directory.EnumerateFiles(Path.Join(_settings.DataDirectory, MetadataDir), "*.json"))
+        async IAsyncEnumerable<TMeta> EnumerateFiles()
         {
-            try
+            foreach (var metaFile in
+                     Directory.EnumerateFiles(Path.Join(_settings.DataDirectory, MetadataDir), "*.json"))
             {
                 var json = await File.ReadAllTextAsync(metaFile);
-                var meta = JsonConvert.DeserializeObject<VoidFileMeta>(json);
-
+                var meta = JsonConvert.DeserializeObject<TMeta>(json);
                 if (meta != null)
                 {
-                    count++;
-                    size += meta.Size;
+                    yield return meta with
+                    {
+                        // TODO: remove after migration decay
+                        Id = Guid.Parse(Path.GetFileNameWithoutExtension(metaFile))
+                    };
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to load metadata file: {File}", metaFile);
             }
         }
 
-        return new(count, size);
+        var results = EnumerateFiles();
+        results = (request.SortBy, request.SortOrder) switch
+        {
+            (PagedSortBy.Name, PageSortOrder.Asc) => results.OrderBy(a => a.Name),
+            (PagedSortBy.Size, PageSortOrder.Asc) => results.OrderBy(a => a.Size),
+            (PagedSortBy.Date, PageSortOrder.Asc) => results.OrderBy(a => a.Uploaded),
+            (PagedSortBy.Name, PageSortOrder.Dsc) => results.OrderByDescending(a => a.Name),
+            (PagedSortBy.Size, PageSortOrder.Dsc) => results.OrderByDescending(a => a.Size),
+            (PagedSortBy.Date, PageSortOrder.Dsc) => results.OrderByDescending(a => a.Uploaded),
+            _ => results
+        };
+
+        return ValueTask.FromResult(new PagedResult<TMeta>
+        {
+            Page = request.Page,
+            PageSize = request.PageSize,
+            Results = results.Take(request.PageSize).Skip(request.Page * request.PageSize)
+        });
     }
 
+    /// <inheritdoc />
+    public async ValueTask<IFileMetadataStore.StoreStats> Stats()
+    {
+        var files = await ListFiles<VoidFileMeta>(new(0, Int32.MaxValue));
+        var count = await files.Results.CountAsync();
+        var size = await files.Results.SumAsync(a => (long) a.Size);
+        return new(count, (ulong) size);
+    }
+
+    /// <inheritdoc />
     public ValueTask<VoidFileMeta?> Get(Guid id)
     {
         return GetMeta<VoidFileMeta>(id);
     }
 
+    /// <inheritdoc />
+    public ValueTask<SecretVoidFileMeta?> GetPrivate(Guid id)
+    {
+        return GetMeta<SecretVoidFileMeta>(id);
+    }
+
+    /// <inheritdoc />
     public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
     {
         var path = MapMeta(id);
@@ -92,6 +128,7 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         await File.WriteAllTextAsync(path, json);
     }
 
+    /// <inheritdoc />
     public ValueTask Delete(Guid id)
     {
         var path = MapMeta(id);

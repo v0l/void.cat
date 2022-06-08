@@ -25,7 +25,7 @@ public static class FileStorageStartup
         {
             services.AddTransient<IUserUploadsStore, PostgresUserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
-            services.AddTransient<IFileMetadataStore, PostgreFileMetadataStore>();
+            services.AddTransient<IFileMetadataStore, PostgresFileMetadataStore>();
         }
         else
         {

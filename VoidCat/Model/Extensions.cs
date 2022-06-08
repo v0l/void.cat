@@ -206,7 +206,7 @@ public static class Extensions
 
     public static bool CheckPassword(this InternalVoidUser vu, string password)
     {
-        var hashParts = vu.PasswordHash.Split(":");
-        return vu.PasswordHash == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
+        var hashParts = vu.Password.Split(":");
+        return vu.Password == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
     }
 }

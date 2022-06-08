@@ -1,4 +1,5 @@
 ﻿@using VoidCat.Model
+@using VoidCat.Services.Users
 @model VoidCat.Model.EmailVerificationCode
 
 <!DOCTYPE html>
@@ -30,7 +31,8 @@
     <div class="page">
         <h1>void.cat</h1>
         <p>Your verification code is below please copy this to complete verification</p>
-        <pre>@(Model?.Id.ToBase58() ?? "?????????????")</pre>
+        <pre>@(Model?.Code.ToBase58() ?? "?????????????")</pre>
+        <p>This code will expire in @BaseEmailVerification.HoursExpire hours</p>
     </div>
 </body>
 </html>

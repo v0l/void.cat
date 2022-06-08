@@ -17,15 +17,17 @@ namespace VoidCat.Controllers
         private readonly IPaywallStore _paywall;
         private readonly IPaywallFactory _paywallFactory;
         private readonly IFileInfoManager _fileInfo;
+        private readonly IUserUploadsStore _userUploads;
 
         public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall,
-            IPaywallFactory paywallFactory, IFileInfoManager fileInfo)
+            IPaywallFactory paywallFactory, IFileInfoManager fileInfo, IUserUploadsStore userUploads)
         {
             _storage = storage;
             _metadata = metadata;
             _paywall = paywall;
             _paywallFactory = paywallFactory;
             _fileInfo = fileInfo;
+            _userUploads = userUploads;
         }
 
         /// <summary>
@@ -76,6 +78,15 @@ namespace VoidCat.Controllers
                     Hash = digest
                 }, HttpContext.RequestAborted);
 
+                // save metadata
+                await _metadata.Set(vf.Id, vf.Metadata!);
+                
+                // attach file upload to user
+                if (uid.HasValue)
+                {
+                    await _userUploads.AddFile(uid!.Value, vf);
+                }
+                
                 if (cli)
                 {
                     var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host,
@@ -126,7 +137,9 @@ namespace VoidCat.Controllers
                     Id = gid,
                     IsAppend = true
                 }, HttpContext.RequestAborted);
-
+                
+                // update file size
+                await _metadata.Set(vf.Id, vf.Metadata!);
                 return UploadResult.Success(vf);
             }
             catch (Exception ex)

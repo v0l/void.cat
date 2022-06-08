@@ -1,8 +1,9 @@
 ﻿namespace VoidCat.Model;
 
-public class EmailVerificationCode
-{
-    public Guid Id { get; init; } = Guid.NewGuid();
-    public Guid UserId { get; init; }
-    public DateTimeOffset Expires { get; init; }
-}
+/// <summary>
+/// Email verification token
+/// </summary>
+/// <param name="Id"></param>
+/// <param name="User"></param>
+/// <param name="Expires"></param>
+public sealed record EmailVerificationCode(Guid User, Guid Code, DateTime Expires);

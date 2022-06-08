@@ -8,7 +8,18 @@ namespace VoidCat.Services.Abstractions;
 /// </summary>
 public interface IFileInfoManager
 {
+    /// <summary>
+    /// Get all metadata for a single file
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     ValueTask<PublicVoidFile?> Get(Guid id);
+    
+    /// <summary>
+    /// Get all metadata for multiple files
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
     ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids);
     
     /// <summary>

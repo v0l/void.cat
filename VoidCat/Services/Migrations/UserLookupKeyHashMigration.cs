@@ -13,7 +13,7 @@ public class UserLookupKeyHashMigration : IMigration
         _database = database;
     }
 
-    public async ValueTask Migrate(string[] args)
+    public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         var users = await _database.SetMembersAsync("users");
         foreach (var userId in users)
@@ -30,6 +30,8 @@ public class UserLookupKeyHashMigration : IMigration
                 await _database.StringSetAsync(MapNew(user.Email), $"\"{userId}\"");
             }
         }
+
+        return IMigration.MigrationResult.Completed;
     }
 
     private static RedisKey MapOld(string email) => $"user:email:{email}";
@@ -41,6 +43,4 @@ public class UserLookupKeyHashMigration : IMigration
 
         public string Email { get; init; }
     }
-
-    public bool ExitOnComplete => false;
 }

@@ -11,11 +11,9 @@ public class FluentMigrationRunner : IMigration
         _runner = runner;
     }
 
-    public ValueTask Migrate(string[] args)
+    public ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         _runner.MigrateUp();
-        return ValueTask.CompletedTask;
+        return ValueTask.FromResult(IMigration.MigrationResult.Completed);
     }
-
-    public bool ExitOnComplete => false;
 }
