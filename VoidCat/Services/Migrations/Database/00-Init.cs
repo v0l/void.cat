@@ -4,7 +4,8 @@ using VoidCat.Model;
 namespace VoidCat.Services.Migrations.Database;
 
 [Migration(20220604_2232)]
-public class Init : Migration {
+public class Init : Migration
+{
     public override void Up()
     {
         Create.Table("Users")
@@ -15,7 +16,7 @@ public class Init : Migration {
             .WithColumn("LastLogin").AsDateTime().Nullable()
             .WithColumn("Avatar").AsString().Nullable()
             .WithColumn("DisplayName").AsString().WithDefaultValue("void user")
-            .WithColumn("Flags").AsInt32().WithDefaultValue((int)VoidUserFlags.PublicProfile);
+            .WithColumn("Flags").AsInt32().WithDefaultValue((int) VoidUserFlags.PublicProfile);
 
         Create.Table("Files")
             .WithColumn("Id").AsGuid().PrimaryKey()
