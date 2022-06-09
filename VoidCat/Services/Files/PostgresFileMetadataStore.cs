@@ -83,22 +83,20 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
     /// <inheritdoc />
     public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
     {
-        var qInner = @"select {0} from ""Files"" order by ""{1}"" {2}";
-        var orderBy = request.SortBy switch
-        {
-            PagedSortBy.Date => "Uploaded",
-            PagedSortBy.Name => "Name",
-            PagedSortBy.Size => "Size",
-            _ => "Id"
-        };
-        var orderDirection = request.SortOrder == PageSortOrder.Asc ? "asc" : "desc";
-        var count = await _connection.ExecuteScalarAsync<int>(string.Format(qInner, "count(*)", orderBy,
-            orderDirection));
+        var count = await _connection.ExecuteScalarAsync<int>(@"select count(*) from ""Files""");
 
         async IAsyncEnumerable<TMeta> Enumerate()
         {
+            var orderBy = request.SortBy switch
+            {
+                PagedSortBy.Date => "Uploaded",
+                PagedSortBy.Name => "Name",
+                PagedSortBy.Size => "Size",
+                _ => "Id"
+            };
+            var orderDirection = request.SortOrder == PageSortOrder.Asc ? "asc" : "desc";
             var results = await _connection.QueryAsync<TMeta>(
-                $"{string.Format(qInner, "*", orderBy, orderDirection)} offset @offset limit @limit",
+                $"select * from \"Files\" order by \"{orderBy}\" {orderDirection} offset @offset limit @limit",
                 new {offset = request.PageSize * request.Page, limit = request.PageSize});
 
             foreach (var meta in results)
