@@ -65,12 +65,6 @@ public record VoidFileMeta : IVoidFileMeta
     /// Url to download the file
     /// </summary>
     public Uri? Url { get; set; }
-
-    /// <summary>
-    /// User who uploaded the file
-    /// </summary>
-    [JsonConverter(typeof(Base58GuidConverter))]
-    public Guid? Uploader { get; init; }
 }
 
 /// <summary>

@@ -1,22 +1,20 @@
 ﻿using Dapper;
-using Npgsql;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
 
+/// <inheritdoc />
 public class PostgresUserUploadStore : IUserUploadsStore
 {
-    private readonly NpgsqlConnection _connection;
-    private readonly IFileInfoManager _fileInfoManager;
+    private readonly PostgresConnectionFactory _connection;
 
-    public PostgresUserUploadStore(NpgsqlConnection connection, IFileInfoManager fileInfoManager)
+    public PostgresUserUploadStore(PostgresConnectionFactory connection)
     {
         _connection = connection;
-        _fileInfoManager = fileInfoManager;
     }
 
-    public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(Guid user, PagedRequest request)
+    public async ValueTask<PagedResult<Guid>> ListFiles(Guid user, PagedRequest request)
     {
         var query = @"select {0} 
 from ""UserFiles"" uf, ""Files"" f
@@ -24,32 +22,31 @@ where uf.""User"" = :user
 and uf.""File"" = f.""Id""";
         var queryOrder = @"order by f.""{1}"" {2} limit :limit offset :offset";
 
-        var orderBy = request.SortBy switch
-        {
-            PagedSortBy.Name => "Name",
-            PagedSortBy.Date => "Uploaded",
-            PagedSortBy.Size => "Size",
-            _ => "Id"
-        };
-        var sortOrder = request.SortOrder switch
-        {
-            PageSortOrder.Dsc => "desc",
-            _ => "asc"
-        };
-        var count = await _connection.ExecuteScalarAsync<int>(string.Format(query, "count(*)"), new {user});
-        var files = await _connection.QueryAsync<Guid>(
-            string.Format(query + queryOrder, "uf.\"File\"", orderBy, sortOrder),
-            new {user, offset = request.Page * request.PageSize, limit = request.PageSize});
+        await using var conn = await _connection.Get();
+        var count = await conn.ExecuteScalarAsync<int>(string.Format(query, "count(*)"), new {user});
 
-        async IAsyncEnumerable<PublicVoidFile> EnumerateFiles()
+        async IAsyncEnumerable<Guid> EnumerateFiles()
         {
-            foreach (var file in files ?? Enumerable.Empty<Guid>())
+            var orderBy = request.SortBy switch
             {
-                var v = await _fileInfoManager.Get(file);
-                if (v != default)
-                {
-                    yield return v;
-                }
+                PagedSortBy.Name => "Name",
+                PagedSortBy.Date => "Uploaded",
+                PagedSortBy.Size => "Size",
+                _ => "Id"
+            };
+            var sortOrder = request.SortOrder switch
+            {
+                PageSortOrder.Dsc => "desc",
+                _ => "asc"
+            };
+            await using var connInner = await _connection.Get();
+            var files = await connInner.ExecuteReaderAsync(
+                string.Format(query + queryOrder, "uf.\"File\"", orderBy, sortOrder),
+                new {user, offset = request.Page * request.PageSize, limit = request.PageSize});
+            var rowParser = files.GetRowParser<Guid>();
+            while (await files.ReadAsync())
+            {
+                yield return rowParser(files);
             }
         }
 
@@ -62,12 +59,22 @@ and uf.""File"" = f.""Id""";
         };
     }
 
+    /// <inheritdoc />
     public async ValueTask AddFile(Guid user, PrivateVoidFile voidFile)
     {
-        await _connection.ExecuteAsync(@"insert into ""UserFiles""(""File"", ""User"") values(:file, :user)", new
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(@"insert into ""UserFiles""(""File"", ""User"") values(:file, :user)", new
         {
             file = voidFile.Id,
             user
         });
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<Guid?> Uploader(Guid file)
+    {
+        await using var conn = await _connection.Get();
+        return await conn.ExecuteScalarAsync<Guid?>(
+            @"select ""User"" from ""UserFiles"" where ""File"" = :file", new {file});
     }
 }

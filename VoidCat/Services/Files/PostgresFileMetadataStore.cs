@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Npgsql;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
@@ -8,9 +7,9 @@ namespace VoidCat.Services.Files;
 /// <inheritdoc />
 public class PostgresFileMetadataStore : IFileMetadataStore
 {
-    private readonly NpgsqlConnection _connection;
+    private readonly PostgresConnectionFactory _connection;
 
-    public PostgresFileMetadataStore(NpgsqlConnection connection)
+    public PostgresFileMetadataStore(PostgresConnectionFactory connection)
     {
         _connection = connection;
     }
@@ -30,7 +29,8 @@ public class PostgresFileMetadataStore : IFileMetadataStore
     /// <inheritdoc />
     public async ValueTask Set(Guid id, SecretVoidFileMeta obj)
     {
-        await _connection.ExecuteAsync(
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(
             @"insert into 
 ""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"")
 values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret)
@@ -50,20 +50,23 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await _connection.ExecuteAsync("delete from \"Files\" where \"Id\" = :id", new {id});
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync("delete from \"Files\" where \"Id\" = :id", new {id});
     }
 
     /// <inheritdoc />
     public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
-        return await _connection.QuerySingleOrDefaultAsync<TMeta?>(@"select * from ""Files"" where ""Id"" = :id",
+        await using var conn = await _connection.Get();
+        return await conn.QuerySingleOrDefaultAsync<TMeta?>(@"select * from ""Files"" where ""Id"" = :id",
             new {id});
     }
 
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
     {
-        var ret = await _connection.QueryAsync<TMeta>("select * from \"Files\" where \"Id\" in :ids", new {ids});
+        await using var conn = await _connection.Get();
+        var ret = await conn.QueryAsync<TMeta>("select * from \"Files\" where \"Id\" in :ids", new {ids});
         return ret.ToList();
     }
 
@@ -83,7 +86,8 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
     /// <inheritdoc />
     public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
     {
-        var count = await _connection.ExecuteScalarAsync<int>(@"select count(*) from ""Files""");
+        await using var conn = await _connection.Get();
+        var count = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Files""");
 
         async IAsyncEnumerable<TMeta> Enumerate()
         {
@@ -94,8 +98,9 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
                 PagedSortBy.Size => "Size",
                 _ => "Id"
             };
+            await using var iconn = await _connection.Get();
             var orderDirection = request.SortOrder == PageSortOrder.Asc ? "asc" : "desc";
-            var results = await _connection.QueryAsync<TMeta>(
+            var results = await iconn.QueryAsync<TMeta>(
                 $"select * from \"Files\" order by \"{orderBy}\" {orderDirection} offset @offset limit @limit",
                 new {offset = request.PageSize * request.Page, limit = request.PageSize});
 
@@ -117,7 +122,8 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
     /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
-        var v = await _connection.QuerySingleAsync<(long Files, long Size)>(
+        await using var conn = await _connection.Get();
+        var v = await conn.QuerySingleAsync<(long Files, long Size)>(
             @"select count(1) ""Files"", cast(sum(""Size"") as bigint) ""Size"" from ""Files""");
         return new(v.Files, (ulong) v.Size);
     }

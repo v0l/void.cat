@@ -10,12 +10,14 @@ public class UserController : Controller
     private readonly IUserStore _store;
     private readonly IUserUploadsStore _userUploads;
     private readonly IEmailVerification _emailVerification;
+    private readonly IFileInfoManager _fileInfoManager;
 
-    public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification)
+    public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification, IFileInfoManager fileInfoManager)
     {
         _store = store;
         _userUploads = userUploads;
         _emailVerification = emailVerification;
+        _fileInfoManager = fileInfoManager;
     }
 
     /// <summary>
@@ -95,7 +97,15 @@ public class UserController : Controller
             !user.Flags.HasFlag(VoidUserFlags.PublicUploads)) return Forbid();
 
         var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
-        return Json(await results.GetResults());
+        var files = await results.Results.ToListAsync();
+        var fileInfo = await Task.WhenAll(files.Select(a => _fileInfoManager.Get(a).AsTask()));
+        return Json(new RenderedResults<PublicVoidFile>()
+        {
+            PageSize = results.PageSize,
+            Page = results.Page,
+            TotalResults = results.TotalResults,
+            Results = fileInfo.Where(a => a != null).ToList()!
+        });
     }
 
     /// <summary>

@@ -14,6 +14,13 @@ public interface IFileInfoManager
     /// <param name="id"></param>
     /// <returns></returns>
     ValueTask<PublicVoidFile?> Get(Guid id);
+
+    /// <summary>
+    /// Get all private metadata for a single file
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    ValueTask<PrivateVoidFile?> GetPrivate(Guid id);
     
     /// <summary>
     /// Get all metadata for multiple files

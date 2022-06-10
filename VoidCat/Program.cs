@@ -158,9 +158,8 @@ services.AddCaptcha(voidSettings);
 // postgres
 if (!string.IsNullOrEmpty(voidSettings.Postgres))
 {
-    services.AddScoped<OpenDatabase>();
-    services.AddScoped((_) => new NpgsqlConnection(voidSettings.Postgres));
-    services.AddScoped<IDbConnection>((svc) => svc.GetRequiredService<NpgsqlConnection>());
+    services.AddSingleton<PostgresConnectionFactory>();
+    services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(voidSettings.Postgres));
 
     // fluent migrations
     services.AddTransient<IMigration, FluentMigrationRunner>();
@@ -220,11 +219,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
-
-if (!string.IsNullOrEmpty(voidSettings.Postgres))
-{
-    app.UseMiddleware<OpenDatabase>();
-}
 
 app.UseEndpoints(ep =>
 {

@@ -40,8 +40,8 @@ public class DeleteUnverifiedAccounts : BackgroundService
                         // ReSharper disable once UseCancellationTokenForIAsyncEnumerable
                         await foreach (var file in files.Results)
                         {
-                            await fileStore.DeleteFile(file.Id);
-                            await fileInfoManager.Delete(file.Id);
+                            await fileStore.DeleteFile(file);
+                            await fileInfoManager.Delete(file);
                         }
                     }
                 }

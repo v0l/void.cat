@@ -68,8 +68,7 @@ namespace VoidCat.Controllers
                     Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
-                    Size = (ulong?) Request.ContentLength ?? 0UL,
-                    Uploader = uid
+                    Size = (ulong?) Request.ContentLength ?? 0UL
                 };
 
                 var digest = Request.Headers.GetHeader("V-Digest");
@@ -80,13 +79,13 @@ namespace VoidCat.Controllers
 
                 // save metadata
                 await _metadata.Set(vf.Id, vf.Metadata!);
-                
+
                 // attach file upload to user
                 if (uid.HasValue)
                 {
                     await _userUploads.AddFile(uid!.Value, vf);
                 }
-                
+
                 if (cli)
                 {
                     var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host,
@@ -137,7 +136,7 @@ namespace VoidCat.Controllers
                     Id = gid,
                     IsAppend = true
                 }, HttpContext.RequestAborted);
-                
+
                 // update file size
                 await _metadata.Set(vf.Id, vf.Metadata!);
                 return UploadResult.Success(vf);
@@ -155,9 +154,13 @@ namespace VoidCat.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{id}")]
-        public ValueTask<PublicVoidFile?> GetInfo([FromRoute] string id)
+        public async Task<IActionResult> GetInfo([FromRoute] string id)
         {
-            return _fileInfo.Get(id.FromBase58Guid());
+            var fid = id.FromBase58Guid();
+            var uid = HttpContext.GetUserId();
+            var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
+
+            return isOwner ? Json(await _fileInfo.GetPrivate(fid)) : Json(await _fileInfo.Get(fid));
         }
 
         /// <summary>
@@ -207,7 +210,7 @@ namespace VoidCat.Controllers
             var gid = id.FromBase58Guid();
             var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
             if (meta == default) return NotFound();
-            if (!meta.CanEdit(req.EditSecret, HttpContext)) return Unauthorized();
+            if (!meta.CanEdit(req.EditSecret)) return Unauthorized();
 
             if (req.Strike != default)
             {
@@ -236,7 +239,7 @@ namespace VoidCat.Controllers
             var gid = id.FromBase58Guid();
             var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
             if (meta == default) return NotFound();
-            if (!meta.CanEdit(fileMeta.EditSecret, HttpContext)) return Unauthorized();
+            if (!meta.CanEdit(fileMeta.EditSecret)) return Unauthorized();
 
             await _metadata.Update(gid, fileMeta);
             return Ok();

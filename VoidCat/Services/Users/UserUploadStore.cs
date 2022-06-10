@@ -3,18 +3,18 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
 
+/// <inheritdoc />
 public class UserUploadStore : IUserUploadsStore
 {
     private readonly ICache _cache;
-    private readonly IFileInfoManager _fileInfo;
 
-    public UserUploadStore(ICache cache, IFileInfoManager fileInfo)
+    public UserUploadStore(ICache cache)
     {
         _cache = cache;
-        _fileInfo = fileInfo;
     }
 
-    public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(Guid user, PagedRequest request)
+    /// <inheritdoc />
+    public async ValueTask<PagedResult<Guid>> ListFiles(Guid user, PagedRequest request)
     {
         var ids = (await _cache.GetList(MapKey(user))).Select(Guid.Parse);
         ids = (request.SortBy, request.SortOrder) switch
@@ -24,15 +24,12 @@ public class UserUploadStore : IUserUploadsStore
             _ => ids
         };
 
-        async IAsyncEnumerable<PublicVoidFile> EnumerateResults(IEnumerable<Guid> page)
+        var idsRendered = ids.ToList();
+        async IAsyncEnumerable<Guid> EnumerateResults(IEnumerable<Guid> page)
         {
-            foreach (var guid in page)
+            foreach (var id in page)
             {
-                var info = await _fileInfo.Get(guid);
-                if (info != default)
-                {
-                    yield return info;
-                }
+                yield return id;
             }
         }
 
@@ -40,15 +37,24 @@ public class UserUploadStore : IUserUploadsStore
         {
             Page = request.Page,
             PageSize = request.PageSize,
-            TotalResults = ids?.Count() ?? 0,
-            Results = EnumerateResults(ids.Skip(request.Page * request.PageSize).Take(request.PageSize))
+            TotalResults = idsRendered.Count,
+            Results = EnumerateResults(idsRendered.Skip(request.Page * request.PageSize).Take(request.PageSize))
         };
     }
 
-    public ValueTask AddFile(Guid user, PrivateVoidFile voidFile)
+    /// <inheritdoc />
+    public async ValueTask AddFile(Guid user, PrivateVoidFile voidFile)
     {
-        return _cache.AddToList(MapKey(user), voidFile.Id.ToString());
+        await _cache.AddToList(MapKey(user), voidFile.Id.ToString());
+        await _cache.Set(MapUploader(voidFile.Id), user);
+    }
+
+    /// <inheritdoc />
+    public ValueTask<Guid?> Uploader(Guid file)
+    {
+        return _cache.Get<Guid?>(MapUploader(file));
     }
 
     private static string MapKey(Guid id) => $"user:{id}:uploads";
+    private static string MapUploader(Guid file) => $"file:{file}:uploader";
 }

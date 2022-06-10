@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Npgsql;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
@@ -8,9 +7,9 @@ namespace VoidCat.Services.Users;
 /// <inheritdoc />
 public class PostgresUserStore : IUserStore
 {
-    private readonly NpgsqlConnection _connection;
+    private readonly PostgresConnectionFactory _connection;
 
-    public PostgresUserStore(NpgsqlConnection connection)
+    public PostgresUserStore(PostgresConnectionFactory connection)
     {
         _connection = connection;
     }
@@ -30,7 +29,8 @@ public class PostgresUserStore : IUserStore
     /// <inheritdoc />
     public async ValueTask Set(Guid id, InternalVoidUser obj)
     {
-        await _connection.ExecuteAsync(
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(
             @"insert into 
 ""Users""(""Id"", ""Email"", ""Password"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"") 
 values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
@@ -48,7 +48,8 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
         {
             foreach (var r in obj.Roles.Where(a => a != Roles.User))
             {
-                await _connection.ExecuteAsync(@"insert into ""UserRoles""(""User"", ""Role"") values(:user, :role)",
+                await conn.ExecuteAsync(
+                    @"insert into ""UserRoles""(""User"", ""Role"") values(:user, :role)",
                     new {user = obj.Id, role = r});
             }
         }
@@ -57,17 +58,20 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await _connection.ExecuteAsync(@"delete from ""Users"" where ""Id"" = :id", new {id});
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(@"delete from ""Users"" where ""Id"" = :id", new {id});
     }
 
     /// <inheritdoc />
     public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
     {
-        var user = await _connection.QuerySingleOrDefaultAsync<T?>(@"select * from ""Users"" where ""Id"" = :id",
+        await using var conn = await _connection.Get();
+        var user = await conn.QuerySingleOrDefaultAsync<T?>(@"select * from ""Users"" where ""Id"" = :id",
             new {id});
         if (user != default)
         {
-            var roles = await _connection.QueryAsync<string>(@"select ""Role"" from ""UserRoles"" where ""User"" = :id",
+            var roles = await conn.QueryAsync<string>(
+                @"select ""Role"" from ""UserRoles"" where ""User"" = :id",
                 new {id});
             foreach (var r in roles)
             {
@@ -81,7 +85,8 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
     /// <inheritdoc />
     public async ValueTask<Guid?> LookupUser(string email)
     {
-        return await _connection.QuerySingleOrDefaultAsync<Guid?>(
+        await using var conn = await _connection.Get();
+        return await conn.QuerySingleOrDefaultAsync<Guid?>(
             @"select ""Id"" from ""Users"" where ""Email"" = :email",
             new {email});
     }
@@ -89,31 +94,34 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
     /// <inheritdoc />
     public async ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request)
     {
-        var orderBy = request.SortBy switch
-        {
-            PagedSortBy.Date => "Created",
-            PagedSortBy.Name => "DisplayName",
-            _ => "Id"
-        };
-        var sortBy = request.SortOrder switch
-        {
-            PageSortOrder.Dsc => "desc",
-            _ => "asc"
-        };
-        var totalUsers = await _connection.ExecuteScalarAsync<int>(@"select count(*) from ""Users""");
-        var users = await _connection.QueryAsync<PrivateVoidUser>(
-            $@"select * from ""Users"" order by ""{orderBy}"" {sortBy} offset :offset limit :limit",
-            new
-            {
-                offset = request.PageSize * request.Page,
-                limit = request.PageSize
-            });
+        await using var conn = await _connection.Get();
+        var totalUsers = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Users""");
 
         async IAsyncEnumerable<PrivateVoidUser> Enumerate()
         {
-            foreach (var u in users ?? Enumerable.Empty<PrivateVoidUser>())
+            var orderBy = request.SortBy switch
             {
-                yield return u;
+                PagedSortBy.Date => "Created",
+                PagedSortBy.Name => "DisplayName",
+                _ => "Id"
+            };
+            var sortBy = request.SortOrder switch
+            {
+                PageSortOrder.Dsc => "desc",
+                _ => "asc"
+            };
+            await using var iconn = await _connection.Get();
+            var users = await iconn.ExecuteReaderAsync(
+                $@"select * from ""Users"" order by ""{orderBy}"" {sortBy} offset :offset limit :limit",
+                new
+                {
+                    offset = request.PageSize * request.Page,
+                    limit = request.PageSize
+                });
+            var rowParser = users.GetRowParser<PrivateVoidUser>();
+            while (await users.ReadAsync())
+            {
+                yield return rowParser(users);
             }
         }
 
@@ -133,8 +141,8 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
         if (oldUser == null) return;
 
         var emailFlag = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified) ? VoidUserFlags.EmailVerified : 0;
-
-        await _connection.ExecuteAsync(
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(
             @"update ""Users"" set ""DisplayName"" = @displayName, ""Avatar"" = @avatar, ""Flags"" = :flags where ""Id"" = :id",
             new
             {
@@ -148,7 +156,8 @@ values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
     /// <inheritdoc />
     public async ValueTask UpdateLastLogin(Guid id, DateTime timestamp)
     {
-        await _connection.ExecuteAsync(@"update ""Users"" set ""LastLogin"" = :timestamp where ""Id"" = :id",
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(@"update ""Users"" set ""LastLogin"" = :timestamp where ""Id"" = :id",
             new {id, timestamp});
     }
 }
