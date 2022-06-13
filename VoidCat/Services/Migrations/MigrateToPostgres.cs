@@ -1,4 +1,5 @@
-﻿using VoidCat.Model;
+﻿using Newtonsoft.Json;
+using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 using VoidCat.Services.Paywall;
@@ -143,6 +144,7 @@ public class MigrateToPostgres : IMigration
 
     private record UploaderSecretVoidFileMeta : SecretVoidFileMeta
     {
+        [JsonConverter(typeof(Base58GuidConverter))]
         public Guid? Uploader { get; set; }
     }
 }
