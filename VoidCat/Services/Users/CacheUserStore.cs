@@ -7,13 +7,11 @@ namespace VoidCat.Services.Users;
 public class CacheUserStore : IUserStore
 {
     private const string UserList = "users";
-    private readonly ILogger<CacheUserStore> _logger;
     private readonly ICache _cache;
 
-    public CacheUserStore(ICache cache, ILogger<CacheUserStore> logger)
+    public CacheUserStore(ICache cache)
     {
         _cache = cache;
-        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -23,18 +21,9 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
+    public ValueTask<T?> Get<T>(Guid id) where T : VoidUser
     {
-        try
-        {
-            return await _cache.Get<T>(MapKey(id));
-        }
-        catch (FormatException)
-        {
-            _logger.LogWarning("Corrupt user data at: {Key}", MapKey(id));
-        }
-
-        return default;
+        return _cache.Get<T>(MapKey(id));
     }
 
     /// <inheritdoc />
