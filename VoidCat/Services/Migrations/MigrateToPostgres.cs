@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Security.Cryptography;
+using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
@@ -17,9 +18,11 @@ public class MigrateToPostgres : IMigration
     private readonly IPaywallStore _paywallStore;
     private readonly IUserStore _userStore;
     private readonly IUserUploadsStore _userUploads;
+    private readonly IFileStore _fileStore;
 
     public MigrateToPostgres(VoidSettings settings, ILogger<MigrateToPostgres> logger, IFileMetadataStore fileMetadata,
-        ICache cache, IPaywallStore paywallStore, IUserStore userStore, IUserUploadsStore userUploads)
+        ICache cache, IPaywallStore paywallStore, IUserStore userStore, IUserUploadsStore userUploads,
+        IFileStore fileStore)
     {
         _logger = logger;
         _settings = settings;
@@ -28,6 +31,7 @@ public class MigrateToPostgres : IMigration
         _paywallStore = paywallStore;
         _userStore = userStore;
         _userUploads = userUploads;
+        _fileStore = fileStore;
     }
 
     /// <inheritdoc />
@@ -64,12 +68,21 @@ public class MigrateToPostgres : IMigration
         {
             try
             {
+                if (string.IsNullOrEmpty(file.Digest))
+                {
+                    var fs = await _fileStore.Open(new(file.Id, Enumerable.Empty<RangeRequest>()),
+                        CancellationToken.None);
+                    var hash = await SHA256.Create().ComputeHashAsync(fs);
+                    file.Digest = hash.ToHex();
+                }
+
                 file.MimeType ??= "application/octet-stream";
                 await _fileMetadata.Set(file.Id, file);
                 if (file.Uploader.HasValue)
                 {
                     await _userUploads.AddFile(file.Uploader.Value, file.Id);
                 }
+
                 await localDiskMetaStore.Delete(file.Id);
                 _logger.LogInformation("Migrated file metadata for {File}", file.Id);
             }
@@ -114,7 +127,7 @@ public class MigrateToPostgres : IMigration
             {
                 var privateUser = await cacheUsers.Get<PrivateUser>(user.Id);
                 privateUser!.Password ??= privateUser.PasswordHash;
-                
+
                 await _userStore.Set(privateUser!.Id, new InternalVoidUser()
                 {
                     Id = privateUser.Id,
@@ -144,6 +157,8 @@ public class MigrateToPostgres : IMigration
 
     private record UploaderSecretVoidFileMeta : SecretVoidFileMeta
     {
+        public new string? Digest { get; set; }
+
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid? Uploader { get; set; }
     }
