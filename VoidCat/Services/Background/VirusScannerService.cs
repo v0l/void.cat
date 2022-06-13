@@ -36,13 +36,15 @@ public class VirusScannerService : BackgroundService
                 await foreach (var file in files.Results.WithCancellation(stoppingToken))
                 {
                     // check for scans
-                    var scan = await _scanStore.Get(file.Id);
+                    var scan = await _scanStore.GetByFile(file.Id);
                     if (scan == default)
                     {
                         try
                         {
                             var result = await _scanner.ScanFile(file.Id, stoppingToken);
-                            await _scanStore.Set(file.Id, result);
+                            await _scanStore.Add(result.Id, result);
+                            _logger.LogInformation("Scanned file {Id}, IsVirus = {Result}", result.File,
+                                result.IsVirus);
                         }
                         catch (RateLimitedException rx)
                         {

@@ -12,7 +12,7 @@ export function Login() {
     const [password, setPassword] = useState();
     const [error, setError] = useState();
     const [captchaResponse, setCaptchaResponse] = useState();
-    const captchaKey = useSelector(state => state.info.stats.captchaSiteKey);
+    const captchaKey = useSelector(state => state.info.stats?.captchaSiteKey);
     const dispatch = useDispatch();
 
     async function login(fnLogin) {
@@ -34,7 +34,8 @@ export function Login() {
             <h2>Login</h2>
             <dl>
                 <dt>Username:</dt>
-                <dd><input type="text" onChange={(e) => setUsername(e.target.value)} placeholder="user@example.com"/></dd>
+                <dd><input type="text" onChange={(e) => setUsername(e.target.value)} placeholder="user@example.com"/>
+                </dd>
                 <dt>Password:</dt>
                 <dd><input type="password" onChange={(e) => setPassword(e.target.value)}/></dd>
             </dl>

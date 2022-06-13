@@ -16,8 +16,8 @@ export function FileEdit(props) {
     const [name, setName] = useState(meta?.name);
     const [description, setDescription] = useState(meta?.description);
 
-    const privateFile = profile?.id === meta?.uploader ? file : JSON.parse(window.localStorage.getItem(file.id));
-    if (!privateFile) {
+    const privateFile = profile?.id === file?.uploader?.id ? file : JSON.parse(window.localStorage.getItem(file.id));
+    if (!privateFile || privateFile?.metadata?.editSecret === null) {
         return null;
     }
 

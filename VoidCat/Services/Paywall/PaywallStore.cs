@@ -10,28 +10,29 @@ public class PaywallStore : BasicCacheStore<PaywallConfig>, IPaywallStore
     {
     }
 
+    /// <inheritdoc />
     public override async ValueTask<PaywallConfig?> Get(Guid id)
     {
-        var cfg = await _cache.Get<NoPaywallConfig>(MapKey(id));
+        var cfg = await Cache.Get<NoPaywallConfig>(MapKey(id));
         return cfg?.Service switch
         {
             PaywallServices.None => cfg,
-            PaywallServices.Strike => await _cache.Get<StrikePaywallConfig>(MapKey(id)),
+            PaywallServices.Strike => await Cache.Get<StrikePaywallConfig>(MapKey(id)),
             _ => default
         };
     }
 
     public async ValueTask<PaywallOrder?> GetOrder(Guid id)
     {
-        return await _cache.Get<PaywallOrder>(OrderKey(id));
+        return await Cache.Get<PaywallOrder>(OrderKey(id));
     }
 
     public ValueTask SaveOrder(PaywallOrder order)
     {
-        return _cache.Set(OrderKey(order.Id), order,
+        return Cache.Set(OrderKey(order.Id), order,
             order.Status == PaywallOrderStatus.Paid ? TimeSpan.FromDays(1) : TimeSpan.FromSeconds(5));
     }
 
-    public override string MapKey(Guid id) => $"paywall:config:{id}";
+    protected override string MapKey(Guid id) => $"paywall:config:{id}";
     private string OrderKey(Guid id) => $"paywall:order:{id}";
 }

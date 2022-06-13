@@ -214,12 +214,12 @@ namespace VoidCat.Controllers
 
             if (req.Strike != default)
             {
-                await _paywall.Set(gid, req.Strike!);
+                await _paywall.Add(gid, req.Strike!);
                 return Ok();
             }
 
             // if none set, set NoPaywallConfig
-            await _paywall.Set(gid, new NoPaywallConfig());
+            await _paywall.Add(gid, new NoPaywallConfig());
             return Ok();
         }
 

@@ -1,7 +1,6 @@
 ﻿using nClam;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
-using VoidCat.Services.VirusScanner.VirusTotal;
 
 namespace VoidCat.Services.VirusScanner;
 
@@ -9,7 +8,14 @@ public static class VirusScannerStartup
 {
     public static void AddVirusScanner(this IServiceCollection services, VoidSettings settings)
     {
-        services.AddTransient<IVirusScanStore, VirusScanStore>();
+        if (settings.Postgres != default)
+        {
+            services.AddTransient<IVirusScanStore, PostgresVirusScanStore>();
+        }
+        else
+        {
+            services.AddTransient<IVirusScanStore, CacheVirusScanStore>();
+        }
 
         var avSettings = settings.VirusScanner;
         if (avSettings != default)
@@ -26,15 +32,6 @@ public static class VirusScannerStartup
                         MaxStreamSize = avSettings.ClamAV.MaxStreamSize ?? 26240000
                     });
                 services.AddTransient<IVirusScanner, ClamAvScanner>();
-            }
-
-            // load VirusTotal
-            if (avSettings.VirusTotal != default)
-            {
-                loadService = true;
-                services.AddTransient((svc) =>
-                    new VirusTotalClient(svc.GetRequiredService<IHttpClientFactory>(), avSettings.VirusTotal));
-                services.AddTransient<IVirusScanner, VirusTotalScanner>();
             }
 
             if (loadService)

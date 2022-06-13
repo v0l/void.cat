@@ -2,26 +2,29 @@
 
 namespace VoidCat.Services;
 
+/// <inheritdoc />
 public abstract class BasicCacheStore<TStore> : IBasicStore<TStore>
 {
-    protected readonly ICache _cache;
+    protected readonly ICache Cache;
 
     protected BasicCacheStore(ICache cache)
     {
-        _cache = cache;
+        Cache = cache;
     }
 
+    /// <inheritdoc />
     public virtual ValueTask<TStore?> Get(Guid id)
     {
-        return _cache.Get<TStore>(MapKey(id));
+        return Cache.Get<TStore>(MapKey(id));
     }
 
+    /// <inheritdoc />
     public virtual async ValueTask<IReadOnlyList<TStore>> Get(Guid[] ids)
     {
         var ret = new List<TStore>();
         foreach (var id in ids)
         {
-            var r = await _cache.Get<TStore>(MapKey(id));
+            var r = await Cache.Get<TStore>(MapKey(id));
             if (r != null)
             {
                 ret.Add(r);
@@ -31,15 +34,22 @@ public abstract class BasicCacheStore<TStore> : IBasicStore<TStore>
         return ret;
     }
 
-    public virtual ValueTask Set(Guid id, TStore obj)
+    /// <inheritdoc />
+    public virtual ValueTask Add(Guid id, TStore obj)
     {
-        return _cache.Set(MapKey(id), obj);
+        return Cache.Set(MapKey(id), obj);
     }
 
+    /// <inheritdoc />
     public virtual ValueTask Delete(Guid id)
     {
-        return _cache.Delete(MapKey(id));
+        return Cache.Delete(MapKey(id));
     }
 
-    public abstract string MapKey(Guid id);
+    /// <summary>
+    /// Map an id to a key in the KV store
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    protected abstract string MapKey(Guid id);
 }

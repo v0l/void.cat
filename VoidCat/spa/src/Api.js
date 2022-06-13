@@ -31,7 +31,7 @@ export function useApi() {
         },
         Api: {
             info: () => getJson("GET", "/info"),
-            fileInfo: (id) => getJson("GET", `/upload/${id}`),
+            fileInfo: (id) => getJson("GET", `/upload/${id}`, undefined, auth),
             setPaywallConfig: (id, cfg) => getJson("POST", `/upload/${id}/paywall`, cfg, auth),
             createOrder: (id) => getJson("GET", `/upload/${id}/paywall`),
             getOrder: (file, order) => getJson("GET", `/upload/${file}/paywall/${order}`),

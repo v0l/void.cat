@@ -4,6 +4,9 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.VirusScanner;
 
+/// <summary>
+/// ClamAV scanner
+/// </summary>
 public class ClamAvScanner : IVirusScanner
 {
     private readonly ILogger<ClamAvScanner> _logger;
@@ -17,6 +20,7 @@ public class ClamAvScanner : IVirusScanner
         _store = store;
     }
 
+    /// <inheritdoc />
     public async ValueTask<VirusScanResult> ScanFile(Guid id, CancellationToken cts)
     {
         _logger.LogInformation("Starting scan of {Filename}", id);
@@ -31,8 +35,11 @@ public class ClamAvScanner : IVirusScanner
 
         return new()
         {
-            IsVirus = result.Result == ClamScanResults.VirusDetected,
-            VirusNames = result.InfectedFiles?.Select(a => a.VirusName.Trim()).ToList() ?? new()
+            Id = Guid.NewGuid(),
+            File = id,
+            Score = result.Result == ClamScanResults.VirusDetected ? 1m : 0m,
+            Names = string.Join(",", result.InfectedFiles?.Select(a => a.VirusName.Trim()) ?? Array.Empty<string>()),
+            Scanner = "ClamAV"
         };
     }
 }

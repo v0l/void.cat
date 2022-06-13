@@ -1,4 +1,5 @@
-﻿using FluentMigrator;
+﻿using System.Data;
+using FluentMigrator;
 using VoidCat.Model;
 
 namespace VoidCat.Services.Migrations.Database;
@@ -12,8 +13,8 @@ public class Init : Migration
             .WithColumn("Id").AsGuid().PrimaryKey()
             .WithColumn("Email").AsString().NotNullable().Indexed()
             .WithColumn("Password").AsString()
-            .WithColumn("Created").AsDateTime().WithDefault(SystemMethods.CurrentDateTime)
-            .WithColumn("LastLogin").AsDateTime().Nullable()
+            .WithColumn("Created").AsDateTimeOffset().WithDefault(SystemMethods.CurrentUTCDateTime)
+            .WithColumn("LastLogin").AsDateTimeOffset().Nullable()
             .WithColumn("Avatar").AsString().Nullable()
             .WithColumn("DisplayName").AsString().WithDefaultValue("void user")
             .WithColumn("Flags").AsInt32().WithDefaultValue((int) VoidUserFlags.PublicProfile);
@@ -22,29 +23,54 @@ public class Init : Migration
             .WithColumn("Id").AsGuid().PrimaryKey()
             .WithColumn("Name").AsString()
             .WithColumn("Size").AsInt64()
-            .WithColumn("Uploaded").AsDateTime().Indexed().WithDefault(SystemMethods.CurrentDateTime)
+            .WithColumn("Uploaded").AsDateTimeOffset().Indexed().WithDefault(SystemMethods.CurrentUTCDateTime)
             .WithColumn("Description").AsString().Nullable()
             .WithColumn("MimeType").AsString().WithDefaultValue("application/octet-stream")
             .WithColumn("Digest").AsString()
             .WithColumn("EditSecret").AsGuid();
 
         Create.Table("UserFiles")
-            .WithColumn("File").AsGuid().ForeignKey("Files", "Id")
-            .WithColumn("User").AsGuid().ForeignKey("Users", "Id").Indexed();
+            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).Indexed()
+            .WithColumn("User").AsGuid().ForeignKey("Users", "Id").OnDelete(Rule.Cascade).Indexed();
 
         Create.UniqueConstraint()
             .OnTable("UserFiles")
             .Columns("File", "User");
 
         Create.Table("Paywall")
-            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").Unique()
+            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).PrimaryKey()
             .WithColumn("Type").AsInt16()
             .WithColumn("Currency").AsInt16()
             .WithColumn("Amount").AsDecimal();
 
         Create.Table("PaywallStrike")
-            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").Unique()
+            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).PrimaryKey()
             .WithColumn("Handle").AsString();
+
+        Create.Table("UserRoles")
+            .WithColumn("User").AsGuid().ForeignKey("Users", "Id").OnDelete(Rule.Cascade).Indexed()
+            .WithColumn("Role").AsString().NotNullable();
+
+        Create.UniqueConstraint()
+            .OnTable("UserRoles")
+            .Columns("User", "Role");
+
+        Create.Table("EmailVerification")
+            .WithColumn("User").AsGuid().ForeignKey("Users", "Id").OnDelete(Rule.Cascade)
+            .WithColumn("Code").AsGuid()
+            .WithColumn("Expires").AsDateTimeOffset();
+
+        Create.UniqueConstraint()
+            .OnTable("EmailVerification")
+            .Columns("User", "Code");
+
+        Create.Table("VirusScanResult")
+            .WithColumn("Id").AsGuid().PrimaryKey()
+            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).Indexed()
+            .WithColumn("ScanTime").AsDateTimeOffset().WithDefault(SystemMethods.CurrentUTCDateTime)
+            .WithColumn("Scanner").AsString()
+            .WithColumn("Score").AsDecimal()
+            .WithColumn("Names").AsString().Nullable();
     }
 
     public override void Down()
@@ -54,5 +80,8 @@ public class Init : Migration
         Delete.Table("UsersFiles");
         Delete.Table("Paywall");
         Delete.Table("PaywallStrike");
+        Delete.Table("UserRoles");
+        Delete.Table("EmailVerification");
+        Delete.Table("VirusScanResult");
     }
 }

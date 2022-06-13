@@ -67,7 +67,7 @@ public class FileInfoManager : IFileInfoManager
         var meta = _metadataStore.Get<TMeta>(id);
         var paywall = _paywallStore.Get(id);
         var bandwidth = _statsReporter.GetBandwidth(id);
-        var virusScan = _virusScanStore.Get(id);
+        var virusScan = _virusScanStore.GetByFile(id);
         var uploader = _userUploadsStore.Uploader(id);
         await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask(), virusScan.AsTask(), uploader.AsTask());
 

@@ -118,7 +118,7 @@ export function FilePreview() {
                     </p>
                     Detected as:
                     <pre>
-                        {scanResult.virusNames.join('\n')}
+                        {scanResult.names}
                     </pre>
                 </div>
             );

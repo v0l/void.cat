@@ -165,7 +165,7 @@ if (!string.IsNullOrEmpty(voidSettings.Postgres))
     services.AddTransient<IMigration, FluentMigrationRunner>();
     services.AddFluentMigratorCore()
         .ConfigureRunner(r =>
-            r.AddPostgres11_0()
+            r.AddPostgres()
                 .WithGlobalConnectionString(voidSettings.Postgres)
                 .ScanIn(typeof(Program).Assembly).For.Migrations());
 }
