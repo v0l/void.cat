@@ -86,9 +86,10 @@ export function FileUpload(props) {
      * @param segment {ArrayBuffer}
      * @param id {string}
      * @param editSecret {string?}
+     * @param fullDigest {string?} Full file hash
      * @returns {Promise<any>}
      */
-    async function xhrSegment(segment, id, editSecret) {
+    async function xhrSegment(segment, id, editSecret, fullDigest) {
         setUState(UploadState.Hashing);
         const digest = await crypto.subtle.digest(DigestAlgo, segment);
         setUState(UploadState.Uploading);
@@ -116,6 +117,7 @@ export function FileUpload(props) {
                 req.setRequestHeader("V-Content-Type", props.file.type);
                 req.setRequestHeader("V-Filename", props.file.name);
                 req.setRequestHeader("V-Digest", buf2hex(digest));
+                req.setRequestHeader("V-Full-Digest", fullDigest);
                 if (auth) {
                     req.setRequestHeader("Authorization", `Bearer ${auth}`);
                 }
@@ -134,12 +136,14 @@ export function FileUpload(props) {
         // upload file in segments of 50MB
         const UploadSize = 50_000_000;
 
+        let digest = await crypto.subtle.digest(DigestAlgo, await props.file.arrayBuffer());
         let xhr = null;
         const segments = props.file.size / UploadSize;
         for (let s = 0; s < segments; s++) {
             let offset = s * UploadSize;
             let slice = props.file.slice(offset, offset + UploadSize, props.file.type);
-            xhr = await xhrSegment(await slice.arrayBuffer(), xhr?.file?.id, xhr?.file?.metadata?.editSecret);
+            let segment = await slice.arrayBuffer();
+            xhr = await xhrSegment(segment, xhr?.file?.id, xhr?.file?.metadata?.editSecret, buf2hex(digest));
             if (!xhr.ok) {
                 break;
             }

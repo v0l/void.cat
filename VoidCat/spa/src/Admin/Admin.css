@@ -4,9 +4,31 @@
     margin-right: auto;
 }
 
+.admin h2 {
+    background-color: #222;
+    padding: 10px;
+}
+
 .admin table {
     width: 100%;
     word-break: keep-all;
     text-overflow: ellipsis;
     white-space: nowrap;
+    border-collapse: collapse;
+}
+
+.admin table th {
+    background-color: #222;
+    text-align: start;
+}
+
+.admin table tr:nth-child(2n) {
+    background-color: #111;
+}
+
+.admin .btn {
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-size: small;
+    margin: 2px;
 }

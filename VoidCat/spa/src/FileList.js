@@ -14,7 +14,7 @@ export function FileList(props) {
     const dispatch = useDispatch();
     const [files, setFiles] = useState();
     const [page, setPage] = useState(0);
-    const pageSize = 10;
+    const pageSize = 20;
     const [accessDenied, setAccessDenied] = useState(false);
 
     async function loadFileList() {
@@ -62,16 +62,18 @@ export function FileList(props) {
         <table className="file-list">
             <thead>
             <tr>
-                <td>Id</td>
-                <td>Name</td>
-                <td>Uploaded</td>
-                <td>Size</td>
-                <td>Egress</td>
-                {actions ? <td>Actions</td> : null}
+                <th>Id</th>
+                <th>Name</th>
+                <th>Uploaded</th>
+                <th>Size</th>
+                <th>Egress</th>
+                {actions ? <th>Actions</th> : null}
             </tr>
             </thead>
             <tbody>
-            {files ? files.results.map(a => renderItem(a)) : <tr><td colSpan={99}>No files</td></tr>}
+            {files ? files.results.map(a => renderItem(a)) : <tr>
+                <td colSpan={99}>No files</td>
+            </tr>}
             </tbody>
             <tbody>
             <tr>

@@ -6,7 +6,7 @@ export function PageSelector(props) {
     const page = props.page;
     const onSelectPage = props.onSelectPage;
     const options = {
-        showPages: 2,
+        showPages: 3,
         ...(props.options || {})
     };
 
@@ -17,7 +17,9 @@ export function PageSelector(props) {
 
     let buttons = [];
     for (let x = first; x <= last; x++) {
-        buttons.push(<div onClick={(e) => onSelectPage(x)} key={x}>{x+1}</div>);
+        buttons.push(<div onClick={(e) => onSelectPage(x)} key={x} className={page === x ? "active" : null}>
+            {x + 1}
+        </div>);
     }
 
     return (

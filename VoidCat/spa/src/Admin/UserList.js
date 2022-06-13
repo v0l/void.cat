@@ -5,6 +5,7 @@ import {useApi} from "../Api";
 import {logout} from "../LoginState";
 import {PageSelector} from "../PageSelector";
 import moment from "moment";
+import {VoidButton} from "../VoidButton";
 
 export function UserList() {
     const {AdminApi} = useApi();
@@ -19,7 +20,7 @@ export function UserList() {
             page: page,
             pageSize,
             sortBy: PagedSortBy.Date,
-            sortOrder: PageSortOrder.Asc
+            sortOrder: PageSortOrder.Dsc
         };
         let req = await AdminApi.userList(pageReq);
         if (req.ok) {
@@ -31,17 +32,17 @@ export function UserList() {
         }
     }
 
-    function renderUser(u) {
+    function renderUser(obj) {
+        const user = obj.user;
         return (
-            <tr key={u.id}>
-                <td><a href={`/u/${u.id}`}>{u.id.substring(0, 4)}..</a></td>
-                <td>{moment(u.created).fromNow()}</td>
-                <td>{moment(u.lastLogin).fromNow()}</td>
-                <td>0</td>
-                <td>{u.roles.join(", ")}</td>
+            <tr key={user.id}>
+                <td><a href={`/u/${user.id}`}>{user.displayName}</a></td>
+                <td>{moment(user.created).fromNow()}</td>
+                <td>{moment(user.lastLogin).fromNow()}</td>
+                <td>{obj.uploads}</td>
                 <td>
-                    <button>Delete</button>
-                    <button>SetRoles</button>
+                    <VoidButton>Delete</VoidButton>
+                    <VoidButton>SetRoles</VoidButton>
                 </td>
             </tr>
         );
@@ -59,12 +60,11 @@ export function UserList() {
         <table>
             <thead>
             <tr>
-                <td>Id</td>
-                <td>Created</td>
-                <td>Last Login</td>
-                <td>Files</td>
-                <td>Roles</td>
-                <td>Actions</td>
+                <th>Name</th>
+                <th>Created</th>
+                <th>Last Login</th>
+                <th>Files</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -73,8 +73,11 @@ export function UserList() {
             <tbody>
             <tr>
                 <td>
-                    {users ? <PageSelector onSelectPage={(x) => setPage(x)} page={page} total={users.totalResults}
-                                           pageSize={pageSize}/> : null}
+                    {users ? <PageSelector
+                        onSelectPage={(x) => setPage(x)}
+                        page={page}
+                        total={users.totalResults}
+                        pageSize={pageSize}/> : null}
                 </td>
             </tr>
             </tbody>

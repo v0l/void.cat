@@ -13,14 +13,16 @@ public class AdminController : Controller
     private readonly IFileMetadataStore _fileMetadata;
     private readonly IFileInfoManager _fileInfo;
     private readonly IUserStore _userStore;
+    private readonly IUserUploadsStore _userUploads;
 
     public AdminController(IFileStore fileStore, IUserStore userStore, IFileInfoManager fileInfo,
-        IFileMetadataStore fileMetadata)
+        IFileMetadataStore fileMetadata, IUserUploadsStore userUploads)
     {
         _fileStore = fileStore;
         _userStore = userStore;
         _fileInfo = fileInfo;
         _fileMetadata = fileMetadata;
+        _userUploads = userUploads;
     }
 
     /// <summary>
@@ -63,9 +65,23 @@ public class AdminController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("user")]
-    public async Task<RenderedResults<PrivateVoidUser>> ListUsers([FromBody] PagedRequest request)
+    public async Task<RenderedResults<AdminListedUser>> ListUsers([FromBody] PagedRequest request)
     {
         var result = await _userStore.ListUsers(request);
-        return await result.GetResults();
+
+        var ret = await result.Results.SelectAwait(async a =>
+        {
+            var uploads = await _userUploads.ListFiles(a.Id, new(0, int.MaxValue));
+            return new AdminListedUser(a, uploads.TotalResults);
+        }).ToListAsync();
+        return new()
+        {
+            PageSize = request.PageSize,
+            Page = request.Page,
+            TotalResults = result.TotalResults,
+            Results = ret
+        };
     }
+
+    public record AdminListedUser(PrivateVoidUser User, int Uploads);
 }

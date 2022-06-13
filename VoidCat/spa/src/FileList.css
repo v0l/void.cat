@@ -3,4 +3,14 @@ table.file-list {
     word-break: keep-all;
     text-overflow: ellipsis;
     white-space: nowrap;
+    border-collapse: collapse;
+}
+
+table.file-list tr:nth-child(2n) {
+    background-color: #111;
+}
+
+table.file-list th {
+    background-color: #222;
+    text-align: start;
 }

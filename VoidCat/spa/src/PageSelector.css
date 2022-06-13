@@ -2,6 +2,7 @@
     display: grid;
     grid-auto-flow: column;
     width: min-content;
+    margin-top: 10px;
 }
 
 .page-buttons > div {
@@ -9,6 +10,11 @@
     border: 1px solid;
     user-select: none;
     cursor: pointer;
+}
+
+.page-buttons > div.active {
+    background-color: #333;
+    font-weight: bold;
 }
 
 .page-buttons > div:first-child {
@@ -25,3 +31,4 @@
     line-height: 32px;
     margin-left: 10px;
 }
+
