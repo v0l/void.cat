@@ -1,6 +1,5 @@
 ﻿using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
-using VoidCat.Services.Strike;
 
 namespace VoidCat.Services.Paywall;
 
@@ -13,26 +12,12 @@ public class PaywallFactory : IPaywallFactory
         _services = services;
     }
 
-    public ValueTask<IPaywallProvider> CreateProvider(PaywallServices svc)
+    public ValueTask<IPaywallProvider> CreateProvider(PaymentServices svc)
     {
         return ValueTask.FromResult<IPaywallProvider>(svc switch
         {
-            PaywallServices.Strike => _services.GetRequiredService<StrikePaywallProvider>(),
+            PaymentServices.Strike => _services.GetRequiredService<StrikePaywallProvider>(),
             _ => throw new ArgumentException("Must have a paywall config", nameof(svc))
         });
-    }
-}
-
-public static class Paywall
-{
-    public static void AddVoidPaywall(this IServiceCollection services)
-    {
-        services.AddTransient<IPaywallFactory, PaywallFactory>();
-        services.AddTransient<IPaywallStore, PaywallStore>();
-
-        // strike
-        services.AddTransient<StrikeApi>();
-        services.AddTransient<StrikePaywallProvider>();
-        services.AddTransient<IPaywallProvider>((svc) => svc.GetRequiredService<StrikePaywallProvider>());
     }
 }

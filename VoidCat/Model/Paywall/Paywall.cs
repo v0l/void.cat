@@ -1,16 +1,56 @@
 ﻿namespace VoidCat.Model.Paywall;
 
-public enum PaywallServices
+/// <summary>
+/// Payment services supported by the system
+/// </summary>
+public enum PaymentServices
 {
+    /// <summary>
+    /// No service 
+    /// </summary>
     None,
+
+    /// <summary>
+    /// Strike.me payment service
+    /// </summary>
     Strike
 }
 
-public abstract record PaywallConfig(PaywallServices Service, PaywallMoney Cost);
-
-public record NoPaywallConfig() : PaywallConfig(PaywallServices.None, new PaywallMoney(0m, PaywallCurrencies.BTC));
-
-public record StrikePaywallConfig(PaywallMoney Cost) : PaywallConfig(PaywallServices.Strike, Cost)
+/// <summary>
+/// Base paywall config
+/// </summary>
+public abstract class PaywallConfig
 {
+    /// <summary>
+    /// File this config is for
+    /// </summary>
+    public Guid File { get; init; }
+    
+    /// <summary>
+    /// Service used to pay the paywall
+    /// </summary>
+    public PaymentServices Service { get; init; } = PaymentServices.None;
+
+    /// <summary>
+    /// The cost for the paywall to pass
+    /// </summary>
+    public PaywallMoney Cost { get; init; } = new(0m, PaywallCurrencies.BTC);
+}
+
+/// <inheritdoc />
+public sealed class NoPaywallConfig : PaywallConfig
+{
+    
+}
+
+/// <summary>
+/// Paywall config for <see cref="PaymentServices.Strike"/> service
+/// </summary>
+/// <param name="Cost"></param>
+public sealed class StrikePaywallConfig : PaywallConfig
+{
+    /// <summary>
+    /// Strike username to pay to
+    /// </summary>
     public string Handle { get; init; } = null!;
 }

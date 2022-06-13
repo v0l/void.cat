@@ -10,7 +10,7 @@ export function LightningPaywall(props) {
     const file = props.file;
     const order = props.order;
     const onPaid = props.onPaid;
-    const link = `lightning:${order.lnInvoice}`;
+    const link = `lightning:${order.invoice}`;
 
     function openInvoice() {
         let a = document.createElement("a");

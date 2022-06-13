@@ -177,7 +177,7 @@ namespace VoidCat.Controllers
             var config = await _paywall.Get(gid);
 
             var provider = await _paywallFactory.CreateProvider(config!.Service);
-            return await provider.CreateOrder(file!);
+            return await provider.CreateOrder(file!.Paywall!);
         }
 
         /// <summary>
@@ -214,12 +214,17 @@ namespace VoidCat.Controllers
 
             if (req.Strike != default)
             {
-                await _paywall.Add(gid, req.Strike!);
+                await _paywall.Add(gid, new StrikePaywallConfig()
+                {
+                    Service = PaymentServices.Strike,
+                    Handle = req.Strike.Handle,
+                    Cost = req.Strike.Cost
+                });
                 return Ok();
             }
 
-            // if none set, set NoPaywallConfig
-            await _paywall.Add(gid, new NoPaywallConfig());
+            // if none set, delete config
+            await _paywall.Delete(gid);
             return Ok();
         }
 

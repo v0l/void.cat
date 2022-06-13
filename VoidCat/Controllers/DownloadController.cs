@@ -11,16 +11,16 @@ public class DownloadController : Controller
 {
     private readonly IFileStore _storage;
     private readonly IFileInfoManager _fileInfo;
-    private readonly IPaywallStore _paywall;
+    private readonly IPaywallOrderStore _paywallOrders;
     private readonly ILogger<DownloadController> _logger;
 
     public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
-        IPaywallStore paywall)
+        IPaywallOrderStore paywall)
     {
         _storage = storage;
         _logger = logger;
         _fileInfo = fileInfo;
-        _paywall = paywall;
+        _paywallOrders = paywall;
     }
 
     [HttpOptions]
@@ -90,7 +90,7 @@ public class DownloadController : Controller
         }
 
         // check paywall
-        if (meta.Paywall != default && meta.Paywall.Service != PaywallServices.None)
+        if (meta.Paywall != default && meta.Paywall.Service != PaymentServices.None)
         {
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))
@@ -111,7 +111,7 @@ public class DownloadController : Controller
     {
         if (Guid.TryParse(orderId, out var oid))
         {
-            var order = await _paywall.GetOrder(oid);
+            var order = await _paywallOrders.Get(oid);
             if (order?.Status == PaywallOrderStatus.Paid)
             {
                 return true;

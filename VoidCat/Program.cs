@@ -132,6 +132,7 @@ services.AddAuthorization((opt) =>
 //
 services.AddTransient<RazorPartialToStringRenderer>();
 services.AddTransient<IMigration, PopulateMetadataId>();
+services.AddTransient<IMigration, MigrateToPostgres>();
 
 // file storage
 services.AddStorage(voidSettings);
@@ -141,7 +142,7 @@ services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();
 services.AddTransient<IStatsCollector, PrometheusStatsCollector>();
 
 // paywall
-services.AddVoidPaywall();
+services.AddPaywallServices(voidSettings);
 
 // users
 services.AddUserServices(voidSettings);

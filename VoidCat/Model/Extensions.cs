@@ -208,4 +208,7 @@ public static class Extensions
         var hashParts = vu.Password.Split(":");
         return vu.Password == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
     }
+
+    public static bool HasPostgres(this VoidSettings settings)
+        => !string.IsNullOrEmpty(settings.Postgres);
 }

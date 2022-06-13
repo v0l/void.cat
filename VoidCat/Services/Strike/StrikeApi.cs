@@ -3,6 +3,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
+#pragma warning disable CS1591
+
 namespace VoidCat.Services.Strike;
 
 public class StrikeApi

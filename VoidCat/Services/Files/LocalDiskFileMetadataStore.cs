@@ -8,13 +8,11 @@ namespace VoidCat.Services.Files;
 public class LocalDiskFileMetadataStore : IFileMetadataStore
 {
     private const string MetadataDir = "metadata-v3";
-    private readonly ILogger<LocalDiskFileMetadataStore> _logger;
     private readonly VoidSettings _settings;
 
-    public LocalDiskFileMetadataStore(VoidSettings settings, ILogger<LocalDiskFileMetadataStore> logger)
+    public LocalDiskFileMetadataStore(VoidSettings settings)
     {
         _settings = settings;
-        _logger = logger;
 
         var metaPath = Path.Combine(_settings.DataDirectory, MetadataDir);
         if (!Directory.Exists(metaPath))
@@ -134,7 +132,6 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         var path = MapMeta(id);
         if (File.Exists(path))
         {
-            _logger.LogInformation("Deleting metadata file {Path}", path);
             File.Delete(path);
         }
 

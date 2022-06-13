@@ -39,14 +39,27 @@ public class Init : Migration
 
         Create.Table("Paywall")
             .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).PrimaryKey()
-            .WithColumn("Type").AsInt16()
+            .WithColumn("Service").AsInt16()
             .WithColumn("Currency").AsInt16()
             .WithColumn("Amount").AsDecimal();
 
         Create.Table("PaywallStrike")
-            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).PrimaryKey()
+            .WithColumn("File").AsGuid().ForeignKey("Paywall", "File").OnDelete(Rule.Cascade).PrimaryKey()
             .WithColumn("Handle").AsString();
 
+        Create.Table("PaywallOrder")
+            .WithColumn("Id").AsGuid().PrimaryKey()
+            .WithColumn("File").AsGuid().ForeignKey("Files", "Id").OnDelete(Rule.Cascade).Indexed()
+            .WithColumn("Service").AsInt16()
+            .WithColumn("Currency").AsInt16()
+            .WithColumn("Amount").AsDecimal()
+            .WithColumn("Status").AsInt16().Indexed();
+
+        Create.Table("PaywallOrderLightning")
+            .WithColumn("Order").AsGuid().ForeignKey("PaywallOrder", "Id").OnDelete(Rule.Cascade).PrimaryKey()
+            .WithColumn("Invoice").AsString()
+            .WithColumn("Expire").AsDateTimeOffset();
+        
         Create.Table("UserRoles")
             .WithColumn("User").AsGuid().ForeignKey("Users", "Id").OnDelete(Rule.Cascade).Indexed()
             .WithColumn("Role").AsString().NotNullable();
