@@ -47,6 +47,21 @@ public static class Extensions
         return new Guid(guidBytes);
     }
 
+    public static bool TryFromBase58Guid(this string base58, out Guid v)
+    {
+        try
+        {
+            v = base58.FromBase58Guid();
+            return true;
+        }
+        catch
+        {
+            // ignored
+            v = Guid.Empty;
+            return false;
+        }
+    }
+
     public static string ToBase58(this Guid id)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();
@@ -65,7 +80,7 @@ public static class Extensions
     {
         return file.EditSecret == editSecret;
     }
-    
+
     public static string ToHex(this byte[] data)
     {
         return BitConverter.ToString(data).Replace("-", string.Empty).ToLower();

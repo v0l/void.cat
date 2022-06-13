@@ -156,7 +156,7 @@ namespace VoidCat.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetInfo([FromRoute] string id)
         {
-            var fid = id.FromBase58Guid();
+            if (!id.TryFromBase58Guid(out var fid)) return StatusCode(404);
             var uid = HttpContext.GetUserId();
             var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
 
