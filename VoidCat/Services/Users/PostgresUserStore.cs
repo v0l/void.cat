@@ -32,13 +32,14 @@ public class PostgresUserStore : IUserStore
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Users""(""Id"", ""Email"", ""Password"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"") 
-values(:id, :email, :password, :lastLogin, :displayName, :avatar, :flags)",
+""Users""(""Id"", ""Email"", ""Password"", ""Created"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"") 
+values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :flags)",
             new
             {
                 Id = id,
                 email = obj.Email,
                 password = obj.Password,
+                created = obj.Created,
                 displayName = obj.DisplayName,
                 lastLogin = obj.LastLogin.ToUniversalTime(),
                 avatar = obj.Avatar,

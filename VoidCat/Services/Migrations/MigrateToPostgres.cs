@@ -105,8 +105,21 @@ public class MigrateToPostgres : IMigration
         {
             try
             {
-                var privateUser = await cacheUsers.GetPrivate(user.Id);
-                await _userStore.Set(privateUser!.Id, privateUser);
+                var privateUser = await cacheUsers.Get<PrivateUser>(user.Id);
+                privateUser!.Password ??= privateUser.PasswordHash;
+                
+                await _userStore.Set(privateUser!.Id, new InternalVoidUser()
+                {
+                    Id = privateUser.Id,
+                    Avatar = privateUser.Avatar,
+                    Created = privateUser.Created,
+                    DisplayName = privateUser.DisplayName,
+                    Email = privateUser.Email,
+                    Flags = privateUser.Flags,
+                    LastLogin = privateUser.LastLogin,
+                    Password = privateUser.Password!,
+                    Roles = privateUser.Roles
+                });
                 _logger.LogInformation("Migrated user {USer}", user.Id);
             }
             catch (Exception ex)
@@ -114,5 +127,11 @@ public class MigrateToPostgres : IMigration
                 _logger.LogError(ex, "Failed to migrate user {User}", user.Id);
             }
         }
+    }
+
+    private class PrivateUser : PrivateVoidUser
+    {
+        public string? PasswordHash { get; set; }
+        public string? Password { get; set; }
     }
 }
