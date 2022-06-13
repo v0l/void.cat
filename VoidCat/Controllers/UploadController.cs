@@ -83,7 +83,7 @@ namespace VoidCat.Controllers
                 // attach file upload to user
                 if (uid.HasValue)
                 {
-                    await _userUploads.AddFile(uid!.Value, vf);
+                    await _userUploads.AddFile(uid!.Value, vf.Id);
                 }
 
                 if (cli)

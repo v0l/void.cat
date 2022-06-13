@@ -4,11 +4,11 @@ using VoidCat.Services.Abstractions;
 namespace VoidCat.Services.Users;
 
 /// <inheritdoc />
-public class UserUploadStore : IUserUploadsStore
+public class CacheUserUploadStore : IUserUploadsStore
 {
     private readonly ICache _cache;
 
-    public UserUploadStore(ICache cache)
+    public CacheUserUploadStore(ICache cache)
     {
         _cache = cache;
     }
@@ -43,10 +43,10 @@ public class UserUploadStore : IUserUploadsStore
     }
 
     /// <inheritdoc />
-    public async ValueTask AddFile(Guid user, PrivateVoidFile voidFile)
+    public async ValueTask AddFile(Guid user, Guid file)
     {
-        await _cache.AddToList(MapKey(user), voidFile.Id.ToString());
-        await _cache.Set(MapUploader(voidFile.Id), user);
+        await _cache.AddToList(MapKey(user), file.ToString());
+        await _cache.Set(MapUploader(file), user);
     }
 
     /// <inheritdoc />

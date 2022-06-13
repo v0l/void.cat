@@ -60,12 +60,12 @@ and uf.""File"" = f.""Id""";
     }
 
     /// <inheritdoc />
-    public async ValueTask AddFile(Guid user, PrivateVoidFile voidFile)
+    public async ValueTask AddFile(Guid user, Guid file)
     {
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(@"insert into ""UserFiles""(""File"", ""User"") values(:file, :user)", new
         {
-            file = voidFile.Id,
+            file,
             user
         });
     }

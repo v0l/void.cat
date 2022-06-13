@@ -15,9 +15,10 @@ public class MigrateToPostgres : IMigration
     private readonly ICache _cache;
     private readonly IPaywallStore _paywallStore;
     private readonly IUserStore _userStore;
+    private readonly IUserUploadsStore _userUploads;
 
     public MigrateToPostgres(VoidSettings settings, ILogger<MigrateToPostgres> logger, IFileMetadataStore fileMetadata,
-        ICache cache, IPaywallStore paywallStore, IUserStore userStore)
+        ICache cache, IPaywallStore paywallStore, IUserStore userStore, IUserUploadsStore userUploads)
     {
         _logger = logger;
         _settings = settings;
@@ -25,6 +26,7 @@ public class MigrateToPostgres : IMigration
         _cache = cache;
         _paywallStore = paywallStore;
         _userStore = userStore;
+        _userUploads = userUploads;
     }
 
     /// <inheritdoc />
@@ -56,13 +58,17 @@ public class MigrateToPostgres : IMigration
         var localDiskMetaStore =
             new LocalDiskFileMetadataStore(_settings);
 
-        var files = await localDiskMetaStore.ListFiles<SecretVoidFileMeta>(new(0, int.MaxValue));
+        var files = await localDiskMetaStore.ListFiles<UploaderSecretVoidFileMeta>(new(0, int.MaxValue));
         await foreach (var file in files.Results)
         {
             try
             {
                 file.MimeType ??= "application/octet-stream";
                 await _fileMetadata.Set(file.Id, file);
+                if (file.Uploader.HasValue)
+                {
+                    await _userUploads.AddFile(file.Uploader.Value, file.Id);
+                }
                 await localDiskMetaStore.Delete(file.Id);
                 _logger.LogInformation("Migrated file metadata for {File}", file.Id);
             }
@@ -133,5 +139,10 @@ public class MigrateToPostgres : IMigration
     {
         public string? PasswordHash { get; set; }
         public string? Password { get; set; }
+    }
+
+    private record UploaderSecretVoidFileMeta : SecretVoidFileMeta
+    {
+        public Guid? Uploader { get; set; }
     }
 }

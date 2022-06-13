@@ -12,7 +12,7 @@ public static class FileStorageStartup
 
         if (settings.CloudStorage != default)
         {
-            services.AddTransient<IUserUploadsStore, UserUploadStore>();
+            services.AddTransient<IUserUploadsStore, CacheUserUploadStore>();
             
             // cloud storage
             if (settings.CloudStorage.S3 != default)
@@ -29,7 +29,7 @@ public static class FileStorageStartup
         }
         else
         {
-            services.AddTransient<IUserUploadsStore, UserUploadStore>();
+            services.AddTransient<IUserUploadsStore, CacheUserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
             services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
         }

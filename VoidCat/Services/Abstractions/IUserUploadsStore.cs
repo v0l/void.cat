@@ -19,9 +19,9 @@ public interface IUserUploadsStore
     /// Assign a file upload to a user
     /// </summary>
     /// <param name="user"></param>
-    /// <param name="voidFile"></param>
+    /// <param name="file"></param>
     /// <returns></returns>
-    ValueTask AddFile(Guid user, PrivateVoidFile voidFile);
+    ValueTask AddFile(Guid user, Guid file);
     
     /// <summary>
     /// Get the uploader of a single file
