@@ -61,6 +61,7 @@ public class MigrateToPostgres : IMigration
         {
             try
             {
+                file.MimeType ??= "application/octet-stream";
                 await _fileMetadata.Set(file.Id, file);
                 await localDiskMetaStore.Delete(file.Id);
                 _logger.LogInformation("Migrated file metadata for {File}", file.Id);
