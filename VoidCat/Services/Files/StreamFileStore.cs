@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Security.Cryptography;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
 using VoidCat.Services.Abstractions;
@@ -45,16 +44,11 @@ public abstract class StreamFileStore
             }
         }
 
-        var (total, hash) = await IngressInternal(id, payload.InStream, outStream, cts);
-        if (payload.Hash != null && !hash.Equals(payload.Hash, StringComparison.InvariantCultureIgnoreCase))
-        {
-            throw new CryptographicException("Invalid file hash");
-        }
-
-        return await HandleCompletedUpload(payload, hash, total);
+        var total = await IngressInternal(id, payload.InStream, outStream, cts);
+        return HandleCompletedUpload(payload, total);
     }
 
-    protected async Task<PrivateVoidFile> HandleCompletedUpload(IngressPayload payload, string hash, ulong totalSize)
+    protected PrivateVoidFile HandleCompletedUpload(IngressPayload payload, ulong totalSize)
     {
         var meta = payload.Meta;
         if (payload.IsAppend)
@@ -68,7 +62,6 @@ public abstract class StreamFileStore
         {
             meta = meta! with
             {
-                Digest = hash,
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = totalSize
@@ -84,13 +77,12 @@ public abstract class StreamFileStore
         return vf;
     }
 
-    private async Task<(ulong, string)> IngressInternal(Guid id, Stream ingress, Stream outStream,
+    private async Task<ulong> IngressInternal(Guid id, Stream ingress, Stream outStream,
         CancellationToken cts)
     {
         using var buffer = MemoryPool<byte>.Shared.Rent(BufferSize);
         var total = 0UL;
-        int readLength = 0, offset = 0;
-        var sha = SHA256.Create();
+        int readLength, offset = 0;
         while ((readLength = await ingress.ReadAsync(buffer.Memory[offset..], cts)) > 0 || offset != 0)
         {
             if (readLength != 0 && offset + readLength < buffer.Memory.Length)
@@ -104,13 +96,11 @@ public abstract class StreamFileStore
             var buf = buffer.Memory[..totalRead];
             await outStream.WriteAsync(buf, cts);
             await _stats.TrackIngress(id, (ulong) buf.Length);
-            sha.TransformBlock(buf.ToArray(), 0, buf.Length, null, 0);
             total += (ulong) buf.Length;
             offset = 0;
         }
 
-        sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        return (total, sha.Hash!.ToHex());
+        return total;
     }
 
     protected async Task EgressFull(Guid id, Stream inStream, Stream outStream,

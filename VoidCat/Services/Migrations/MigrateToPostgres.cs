@@ -157,8 +157,6 @@ public class MigrateToPostgres : IMigration
 
     private record UploaderSecretVoidFileMeta : SecretVoidFileMeta
     {
-        public new string? Digest { get; set; }
-
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid? Uploader { get; set; }
     }

@@ -43,8 +43,8 @@ public class S3FileStore : StreamFileStore, IFileStore
             }
         };
 
-        var r = await _client.PutObjectAsync(req, cts);
-        return await HandleCompletedUpload(payload, r.ChecksumSHA256, payload.Meta.Size);
+        await _client.PutObjectAsync(req, cts);
+        return HandleCompletedUpload(payload, payload.Meta.Size);
     }
 
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)

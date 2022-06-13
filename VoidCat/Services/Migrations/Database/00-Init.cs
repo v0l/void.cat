@@ -21,12 +21,12 @@ public class Init : Migration
 
         Create.Table("Files")
             .WithColumn("Id").AsGuid().PrimaryKey()
-            .WithColumn("Name").AsString()
+            .WithColumn("Name").AsString().Nullable()
             .WithColumn("Size").AsInt64()
             .WithColumn("Uploaded").AsDateTimeOffset().Indexed().WithDefault(SystemMethods.CurrentUTCDateTime)
             .WithColumn("Description").AsString().Nullable()
             .WithColumn("MimeType").AsString().WithDefaultValue("application/octet-stream")
-            .WithColumn("Digest").AsString()
+            .WithColumn("Digest").AsString().Nullable()
             .WithColumn("EditSecret").AsGuid();
 
         Create.Table("UserFiles")

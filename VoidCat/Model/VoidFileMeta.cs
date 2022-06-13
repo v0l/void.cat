@@ -59,7 +59,7 @@ public record VoidFileMeta : IVoidFileMeta
     /// <summary>
     /// SHA-256 hash of the file
     /// </summary>
-    public string? Digest { get; init; }
+    public string? Digest { get; set; }
 
     /// <summary>
     /// Url to download the file
