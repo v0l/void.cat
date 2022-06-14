@@ -3,6 +3,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Stats;
 
+/// <inheritdoc />
 public class PrometheusStatsCollector : IStatsCollector
 {
     private readonly Counter _egress =
@@ -11,6 +12,7 @@ public class PrometheusStatsCollector : IStatsCollector
     private readonly Counter _ingress =
         Metrics.CreateCounter("ingress", "Incoming traffic to the site", "file");
 
+    /// <inheritdoc />
     public ValueTask TrackIngress(Guid id, ulong amount)
     {
         _ingress.Inc(amount);
@@ -18,6 +20,7 @@ public class PrometheusStatsCollector : IStatsCollector
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc />
     public ValueTask TrackEgress(Guid id, ulong amount)
     {
         _egress.Inc(amount);

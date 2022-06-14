@@ -15,30 +15,34 @@ public class RedisStatsController : IStatsReporter, IStatsCollector
         _redis = redis;
     }
 
+    /// <inheritdoc />
     public async ValueTask<Bandwidth> GetBandwidth()
     {
         var egress = _redis.StringGetAsync(GlobalEgress);
         var ingress = _redis.StringGetAsync(GlobalIngress);
         await Task.WhenAll(egress, ingress);
 
-        return new((ulong)ingress.Result, (ulong)egress.Result);
+        return new((ulong) ingress.Result, (ulong) egress.Result);
     }
 
+    /// <inheritdoc />
     public async ValueTask<Bandwidth> GetBandwidth(Guid id)
     {
         var egress = _redis.StringGetAsync(formatEgressKey(id));
         var ingress = _redis.StringGetAsync(formatIngressKey(id));
         await Task.WhenAll(egress, ingress);
 
-        return new((ulong)ingress.Result, (ulong)egress.Result);
+        return new((ulong) ingress.Result, (ulong) egress.Result);
     }
 
+    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         await _redis.KeyDeleteAsync(formatEgressKey(id));
         await _redis.KeyDeleteAsync(formatIngressKey(id));
     }
 
+    /// <inheritdoc />
     public async ValueTask TrackIngress(Guid id, ulong amount)
     {
         await Task.WhenAll(
@@ -46,6 +50,7 @@ public class RedisStatsController : IStatsReporter, IStatsCollector
             _redis.StringIncrementAsync(formatIngressKey(id), amount));
     }
 
+    /// <inheritdoc />
     public async ValueTask TrackEgress(Guid id, ulong amount)
     {
         await Task.WhenAll(

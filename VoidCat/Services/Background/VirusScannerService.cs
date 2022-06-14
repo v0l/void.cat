@@ -35,6 +35,9 @@ public class VirusScannerService : BackgroundService
 
                 await foreach (var file in files.Results.WithCancellation(stoppingToken))
                 {
+                    // file is too large, cant scan
+                    if (file.Size > 4_000_000) continue;
+
                     // check for scans
                     var scan = await _scanStore.GetByFile(file.Id);
                     if (scan == default)

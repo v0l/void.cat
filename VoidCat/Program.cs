@@ -46,8 +46,7 @@ services.AddSingleton(voidSettings.Strike ?? new());
 var seqSettings = configuration.GetSection("Seq");
 builder.Logging.AddSeq(seqSettings);
 
-var useRedis = !string.IsNullOrEmpty(voidSettings.Redis);
-if (useRedis)
+if (voidSettings.HasRedis())
 {
     var cx = await ConnectionMultiplexer.ConnectAsync(voidSettings.Redis);
     services.AddSingleton(cx);
@@ -138,8 +137,7 @@ services.AddTransient<IMigration, MigrateToPostgres>();
 services.AddStorage(voidSettings);
 
 // stats
-services.AddTransient<IAggregateStatsCollector, AggregateStatsCollector>();
-services.AddTransient<IStatsCollector, PrometheusStatsCollector>();
+services.AddMetrics(voidSettings);
 
 // paywall
 services.AddPaywallServices(voidSettings);
@@ -171,13 +169,10 @@ if (!string.IsNullOrEmpty(voidSettings.Postgres))
                 .ScanIn(typeof(Program).Assembly).For.Migrations());
 }
 
-if (useRedis)
+if (voidSettings.HasRedis())
 {
     services.AddTransient<ICache, RedisCache>();
-    services.AddTransient<RedisStatsController>();
-    services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<RedisStatsController>());
-    services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<RedisStatsController>());
-
+    
     // redis specific migrations
     services.AddTransient<IMigration, UserLookupKeyHashMigration>();
 }
@@ -185,9 +180,6 @@ else
 {
     services.AddMemoryCache();
     services.AddTransient<ICache, InMemoryCache>();
-    services.AddTransient<InMemoryStatsController>();
-    services.AddTransient<IStatsReporter>(svc => svc.GetRequiredService<InMemoryStatsController>());
-    services.AddTransient<IStatsCollector>(svc => svc.GetRequiredService<InMemoryStatsController>());
 }
 
 var app = builder.Build();

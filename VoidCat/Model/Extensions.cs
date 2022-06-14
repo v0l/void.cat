@@ -226,4 +226,10 @@ public static class Extensions
 
     public static bool HasPostgres(this VoidSettings settings)
         => !string.IsNullOrEmpty(settings.Postgres);
+
+    public static bool HasRedis(this VoidSettings settings)
+        => !string.IsNullOrEmpty(settings.Redis);
+
+    public static bool HasPrometheus(this VoidSettings settings)
+        => settings.Prometheus != null;
 }

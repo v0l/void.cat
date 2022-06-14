@@ -18,9 +18,11 @@ namespace VoidCat.Controllers
         private readonly IPaywallFactory _paywallFactory;
         private readonly IFileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
+        private readonly ITimeSeriesStatsReporter _timeSeriesStats;
 
         public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall,
-            IPaywallFactory paywallFactory, IFileInfoManager fileInfo, IUserUploadsStore userUploads)
+            IPaywallFactory paywallFactory, IFileInfoManager fileInfo, IUserUploadsStore userUploads,
+            ITimeSeriesStatsReporter timeSeriesStats)
         {
             _storage = storage;
             _metadata = metadata;
@@ -28,6 +30,7 @@ namespace VoidCat.Controllers
             _paywallFactory = paywallFactory;
             _fileInfo = fileInfo;
             _userUploads = userUploads;
+            _timeSeriesStats = timeSeriesStats;
         }
 
         /// <summary>
@@ -161,6 +164,22 @@ namespace VoidCat.Controllers
             var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
 
             return isOwner ? Json(await _fileInfo.GetPrivate(fid)) : Json(await _fileInfo.Get(fid));
+        }
+
+        /// <summary>
+        /// Return information about a specific file
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("{id}/metrics")]
+        public async Task<IActionResult> Metrics([FromRoute] string id)
+        {
+            if (!id.TryFromBase58Guid(out var fid)) return StatusCode(404);
+
+            var stats = await _timeSeriesStats.GetBandwidth(Guid.Parse("0327ed25-69cb-489a-ae37-2e512a63e4a4"), DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)), DateTime.UtcNow);
+
+            return Json(stats);
         }
 
         /// <summary>

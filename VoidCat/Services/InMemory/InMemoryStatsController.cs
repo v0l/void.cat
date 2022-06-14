@@ -14,6 +14,7 @@ public class InMemoryStatsController : IStatsCollector, IStatsReporter
         _cache = cache;
     }
 
+    /// <inheritdoc />
     public ValueTask TrackIngress(Guid id, ulong amount)
     {
         Incr(IngressKey(id), amount);
@@ -21,6 +22,7 @@ public class InMemoryStatsController : IStatsCollector, IStatsReporter
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc />
     public ValueTask TrackEgress(Guid id, ulong amount)
     {
         Incr(EgressKey(id), amount);
@@ -28,12 +30,27 @@ public class InMemoryStatsController : IStatsCollector, IStatsReporter
         return ValueTask.CompletedTask;
     }
 
+    /// <inheritdoc />
     public ValueTask<Bandwidth> GetBandwidth()
         => ValueTask.FromResult(GetBandwidthInternal(Global));
 
+    /// <inheritdoc />
+    public ValueTask<IReadOnlyList<BandwidthPoint>> GetBandwidth(DateTime start, DateTime end)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
     public ValueTask<Bandwidth> GetBandwidth(Guid id)
         => ValueTask.FromResult(GetBandwidthInternal(id));
 
+    /// <inheritdoc />
+    public ValueTask<IReadOnlyList<BandwidthPoint>> GetBandwidth(Guid id, DateTime start, DateTime end)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
     public ValueTask Delete(Guid id)
     {
         _cache.Remove(EgressKey(id));
