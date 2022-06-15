@@ -39,6 +39,9 @@
 		<!-- Don't publish the SPA source files, but do show them in the project files list -->
 		<Content Remove="$(SpaRoot)**" />
 		<Content Include="$(SolutionDir).github\workflows\build.yml" />
+		<Content Include="..\docker-compose.yml">
+		  <Link>docker-compose.yml</Link>
+		</Content>
 		<Content Include="..\Dockerfile">
 		  <Link>Dockerfile</Link>
 		</Content>

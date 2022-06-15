@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8001:80"
+    volumes:
+      - "./VoidCat/appsettings.compose.json:/app/appsettings.json:ro"
+  redis:
+    image: "redis:alpine"
+  postgres:
+    image: "postgres:14.1"
+    environment:
+      - "POSTGRES_DB=void"
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+  clamav:
+    image: "clamav/clamav"
