@@ -2,6 +2,7 @@
 
 namespace VoidCat.Services.Migrations;
 
+/// <inheritdoc />
 public class FluentMigrationRunner : IMigration
 {
     private readonly IMigrationRunner _runner;
@@ -11,6 +12,10 @@ public class FluentMigrationRunner : IMigration
         _runner = runner;
     }
 
+    /// <inheritdoc />
+    public int Order => -1;
+
+    /// <inheritdoc />
     public ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         _runner.MigrateUp();

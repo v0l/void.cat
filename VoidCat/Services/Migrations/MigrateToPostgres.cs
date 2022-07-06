@@ -35,6 +35,9 @@ public class MigrateToPostgres : IMigration
     }
 
     /// <inheritdoc />
+    public int Order => 0;
+
+    /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         if (args.Contains("--migrate-local-metadata-to-postgres"))

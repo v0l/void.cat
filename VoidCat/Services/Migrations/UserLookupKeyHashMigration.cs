@@ -4,6 +4,7 @@ using VoidCat.Model;
 
 namespace VoidCat.Services.Migrations;
 
+/// <inheritdoc />
 public class UserLookupKeyHashMigration : IMigration
 {
     private readonly IDatabase _database;
@@ -13,6 +14,10 @@ public class UserLookupKeyHashMigration : IMigration
         _database = database;
     }
 
+    /// <inheritdoc />
+    public int Order => 2;
+
+    /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         var users = await _database.SetMembersAsync("users");

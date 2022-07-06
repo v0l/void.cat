@@ -173,7 +173,7 @@ if (!string.IsNullOrEmpty(voidSettings.Postgres))
 if (voidSettings.HasRedis())
 {
     services.AddTransient<ICache, RedisCache>();
-    
+
     // redis specific migrations
     services.AddTransient<IMigration, UserLookupKeyHashMigration>();
 }
@@ -190,7 +190,7 @@ using (var migrationScope = app.Services.CreateScope())
 {
     var migrations = migrationScope.ServiceProvider.GetServices<IMigration>();
     var logger = migrationScope.ServiceProvider.GetRequiredService<ILogger<IMigration>>();
-    foreach (var migration in migrations)
+    foreach (var migration in migrations.OrderBy(a => a.Order))
     {
         logger.LogInformation("Running migration: {Migration}", migration.GetType().Name);
         var res = await migration.Migrate(args);

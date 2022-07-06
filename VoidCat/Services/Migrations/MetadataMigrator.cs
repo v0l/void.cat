@@ -3,6 +3,7 @@ using VoidCat.Model;
 
 namespace VoidCat.Services.Migrations;
 
+/// <inheritdoc />
 public abstract class MetadataMigrator<TOld, TNew> : IMigration
 {
     private readonly VoidSettings _settings;
@@ -14,6 +15,10 @@ public abstract class MetadataMigrator<TOld, TNew> : IMigration
         _logger = logger;
     }
 
+    /// <inheritdoc />
+    public int Order => 2;
+
+    /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         var newMeta = Path.Combine(_settings.DataDirectory, OldPath);

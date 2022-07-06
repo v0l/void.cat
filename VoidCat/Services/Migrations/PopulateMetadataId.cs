@@ -3,6 +3,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Migrations;
 
+/// <inheritdoc />
 public class PopulateMetadataId : IMigration
 {
     private readonly IFileMetadataStore _metadataStore;
@@ -12,6 +13,10 @@ public class PopulateMetadataId : IMigration
         _metadataStore = metadataStore;
     }
 
+    /// <inheritdoc />
+    public int Order => 2;
+
+    /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         if (!args.Contains("--add-metadata-id"))

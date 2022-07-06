@@ -3,6 +3,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Migrations;
 
+/// <inheritdoc />
 public class FixSize : IMigration
 {
     private readonly ILogger<FixSize> _logger;
@@ -16,6 +17,10 @@ public class FixSize : IMigration
         _fileStore = fileStore;
     }
 
+    /// <inheritdoc />
+    public int Order => 2;
+
+    /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
         var files = await _fileMetadata.ListFiles<SecretVoidFileMeta>(new(0, int.MaxValue));
