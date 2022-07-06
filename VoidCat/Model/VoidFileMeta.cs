@@ -65,6 +65,11 @@ public record VoidFileMeta : IVoidFileMeta
     /// Url to download the file
     /// </summary>
     public Uri? Url { get; set; }
+    
+    /// <summary>
+    /// Time when the file will expire and be deleted
+    /// </summary>
+    public DateTimeOffset? Expires { get; set; }
 }
 
 /// <summary>

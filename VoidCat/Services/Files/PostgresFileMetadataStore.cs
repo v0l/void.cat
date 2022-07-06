@@ -32,9 +32,10 @@ public class PostgresFileMetadataStore : IFileMetadataStore
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"")
-values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret)
-on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :description, ""MimeType"" = :mimeType", new
+""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"")
+values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires)
+on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :description, ""MimeType"" = :mimeType, ""Expires"" = :expires",
+            new
             {
                 id,
                 name = obj.Name,
@@ -43,7 +44,8 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
                 description = obj.Description,
                 mimeType = obj.MimeType,
                 digest = obj.Digest,
-                editSecret = obj.EditSecret
+                editSecret = obj.EditSecret,
+                expires = obj.Expires
             });
     }
 
@@ -79,6 +81,7 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :descript
         oldMeta.Description = meta.Description ?? oldMeta.Description;
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
+        oldMeta.Expires = meta.Expires ?? oldMeta.Expires;
 
         await Set(id, oldMeta);
     }
