@@ -34,7 +34,7 @@ public class PostgresFileMetadataStore : IFileMetadataStore
             @"insert into 
 ""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"")
 values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires)
-on conflict (""Id"") do update set ""Name"" = :name, ""Description"" = :description, ""MimeType"" = :mimeType, ""Expires"" = :expires",
+on conflict (""Id"") do update set ""Name"" = :name, ""Size"" = :size, ""Description"" = :description, ""MimeType"" = :mimeType, ""Expires"" = :expires",
             new
             {
                 id,
