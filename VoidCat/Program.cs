@@ -132,6 +132,7 @@ services.AddAuthorization((opt) =>
 services.AddTransient<RazorPartialToStringRenderer>();
 services.AddTransient<IMigration, PopulateMetadataId>();
 services.AddTransient<IMigration, MigrateToPostgres>();
+services.AddTransient<IMigration, FixSize>();
 
 // file storage
 services.AddStorage(voidSettings);
