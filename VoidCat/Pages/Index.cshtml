@@ -1,0 +1,64 @@
+﻿@using VoidCat.Model
+@model VoidCat.Controllers.IndexController.IndexModel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#000000"/>
+    <link rel="icon" href="/favicon.ico"/>
+    <link rel="apple-touch-icon" href="/logo.png"/>
+    <link rel="manifest" href="/manifest.json"/>
+
+    <title>void.cat - @Model.Meta.Name</title>
+    <meta name="description" content="@Model.Meta.Description"/>
+
+    <meta property="og:site_name" content="void.cat"/>
+    <meta property="og:title" content="@Model.Meta.Name"/>
+    <meta property="og:description" content="@Model.Meta.Description"/>
+    <meta property="og:url" content="@($"https://{Context.Request.Host}/{Model.Meta.Id.ToBase58()}")"/>
+
+    @foreach (var ep in Model.Manifest.Entrypoints)
+    {
+        switch (System.IO.Path.GetExtension(ep))
+        {
+            case ".css":
+            {
+                <link rel="stylesheet" href="@ep"/>
+                break;
+            }
+            case ".js":
+            {
+                <script defer src="@ep"></script>
+                break;
+            }
+        }
+    }
+    @{
+        var mime = Model.Meta.MimeType;
+    }
+    @if (mime != default)
+    {
+        var link = $"https://{Context.Request.Host}/d/{Model.Meta.Id.ToBase58()}";
+        if (mime.StartsWith("image/"))
+        {
+            <meta property="og:image" content="@link"/>
+            <meta property="og:image:type" content="@mime"/>
+        }
+        else if (mime.StartsWith("video/"))
+        {
+            <meta property="og:video" content="@link"/>
+            <meta property="og:video:type" content="@mime"/>
+        }
+        else if (mime.StartsWith("audio/"))
+        {
+            <meta property="og:audio" content="@link"/>
+            <meta property="og:audio:type" content="@mime"/>
+        }
+    }
+</head>
+<body>
+<noscript>You need to enable JavaScript to run this app.</noscript>
+<div id="root"></div>
+</body>
+</html>

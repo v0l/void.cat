@@ -6,6 +6,9 @@ services:
       - "8001:80"
     volumes:
       - "./VoidCat/appsettings.compose.json:/app/appsettings.json:ro"
+    depends_on:
+      - postgres
+      - redis
   redis:
     image: "redis:alpine"
   postgres:
