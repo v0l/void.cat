@@ -24,10 +24,7 @@ public class IndexController : Controller
     [Route("{id}")]
     public async Task<IActionResult> FilePreview(string id)
     {
-        if (!id.TryFromBase58Guid(out var gid)) return NotFound();
-
-        var meta = await _fileMetadata.Get(gid);
-        if (meta == default) return NotFound();
+        id.TryFromBase58Guid(out var gid);
 
         var manifestPath = Path.Combine(_webHost.WebRootPath, "asset-manifest.json");
         if (!System.IO.File.Exists(manifestPath)) return StatusCode(500);
@@ -35,14 +32,14 @@ public class IndexController : Controller
         var jsonManifest = await System.IO.File.ReadAllTextAsync(manifestPath);
         return View("~/Pages/Index.cshtml", new IndexModel
         {
-            Meta = meta,
+            Meta = await _fileMetadata.Get(gid),
             Manifest = JsonConvert.DeserializeObject<AssetManifest>(jsonManifest)!
         });
     }
 
     public class IndexModel
     {
-        public VoidFileMeta Meta { get; init; }
+        public VoidFileMeta? Meta { get; init; }
 
         public AssetManifest Manifest { get; init; }
     }
