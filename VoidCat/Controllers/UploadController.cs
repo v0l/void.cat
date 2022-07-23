@@ -177,7 +177,8 @@ namespace VoidCat.Controllers
         {
             if (!id.TryFromBase58Guid(out var fid)) return StatusCode(404);
 
-            var stats = await _timeSeriesStats.GetBandwidth(Guid.Parse("0327ed25-69cb-489a-ae37-2e512a63e4a4"), DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)), DateTime.UtcNow);
+            var stats = await _timeSeriesStats.GetBandwidth(fid, DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)),
+                DateTime.UtcNow);
 
             return Json(stats);
         }

@@ -22,6 +22,7 @@ public class IndexController : Controller
     /// <param name="id"></param>
     /// <returns></returns>
     [Route("{id}")]
+    [HttpGet]
     public async Task<IActionResult> FilePreview(string id)
     {
         id.TryFromBase58Guid(out var gid);
