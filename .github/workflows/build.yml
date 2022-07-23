@@ -1,9 +1,6 @@
 name: build
 on:
   push:
-    branches: [ v4-re ]
-    paths-ignore:
-      - '.github/**'
 jobs:
   build:
     runs-on: ubuntu-latest
