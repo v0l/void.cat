@@ -107,6 +107,7 @@ services.AddRazorPages();
 services.AddRouting();
 services.AddControllers()
     .AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
+services.AddHealthChecks();
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -213,6 +214,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHealthChecks("/healthz");
 
 app.UseEndpoints(ep =>
 {
