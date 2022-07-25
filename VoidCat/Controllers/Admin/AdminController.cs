@@ -65,7 +65,7 @@ public class AdminController : Controller
     /// <param name="request">Page request</param>
     /// <returns></returns>
     [HttpPost]
-    [Route("user")]
+    [Route("users")]
     public async Task<RenderedResults<AdminListedUser>> ListUsers([FromBody] PagedRequest request)
     {
         var result = await _userStore.ListUsers(request);
@@ -91,7 +91,7 @@ public class AdminController : Controller
     /// <param name="user"></param>
     /// <returns></returns>
     [HttpPost]
-    [Route("user/{id}")]
+    [Route("update-user")]
     public async Task<IActionResult> UpdateUser([FromBody] PrivateVoidUser user)
     {
         var oldUser = await _userStore.Get(user.Id);

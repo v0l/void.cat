@@ -52,7 +52,7 @@ public class AuthController : Controller
             }
 
             var user = await _manager.Login(req.Username, req.Password);
-            var token = CreateToken(user);
+            var token = CreateToken(user, DateTime.UtcNow.AddHours(12));
             var tokenWriter = new JwtSecurityTokenHandler();
             return new(tokenWriter.WriteToken(token), Profile: user.ToPublic());
         }
@@ -86,7 +86,7 @@ public class AuthController : Controller
             }
 
             var newUser = await _manager.Register(req.Username, req.Password);
-            var token = CreateToken(newUser);
+            var token = CreateToken(newUser, DateTime.UtcNow.AddHours(12));
             var tokenWriter = new JwtSecurityTokenHandler();
             return new(tokenWriter.WriteToken(token), Profile: newUser.ToPublic());
         }
@@ -137,7 +137,7 @@ public class AuthController : Controller
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            Token = new JwtSecurityTokenHandler().WriteToken(CreateApiToken(user, expiry)),
+            Token = new JwtSecurityTokenHandler().WriteToken(CreateToken(user, expiry)),
             Expiry = expiry
         };
 
@@ -145,7 +145,7 @@ public class AuthController : Controller
         return Json(key);
     }
 
-    private JwtSecurityToken CreateApiToken(VoidUser user, DateTime expiry)
+    private JwtSecurityToken CreateToken(VoidUser user, DateTime expiry)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSettings.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -153,26 +153,7 @@ public class AuthController : Controller
         var claims = new List<Claim>()
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Aud, "API"),
             new(JwtRegisteredClaimNames.Exp, new DateTimeOffset(expiry).ToUnixTimeSeconds().ToString()),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
-        };
-
-        claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a)));
-
-        return new JwtSecurityToken(_settings.JwtSettings.Issuer, claims: claims,
-            signingCredentials: credentials);
-    }
-
-    private JwtSecurityToken CreateToken(VoidUser user)
-    {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSettings.Key));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var claims = new List<Claim>()
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Exp, DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds().ToString()),
             new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
 

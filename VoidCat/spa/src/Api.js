@@ -27,8 +27,8 @@ export function useApi() {
         AdminApi: {
             fileList: (pageReq) => getJson("POST", "/admin/file", pageReq, auth),
             deleteFile: (id) => getJson("DELETE", `/admin/file/${id}`, undefined, auth),
-            userList: (pageReq) => getJson("POST", `/admin/user`, pageReq, auth),
-            updateUser: (user) => getJson("POST", `/admin/user/${user.id}`, user, auth)
+            userList: (pageReq) => getJson("POST", `/admin/users`, pageReq, auth),
+            updateUser: (user) => getJson("POST", `/admin/update-user`, user, auth)
         },
         Api: {
             info: () => getJson("GET", "/info"),

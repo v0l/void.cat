@@ -19,6 +19,7 @@ public static class UsersStartup
         {
             services.AddTransient<IUserStore, CacheUserStore>();
             services.AddTransient<IEmailVerification, CacheEmailVerification>();
+            services.AddTransient<IApiKeyStore, CacheApiKeyStore>();
         }
     }
 }
