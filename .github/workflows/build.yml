@@ -1,6 +1,8 @@
 name: build
 on:
   push:
+    branches: [ v4-re ]
+  pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
