@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers.Admin;
 
@@ -9,13 +10,13 @@ namespace VoidCat.Controllers.Admin;
 [Authorize(Policy = Policies.RequireAdmin)]
 public class AdminController : Controller
 {
-    private readonly IFileStore _fileStore;
+    private readonly FileStoreFactory _fileStore;
     private readonly IFileMetadataStore _fileMetadata;
     private readonly IFileInfoManager _fileInfo;
     private readonly IUserStore _userStore;
     private readonly IUserUploadsStore _userUploads;
 
-    public AdminController(IFileStore fileStore, IUserStore userStore, IFileInfoManager fileInfo,
+    public AdminController(FileStoreFactory fileStore, IUserStore userStore, IFileInfoManager fileInfo,
         IFileMetadataStore fileMetadata, IUserUploadsStore userUploads)
     {
         _fileStore = fileStore;
@@ -74,6 +75,7 @@ public class AdminController : Controller
             var uploads = await _userUploads.ListFiles(a.Id, new(0, int.MaxValue));
             return new AdminListedUser(a, uploads.TotalResults);
         }).ToListAsync();
+
         return new()
         {
             PageSize = request.PageSize,
@@ -81,6 +83,22 @@ public class AdminController : Controller
             TotalResults = result.TotalResults,
             Results = ret
         };
+    }
+
+    /// <summary>
+    /// Admin update user account
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("user/{id}")]
+    public async Task<IActionResult> UpdateUser([FromBody] PrivateVoidUser user)
+    {
+        var oldUser = await _userStore.Get(user.Id);
+        if (oldUser == default) return BadRequest();
+        
+        await _userStore.AdminUpdateUser(user);
+        return Ok();
     }
 
     public record AdminListedUser(PrivateVoidUser User, int Uploads);

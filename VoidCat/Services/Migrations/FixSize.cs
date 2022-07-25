@@ -1,5 +1,6 @@
 ﻿using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Services.Migrations;
 
@@ -8,9 +9,9 @@ public class FixSize : IMigration
 {
     private readonly ILogger<FixSize> _logger;
     private readonly IFileMetadataStore _fileMetadata;
-    private readonly IFileStore _fileStore;
+    private readonly FileStoreFactory _fileStore;
 
-    public FixSize(ILogger<FixSize> logger, IFileMetadataStore fileMetadata, IFileStore fileStore)
+    public FixSize(ILogger<FixSize> logger, IFileMetadataStore fileMetadata, FileStoreFactory fileStore)
     {
         _logger = logger;
         _fileMetadata = fileMetadata;

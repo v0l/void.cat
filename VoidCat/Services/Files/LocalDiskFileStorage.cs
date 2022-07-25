@@ -32,6 +32,9 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
     }
 
     /// <inheritdoc />
+    public string Key => "local-disk";
+    
+    /// <inheritdoc />
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var fPath = MapPath(payload.Id);

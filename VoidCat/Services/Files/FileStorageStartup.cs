@@ -9,29 +9,42 @@ public static class FileStorageStartup
     public static void AddStorage(this IServiceCollection services, VoidSettings settings)
     {
         services.AddTransient<IFileInfoManager, FileInfoManager>();
-
+        services.AddTransient<FileStoreFactory>();
+        
         if (settings.CloudStorage != default)
         {
-            services.AddTransient<IUserUploadsStore, CacheUserUploadStore>();
-            
-            // cloud storage
-            if (settings.CloudStorage.S3 != default)
+            // S3 storage
+            foreach (var s3 in settings.CloudStorage.S3 ?? Array.Empty<S3BlobConfig>())
             {
-                services.AddSingleton<IFileStore, S3FileStore>();
-                services.AddSingleton<IFileMetadataStore, S3FileMetadataStore>();
+                services.AddTransient<IFileStore>((svc) =>
+                    new S3FileStore(s3, svc.GetRequiredService<IAggregateStatsCollector>(),
+                        svc.GetRequiredService<IFileInfoManager>()));
+
+                if (settings.MetadataStore == s3.Name)
+                {
+                    services.AddSingleton<IFileMetadataStore>((svc) =>
+                        new S3FileMetadataStore(s3, svc.GetRequiredService<ILogger<S3FileMetadataStore>>()));
+                }
             }
         }
-        else if (!string.IsNullOrEmpty(settings.Postgres))
+
+        if (!string.IsNullOrEmpty(settings.Postgres))
         {
             services.AddTransient<IUserUploadsStore, PostgresUserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
-            services.AddTransient<IFileMetadataStore, PostgresFileMetadataStore>();
+            if (settings.MetadataStore == "postgres")
+            {
+                services.AddSingleton<IFileMetadataStore, PostgresFileMetadataStore>();
+            }
         }
         else
         {
             services.AddTransient<IUserUploadsStore, CacheUserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
-            services.AddTransient<IFileMetadataStore, LocalDiskFileMetadataStore>();
+            if (settings.MetadataStore == "local-disk")
+            {
+                services.AddSingleton<IFileMetadataStore, LocalDiskFileMetadataStore>();
+            }
         }
     }
 }

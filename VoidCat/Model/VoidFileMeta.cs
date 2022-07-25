@@ -70,6 +70,11 @@ public record VoidFileMeta : IVoidFileMeta
     /// Time when the file will expire and be deleted
     /// </summary>
     public DateTimeOffset? Expires { get; set; }
+    
+    /// <summary>
+    /// What storage system the file is on
+    /// </summary>
+    public string? Storage { get; set; }
 }
 
 /// <summary>

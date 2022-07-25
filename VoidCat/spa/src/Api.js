@@ -27,7 +27,8 @@ export function useApi() {
         AdminApi: {
             fileList: (pageReq) => getJson("POST", "/admin/file", pageReq, auth),
             deleteFile: (id) => getJson("DELETE", `/admin/file/${id}`, undefined, auth),
-            userList: (pageReq) => getJson("POST", `/admin/user`, pageReq, auth)
+            userList: (pageReq) => getJson("POST", `/admin/user`, pageReq, auth),
+            updateUser: (user) => getJson("POST", `/admin/user/${user.id}`, user, auth)
         },
         Api: {
             info: () => getJson("GET", "/info"),
@@ -42,7 +43,9 @@ export function useApi() {
             listUserFiles: (uid, pageReq) => getJson("POST", `/user/${uid}/files`, pageReq, auth),
             submitVerifyCode: (uid, code) => getJson("POST", `/user/${uid}/verify`, code, auth),
             sendNewCode: (uid) => getJson("GET", `/user/${uid}/verify`, undefined, auth),
-            updateMetadata: (id, meta) => getJson("POST", `/upload/${id}/meta`, meta, auth)
+            updateMetadata: (id, meta) => getJson("POST", `/upload/${id}/meta`, meta, auth),
+            listApiKeys: () => getJson("GET", `/auth/api-key`, undefined, auth),
+            createApiKey: (req) => getJson("POST", `/auth/api-key`, req, auth)
         }
     };
 }

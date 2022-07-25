@@ -5,6 +5,7 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
+/// <inheritdoc cref="VoidCat.Services.Abstractions.IFileStore" />
 public class S3FileStore : StreamFileStore, IFileStore
 {
     private readonly IFileInfoManager _fileInfo;
@@ -12,22 +13,28 @@ public class S3FileStore : StreamFileStore, IFileStore
     private readonly S3BlobConfig _config;
     private readonly IAggregateStatsCollector _statsCollector;
 
-    public S3FileStore(VoidSettings settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo) : base(stats)
+    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo) : base(stats)
     {
         _fileInfo = fileInfo;
         _statsCollector = stats;
-        _config = settings.CloudStorage!.S3!;
+        _config = settings;
         _client = _config.CreateClient();
     }
 
+    /// <inheritdoc />
+    public string Key => _config.Name;
+
+    /// <inheritdoc />
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
+        if (payload.IsAppend) throw new InvalidOperationException("Cannot append to S3 store");
+        
         var req = new PutObjectRequest
         {
             BucketName = _config.BucketName,
             Key = payload.Id.ToString(),
             InputStream = payload.InStream,
-            ContentType = "application/octet-stream",
+            ContentType = payload.Meta.MimeType ?? "application/octet-stream",
             AutoResetStreamPosition = false,
             AutoCloseStream = false,
             ChecksumAlgorithm = ChecksumAlgorithm.SHA256,
@@ -47,6 +54,7 @@ public class S3FileStore : StreamFileStore, IFileStore
         return HandleCompletedUpload(payload, payload.Meta.Size);
     }
 
+    /// <inheritdoc />
     public async ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts)
     {
         await using var stream = await Open(request, cts);
@@ -108,11 +116,13 @@ public class S3FileStore : StreamFileStore, IFileStore
         }
     }
 
+    /// <inheritdoc />
     public async ValueTask DeleteFile(Guid id)
     {
         await _client.DeleteObjectAsync(_config.BucketName, id.ToString());
     }
 
+    /// <inheritdoc />
     public async ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)
     {
         var req = new GetObjectRequest()

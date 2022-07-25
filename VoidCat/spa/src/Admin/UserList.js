@@ -5,15 +5,15 @@ import {useApi} from "../Api";
 import {logout} from "../LoginState";
 import {PageSelector} from "../PageSelector";
 import moment from "moment";
-import {VoidButton} from "../VoidButton";
 
-export function UserList() {
+export function UserList(props) {
     const {AdminApi} = useApi();
     const dispatch = useDispatch();
     const [users, setUsers] = useState();
     const [page, setPage] = useState(0);
     const pageSize = 10;
     const [accessDenied, setAccessDenied] = useState();
+    const actions = props.actions;
 
     async function loadUserList() {
         let pageReq = {
@@ -40,10 +40,7 @@ export function UserList() {
                 <td>{moment(user.created).fromNow()}</td>
                 <td>{moment(user.lastLogin).fromNow()}</td>
                 <td>{obj.uploads}</td>
-                <td>
-                    <VoidButton>Delete</VoidButton>
-                    <VoidButton>SetRoles</VoidButton>
-                </td>
+                <td>{actions(user)}</td>
             </tr>
         );
     }

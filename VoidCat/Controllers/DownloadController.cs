@@ -3,18 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers;
 
 [Route("d")]
 public class DownloadController : Controller
 {
-    private readonly IFileStore _storage;
+    private readonly FileStoreFactory _storage;
     private readonly IFileInfoManager _fileInfo;
     private readonly IPaywallOrderStore _paywallOrders;
     private readonly ILogger<DownloadController> _logger;
 
-    public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
+    public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
         IPaywallOrderStore paywall)
     {
         _storage = storage;

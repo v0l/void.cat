@@ -8,6 +8,11 @@ namespace VoidCat.Services.Abstractions;
 public interface IFileStore
 {
     /// <summary>
+    /// Return key for named instance
+    /// </summary>
+    string? Key { get; }
+    
+    /// <summary>
     /// Ingress a file into the system (Upload)
     /// </summary>
     /// <param name="payload"></param>

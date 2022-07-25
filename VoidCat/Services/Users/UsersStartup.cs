@@ -9,10 +9,11 @@ public static class UsersStartup
     {
         services.AddTransient<IUserManager, UserManager>();
 
-        if (settings.Postgres != default)
+        if (settings.HasPostgres())
         {
             services.AddTransient<IUserStore, PostgresUserStore>();
             services.AddTransient<IEmailVerification, PostgresEmailVerification>();
+            services.AddTransient<IApiKeyStore, PostgresApiKeyStore>();
         }
         else
         {

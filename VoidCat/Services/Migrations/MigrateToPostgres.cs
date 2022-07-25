@@ -18,11 +18,11 @@ public class MigrateToPostgres : IMigration
     private readonly IPaywallStore _paywallStore;
     private readonly IUserStore _userStore;
     private readonly IUserUploadsStore _userUploads;
-    private readonly IFileStore _fileStore;
+    private readonly FileStoreFactory _fileStore;
 
     public MigrateToPostgres(VoidSettings settings, ILogger<MigrateToPostgres> logger, IFileMetadataStore fileMetadata,
         ICache cache, IPaywallStore paywallStore, IUserStore userStore, IUserUploadsStore userUploads,
-        IFileStore fileStore)
+        FileStoreFactory fileStore)
     {
         _logger = logger;
         _settings = settings;
@@ -75,6 +75,7 @@ public class MigrateToPostgres : IMigration
                 {
                     var fs = await _fileStore.Open(new(file.Id, Enumerable.Empty<RangeRequest>()),
                         CancellationToken.None);
+
                     var hash = await SHA256.Create().ComputeHashAsync(fs);
                     file.Digest = hash.ToHex();
                 }
@@ -143,6 +144,7 @@ public class MigrateToPostgres : IMigration
                     Password = privateUser.Password!,
                     Roles = privateUser.Roles
                 });
+
                 _logger.LogInformation("Migrated user {USer}", user.Id);
             }
             catch (Exception ex)

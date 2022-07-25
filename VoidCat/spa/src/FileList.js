@@ -1,4 +1,3 @@
-import "./FileList.css";
 import moment from "moment";
 import {Link} from "react-router-dom";
 import {useDispatch} from "react-redux";
@@ -59,7 +58,7 @@ export function FileList(props) {
     }
 
     return (
-        <table className="file-list">
+        <table>
             <thead>
             <tr>
                 <th>Id</th>
