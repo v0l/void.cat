@@ -2,10 +2,14 @@
 
 namespace VoidCat.Services.Captcha;
 
+/// <summary>
+/// No captcha system is configured
+/// </summary>
 public class NoOpVerifier : ICaptchaVerifier
 {
+    /// <inheritdoc />
     public ValueTask<bool> Verify(string? token)
     {
-        return ValueTask.FromResult(token == null);
+        return ValueTask.FromResult(true);
     }
 }
