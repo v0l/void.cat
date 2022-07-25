@@ -22,7 +22,7 @@ export function useApi() {
             body: body ? JSON.stringify(body) : undefined
         });
     }
-    
+
     return {
         AdminApi: {
             fileList: (pageReq) => getJson("POST", "/admin/file", pageReq, auth),

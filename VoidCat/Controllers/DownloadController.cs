@@ -45,7 +45,7 @@ public class DownloadController : Controller
         var voidFile = await SetupDownload(gid);
         if (voidFile == default) return;
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -57,10 +57,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -83,7 +83,7 @@ public class DownloadController : Controller
             Response.ContentLength = 0;
             return;
         }
-        
+
         var cts = HttpContext.RequestAborted;
         await Response.StartAsync(cts);
         await _storage.Egress(egressReq, Response.Body, cts);
@@ -105,7 +105,7 @@ public class DownloadController : Controller
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))
             {
-                Response.StatusCode = (int) HttpStatusCode.PaymentRequired;
+                Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
                 return default;
             }
         }

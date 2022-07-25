@@ -96,7 +96,7 @@ public class AdminController : Controller
     {
         var oldUser = await _userStore.Get(user.Id);
         if (oldUser == default) return BadRequest();
-        
+
         await _userStore.AdminUpdateUser(user);
         return Ok();
     }

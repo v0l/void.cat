@@ -28,7 +28,7 @@ public class S3FileStore : StreamFileStore, IFileStore
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
         if (payload.IsAppend) throw new InvalidOperationException("Cannot append to S3 store");
-        
+
         var req = new PutObjectRequest
         {
             BucketName = _config.BucketName,
@@ -41,12 +41,12 @@ public class S3FileStore : StreamFileStore, IFileStore
             ChecksumSHA256 = payload.Hash != default ? Convert.ToBase64String(payload.Hash!.FromHex()) : null,
             StreamTransferProgress = (s, e) =>
             {
-                _statsCollector.TrackIngress(payload.Id, (ulong) e.IncrementTransferred)
+                _statsCollector.TrackIngress(payload.Id, (ulong)e.IncrementTransferred)
                     .GetAwaiter().GetResult();
             },
             Headers =
             {
-                ContentLength = (long) payload.Meta.Size
+                ContentLength = (long)payload.Meta.Size
             }
         };
 
@@ -145,6 +145,7 @@ public class S3FileStore : StreamFileStore, IFileStore
             BucketName = _config.BucketName,
             Key = request.Id.ToString()
         };
+
         if (request.Ranges.Any())
         {
             var r = request.Ranges.First();
