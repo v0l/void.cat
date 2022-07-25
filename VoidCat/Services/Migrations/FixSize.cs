@@ -27,15 +27,23 @@ public class FixSize : IMigration
         var files = await _fileMetadata.ListFiles<SecretVoidFileMeta>(new(0, int.MaxValue));
         await foreach (var file in files.Results)
         {
-            var fs = await _fileStore.Open(new(file.Id, Enumerable.Empty<RangeRequest>()), CancellationToken.None);
-            if (file.Size != (ulong) fs.Length)
+            try
             {
-                _logger.LogInformation("Updating file size {Id} to {Size}", file.Id, fs.Length);
-                var newFile = file with
+                var fs = await _fileStore.Open(new(file.Id, Enumerable.Empty<RangeRequest>()), CancellationToken.None);
+                if (file.Size != (ulong)fs.Length)
                 {
-                    Size = (ulong) fs.Length
-                };
-                await _fileMetadata.Set(newFile.Id, newFile);
+                    _logger.LogInformation("Updating file size {Id} to {Size}", file.Id, fs.Length);
+                    var newFile = file with
+                    {
+                        Size = (ulong)fs.Length
+                    };
+
+                    await _fileMetadata.Set(newFile.Id, newFile);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fix file {id}", file.Id);
             }
         }
 

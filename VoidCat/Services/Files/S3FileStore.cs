@@ -66,12 +66,14 @@ public class S3FileStore : StreamFileStore, IFileStore
     {
         if (!_config.Direct) return ValueTask.FromResult(new EgressResult());
 
-        var ub = new UriBuilder(_config.ServiceUrl!)
+        var url = _client.GetPreSignedURL(new()
         {
-            Path = $"/{_config.BucketName}/{request.Id}"
-        };
+            BucketName = _config.BucketName,
+            Expires = DateTime.UtcNow.AddHours(1),
+            Key = request.Id.ToString()
+        });
 
-        return ValueTask.FromResult(new EgressResult(ub.Uri));
+        return ValueTask.FromResult(new EgressResult(new Uri(url)));
     }
 
     public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
