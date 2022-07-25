@@ -30,6 +30,12 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         await using var fs = await Open(request, cts);
         await EgressFromStream(fs, request, outStream, cts);
     }
+    
+    /// <inheritdoc />
+    public ValueTask<EgressResult> StartEgress(EgressRequest request)
+    {
+        return ValueTask.FromResult(new EgressResult());
+    }
 
     /// <inheritdoc />
     public string Key => "local-disk";

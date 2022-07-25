@@ -143,15 +143,6 @@ public class S3FileMetadataStore : IFileMetadataStore
             if (ret != default)
             {
                 ret.Id = id;
-                if (_config.Direct)
-                {
-                    var ub = new UriBuilder(_config.ServiceUrl!)
-                    {
-                        Path = $"/{_config.BucketName}/{id}"
-                    };
-
-                    ret.Url = ub.Uri;
-                }
             }
 
             return ret;

@@ -75,6 +75,15 @@ public class DownloadController : Controller
             Response.ContentLength = range.Size;
         }
 
+        var preResult = await _storage.StartEgress(egressReq);
+        if (preResult.Redirect != null)
+        {
+            Response.StatusCode = (int)HttpStatusCode.Redirect;
+            Response.Headers.Location = preResult.Redirect.ToString();
+            Response.ContentLength = 0;
+            return;
+        }
+        
         var cts = HttpContext.RequestAborted;
         await Response.StartAsync(cts);
         await _storage.Egress(egressReq, Response.Body, cts);

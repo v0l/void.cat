@@ -61,6 +61,19 @@ public class S3FileStore : StreamFileStore, IFileStore
         await EgressFull(request.Id, stream, outStream, cts);
     }
 
+    /// <inheritdoc />
+    public ValueTask<EgressResult> StartEgress(EgressRequest request)
+    {
+        if (!_config.Direct) return ValueTask.FromResult(new EgressResult());
+
+        var ub = new UriBuilder(_config.ServiceUrl!)
+        {
+            Path = $"/{_config.BucketName}/{request.Id}"
+        };
+
+        return ValueTask.FromResult(new EgressResult(ub.Uri));
+    }
+
     public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
     {
         try

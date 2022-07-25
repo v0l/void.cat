@@ -19,7 +19,9 @@ export default function ApiKeyList() {
         let rsp = await Api.createApiKey({
             expiry: new Date(new Date().getTime() + DefaultExpiry)
         });
-        setNewApiKey(await rsp.json());
+        if (rsp.ok) {
+            setNewApiKey(await rsp.json());
+        }
     }
 
     useEffect(() => {
@@ -59,7 +61,7 @@ export default function ApiKeyList() {
                 </tbody>
             </table>
             {newApiKey ?
-                <VoidModal title="New Api Key" style={{ maxWidth: "50vw"}}>
+                <VoidModal title="New Api Key" style={{maxWidth: "50vw"}}>
                     Please save this now as it will not be shown again:
                     <pre className="copy">{newApiKey.token}</pre>
                     <VoidButton onClick={(e) => setNewApiKey(undefined)}>Close</VoidButton>

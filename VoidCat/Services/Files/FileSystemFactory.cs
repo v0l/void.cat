@@ -53,6 +53,13 @@ public class FileStoreFactory : IFileStore
         var store = await GetStore(request.Id);
         await store.Egress(request, outStream, cts);
     }
+    
+    /// <inheritdoc />
+    public async ValueTask<EgressResult> StartEgress(EgressRequest request)
+    {
+        var store = await GetStore(request.Id);
+        return await store.StartEgress(request);
+    }
 
     /// <inheritdoc />
     public async ValueTask DeleteFile(Guid id)

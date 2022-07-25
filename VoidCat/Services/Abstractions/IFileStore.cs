@@ -30,6 +30,13 @@ public interface IFileStore
     ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
     /// <summary>
+    /// Pre-Egress checks
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    ValueTask<EgressResult> StartEgress(EgressRequest request);
+    
+    /// <summary>
     /// Deletes file data only, metadata must be deleted with <see cref="IFileInfoManager.Delete"/>
     /// </summary>
     /// <param name="id"></param>
