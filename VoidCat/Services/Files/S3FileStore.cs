@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using System.Net;
+using Amazon.S3;
 using Amazon.S3.Model;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
@@ -12,10 +13,12 @@ public class S3FileStore : StreamFileStore, IFileStore
     private readonly AmazonS3Client _client;
     private readonly S3BlobConfig _config;
     private readonly IAggregateStatsCollector _statsCollector;
+    private readonly ICache _cache;
 
-    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo) : base(stats)
+    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo, ICache cache) : base(stats)
     {
         _fileInfo = fileInfo;
+        _cache = cache;
         _statsCollector = stats;
         _config = settings;
         _client = _config.CreateClient();
@@ -27,23 +30,18 @@ public class S3FileStore : StreamFileStore, IFileStore
     /// <inheritdoc />
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
-        if (payload.IsAppend) throw new InvalidOperationException("Cannot append to S3 store");
+        if (payload.IsMultipart) return await IngressMultipart(payload, cts);
 
         var req = new PutObjectRequest
         {
             BucketName = _config.BucketName,
             Key = payload.Id.ToString(),
             InputStream = payload.InStream,
-            ContentType = payload.Meta.MimeType ?? "application/octet-stream",
+            ContentType = "application/octet-stream",
             AutoResetStreamPosition = false,
             AutoCloseStream = false,
             ChecksumAlgorithm = ChecksumAlgorithm.SHA256,
-            ChecksumSHA256 = payload.Hash != default ? Convert.ToBase64String(payload.Hash!.FromHex()) : null,
-            StreamTransferProgress = (s, e) =>
-            {
-                _statsCollector.TrackIngress(payload.Id, (ulong)e.IncrementTransferred)
-                    .GetAwaiter().GetResult();
-            },
+            ChecksumSHA256 = payload.Meta.Digest != default ? Convert.ToBase64String(payload.Meta.Digest!.FromHex()) : null,
             Headers =
             {
                 ContentLength = (long)payload.Meta.Size
@@ -51,6 +49,7 @@ public class S3FileStore : StreamFileStore, IFileStore
         };
 
         await _client.PutObjectAsync(req, cts);
+        await _statsCollector.TrackIngress(payload.Id, payload.Meta.Size);
         return HandleCompletedUpload(payload, payload.Meta.Size);
     }
 
@@ -62,18 +61,24 @@ public class S3FileStore : StreamFileStore, IFileStore
     }
 
     /// <inheritdoc />
-    public ValueTask<EgressResult> StartEgress(EgressRequest request)
+    public async ValueTask<EgressResult> StartEgress(EgressRequest request)
     {
-        if (!_config.Direct) return ValueTask.FromResult(new EgressResult());
+        if (!_config.Direct) return new();
 
+        var meta = await _fileInfo.Get(request.Id);
         var url = _client.GetPreSignedURL(new()
         {
             BucketName = _config.BucketName,
             Expires = DateTime.UtcNow.AddHours(1),
-            Key = request.Id.ToString()
+            Key = request.Id.ToString(),
+            ResponseHeaderOverrides = new()
+            {
+                ContentDisposition = $"inline; filename=\"{meta?.Metadata?.Name}\"",
+                ContentType = meta?.Metadata?.MimeType
+            }
         });
 
-        return ValueTask.FromResult(new EgressResult(new Uri(url)));
+        return new(new Uri(url));
     }
 
     public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
@@ -154,5 +159,88 @@ public class S3FileStore : StreamFileStore, IFileStore
 
         var obj = await _client.GetObjectAsync(req, cts);
         return obj.ResponseStream;
+    }
+
+    private async Task<PrivateVoidFile> IngressMultipart(IngressPayload payload, CancellationToken cts)
+    {
+        string? uploadId;
+        var cacheKey = $"s3:{_config.Name}:multipart-upload-id:{payload.Id}";
+        var partsCacheKey = $"s3:{_config.Name}:multipart-upload:{payload.Id}";
+
+        if (payload.Segment == 1)
+        {
+            var mStart = new InitiateMultipartUploadRequest()
+            {
+                BucketName = _config.BucketName,
+                Key = payload.Id.ToString(),
+                ContentType = "application/octet-stream",
+                ChecksumAlgorithm = ChecksumAlgorithm.SHA256
+            };
+
+            var mStartResult = await _client.InitiateMultipartUploadAsync(mStart, cts);
+            uploadId = mStartResult.UploadId;
+            await _cache.Set(cacheKey, uploadId, TimeSpan.FromHours(1));
+        }
+        else
+        {
+            uploadId = await _cache.Get<string>(cacheKey);
+        }
+
+        // sadly it seems like we need a tmp file here
+        var tmpFile = Path.GetTempFileName();
+        await using var fsTmp = new FileStream(tmpFile, FileMode.Create, FileAccess.ReadWrite);
+        await payload.InStream.CopyToAsync(fsTmp, cts);
+        fsTmp.Seek(0, SeekOrigin.Begin);
+
+        var segmentLength = (ulong)fsTmp.Length;
+        var mbody = new UploadPartRequest()
+        {
+            UploadId = uploadId,
+            BucketName = _config.BucketName,
+            PartNumber = payload.Segment,
+            Key = payload.Id.ToString(),
+            InputStream = fsTmp
+        };
+
+        var bodyResponse = await _client.UploadPartAsync(mbody, cts);
+        if (bodyResponse.HttpStatusCode != HttpStatusCode.OK)
+        {
+            await _client.AbortMultipartUploadAsync(new()
+            {
+                BucketName = _config.BucketName,
+                UploadId = uploadId
+            }, cts);
+
+            throw new Exception("Upload aborted");
+        }
+
+        await _statsCollector.TrackIngress(payload.Id, segmentLength);
+        await _cache.AddToList(partsCacheKey, $"{payload.Segment}|{bodyResponse.ETag.Replace("\"", string.Empty)}");
+        if (payload.Segment == payload.TotalSegments)
+        {
+            var parts = await _cache.GetList(partsCacheKey);
+            var completeResponse = await _client.CompleteMultipartUploadAsync(new()
+            {
+                BucketName = _config.BucketName,
+                Key = payload.Id.ToString(),
+                UploadId = uploadId,
+                PartETags = parts.Select(a =>
+                {
+                    var pSplit = a.Split('|');
+                    return new PartETag()
+                    {
+                        PartNumber = int.Parse(pSplit[0]),
+                        ETag = pSplit[1]
+                    };
+                }).ToList()
+            }, cts);
+
+            if (completeResponse.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Upload failed");
+            }
+        }
+
+        return HandleCompletedUpload(payload, segmentLength);
     }
 }

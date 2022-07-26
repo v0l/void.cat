@@ -87,11 +87,11 @@ export function FileUpload(props) {
      * @param id {string}
      * @param editSecret {string?}
      * @param fullDigest {string?} Full file hash
+     * @param part {int?} Segment number
+     * @param partOf {int?} Total number of segments
      * @returns {Promise<any>}
      */
-    async function xhrSegment(segment, id, editSecret, fullDigest) {
-        setUState(UploadState.Hashing);
-        const digest = await crypto.subtle.digest(DigestAlgo, segment);
+    async function xhrSegment(segment, id, editSecret, fullDigest, part, partOf) {
         setUState(UploadState.Uploading);
 
         return await new Promise((resolve, reject) => {
@@ -114,10 +114,10 @@ export function FileUpload(props) {
                 req.upload.onprogress = handleProgress;
                 req.open("POST", typeof (id) === "string" ? `${ApiHost}/upload/${id}` : `${ApiHost}/upload`);
                 req.setRequestHeader("Content-Type", "application/octet-stream");
-                req.setRequestHeader("V-Content-Type", props.file.type);
+                req.setRequestHeader("V-Content-Type", props.file.type.length === 0 ? "application/octet-stream" : props.file.type);
                 req.setRequestHeader("V-Filename", props.file.name);
-                req.setRequestHeader("V-Digest", buf2hex(digest));
                 req.setRequestHeader("V-Full-Digest", fullDigest);
+                req.setRequestHeader("V-Segment", `${part}/${partOf}`)
                 if (auth) {
                     req.setRequestHeader("Authorization", `Bearer ${auth}`);
                 }
@@ -136,14 +136,16 @@ export function FileUpload(props) {
         // upload file in segments of 50MB
         const UploadSize = 50_000_000;
 
+        setUState(UploadState.Hashing);
         let digest = await crypto.subtle.digest(DigestAlgo, await props.file.arrayBuffer());
         let xhr = null;
-        const segments = props.file.size / UploadSize;
+        const segments = Math.ceil(props.file.size / UploadSize);
         for (let s = 0; s < segments; s++) {
+            calc.ResetLastLoaded();
             let offset = s * UploadSize;
             let slice = props.file.slice(offset, offset + UploadSize, props.file.type);
             let segment = await slice.arrayBuffer();
-            xhr = await xhrSegment(segment, xhr?.file?.id, xhr?.file?.metadata?.editSecret, buf2hex(digest));
+            xhr = await xhrSegment(segment, xhr?.file?.id, xhr?.file?.metadata?.editSecret, buf2hex(digest), s + 1, segments);
             if (!xhr.ok) {
                 break;
             }

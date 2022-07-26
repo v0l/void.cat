@@ -80,7 +80,7 @@ namespace VoidCat.Controllers
                         store = user.Storage!;
                     }
                 }
-                
+
                 var meta = new SecretVoidFileMeta
                 {
                     MimeType = mime,
@@ -91,11 +91,8 @@ namespace VoidCat.Controllers
                     Storage = store
                 };
 
-                var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta)
-                {
-                    Hash = digest
-                }, HttpContext.RequestAborted);
+                var (segment, totalSegments) = ParseSegmentsHeader();
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments), HttpContext.RequestAborted);
 
                 // save metadata
                 await _metadata.Set(vf.Id, vf.Metadata!);
@@ -147,14 +144,20 @@ namespace VoidCat.Controllers
                 var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
                 if (meta == default) return UploadResult.Error("File not found");
 
-                var editSecret = Request.Headers.GetHeader("V-EditSecret");
-                var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta)
+                // Parse V-Segment header
+                var (segment, totalSegments) = ParseSegmentsHeader();
+
+                // sanity check for append operations
+                if (segment <= 1 || totalSegments <= 1)
                 {
-                    Hash = digest,
+                    return UploadResult.Error("Malformed request, segment must be > 1 for append");
+                }
+
+                var editSecret = Request.Headers.GetHeader("V-EditSecret");
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments)
+                {
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
-                    Id = gid,
-                    IsAppend = true
+                    Id = gid
                 }, HttpContext.RequestAborted);
 
                 // update file size
@@ -287,6 +290,24 @@ namespace VoidCat.Controllers
 
             await _metadata.Update(gid, fileMeta);
             return Ok();
+        }
+
+        private (int Segment, int TotalSegments) ParseSegmentsHeader()
+        {
+            // Parse V-Segment header
+            int segment = 1, totalSegments = 1;
+            var segmentHeader = Request.Headers.GetHeader("V-Segment");
+            if (!string.IsNullOrEmpty(segmentHeader))
+            {
+                var split = segmentHeader.Split("/");
+                if (split.Length == 2 && int.TryParse(split[0], out var a) && int.TryParse(split[1], out var b))
+                {
+                    segment = a;
+                    totalSegments = b;
+                }
+            }
+
+            return (segment, totalSegments);
         }
     }
 

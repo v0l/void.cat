@@ -17,8 +17,10 @@ public static class FileStorageStartup
             foreach (var s3 in settings.CloudStorage.S3 ?? Array.Empty<S3BlobConfig>())
             {
                 services.AddTransient<IFileStore>((svc) =>
-                    new S3FileStore(s3, svc.GetRequiredService<IAggregateStatsCollector>(),
-                        svc.GetRequiredService<IFileInfoManager>()));
+                    new S3FileStore(s3, 
+                        svc.GetRequiredService<IAggregateStatsCollector>(),
+                        svc.GetRequiredService<IFileInfoManager>(),
+                        svc.GetRequiredService<ICache>()));
 
                 if (settings.MetadataStore == s3.Name)
                 {
