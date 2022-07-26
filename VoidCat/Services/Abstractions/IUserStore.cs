@@ -43,4 +43,11 @@ public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
     /// <param name="timestamp"></param>
     /// <returns></returns>
     ValueTask UpdateLastLogin(Guid id, DateTime timestamp);
+
+    /// <summary>
+    /// Update user account for admin
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    ValueTask AdminUpdateUser(PrivateVoidUser user);
 }

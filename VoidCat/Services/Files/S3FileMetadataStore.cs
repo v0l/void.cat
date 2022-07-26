@@ -11,16 +11,17 @@ public class S3FileMetadataStore : IFileMetadataStore
     private readonly ILogger<S3FileMetadataStore> _logger;
     private readonly AmazonS3Client _client;
     private readonly S3BlobConfig _config;
-    private readonly bool _includeUrl;
 
-    public S3FileMetadataStore(VoidSettings settings, ILogger<S3FileMetadataStore> logger)
+    public S3FileMetadataStore(S3BlobConfig settings, ILogger<S3FileMetadataStore> logger)
     {
         _logger = logger;
-        _includeUrl = settings.CloudStorage?.ServeFromCloud ?? false;
-        _config = settings.CloudStorage!.S3!;
+        _config = settings;
         _client = _config.CreateClient();
     }
 
+    /// <inheritdoc />
+    public string? Key => _config.Name;
+    
     /// <inheritdoc />
     public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
     {
@@ -53,6 +54,7 @@ public class S3FileMetadataStore : IFileMetadataStore
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
         oldMeta.Expires = meta.Expires ?? oldMeta.Expires;
+        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
 
         await Set(id, oldMeta);
     }
@@ -141,15 +143,6 @@ public class S3FileMetadataStore : IFileMetadataStore
             if (ret != default)
             {
                 ret.Id = id;
-                if (_includeUrl)
-                {
-                    var ub = new UriBuilder(_config.ServiceUrl!)
-                    {
-                        Path = $"/{_config.BucketName}/{id}"
-                    };
-
-                    ret.Url = ub.Uri;
-                }
             }
 
             return ret;

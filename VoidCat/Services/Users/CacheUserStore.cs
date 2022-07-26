@@ -109,6 +109,18 @@ public class CacheUserStore : IUserStore
             await Set(user.Id, user);
         }
     }
+    
+    /// <inheritdoc />
+    public async ValueTask AdminUpdateUser(PrivateVoidUser user)
+    {
+        var oldUser = await Get<InternalVoidUser>(user.Id);
+        if (oldUser == null) return;
+
+        oldUser.Email = user.Email;
+        oldUser.Storage = user.Storage;
+
+        await Set(oldUser.Id, oldUser);
+    }
 
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)

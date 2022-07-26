@@ -3,18 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers;
 
 [Route("d")]
 public class DownloadController : Controller
 {
-    private readonly IFileStore _storage;
+    private readonly FileStoreFactory _storage;
     private readonly IFileInfoManager _fileInfo;
     private readonly IPaywallOrderStore _paywallOrders;
     private readonly ILogger<DownloadController> _logger;
 
-    public DownloadController(IFileStore storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
+    public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
         IPaywallOrderStore paywall)
     {
         _storage = storage;
@@ -44,7 +45,7 @@ public class DownloadController : Controller
         var voidFile = await SetupDownload(gid);
         if (voidFile == default) return;
 
-        var egressReq = new EgressRequest(gid, GetRanges(Request, (long) voidFile!.Metadata!.Size));
+        var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
             _logger.LogWarning("Multi-range request not supported!");
@@ -56,10 +57,10 @@ public class DownloadController : Controller
         }
         else if (egressReq.Ranges.Count() == 1)
         {
-            Response.StatusCode = (int) HttpStatusCode.PartialContent;
+            Response.StatusCode = (int)HttpStatusCode.PartialContent;
             if (egressReq.Ranges.Sum(a => a.Size) == 0)
             {
-                Response.StatusCode = (int) HttpStatusCode.RequestedRangeNotSatisfiable;
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
                 return;
             }
         }
@@ -72,6 +73,15 @@ public class DownloadController : Controller
         {
             Response.Headers.Add("content-range", range.ToContentRange());
             Response.ContentLength = range.Size;
+        }
+
+        var preResult = await _storage.StartEgress(egressReq);
+        if (preResult.Redirect != null)
+        {
+            Response.StatusCode = (int)HttpStatusCode.Redirect;
+            Response.Headers.Location = preResult.Redirect.ToString();
+            Response.ContentLength = 0;
+            return;
         }
 
         var cts = HttpContext.RequestAborted;
@@ -95,7 +105,7 @@ public class DownloadController : Controller
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))
             {
-                Response.StatusCode = (int) HttpStatusCode.PaymentRequired;
+                Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
                 return default;
             }
         }

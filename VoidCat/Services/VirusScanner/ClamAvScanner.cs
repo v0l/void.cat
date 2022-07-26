@@ -1,6 +1,7 @@
 ﻿using nClam;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Services.VirusScanner;
 
@@ -11,13 +12,13 @@ public class ClamAvScanner : IVirusScanner
 {
     private readonly ILogger<ClamAvScanner> _logger;
     private readonly IClamClient _clam;
-    private readonly IFileStore _store;
+    private readonly FileStoreFactory _fileSystemFactory;
 
-    public ClamAvScanner(ILogger<ClamAvScanner> logger, IClamClient clam, IFileStore store)
+    public ClamAvScanner(ILogger<ClamAvScanner> logger, IClamClient clam, FileStoreFactory fileSystemFactory)
     {
         _logger = logger;
         _clam = clam;
-        _store = store;
+        _fileSystemFactory = fileSystemFactory;
     }
 
     /// <inheritdoc />
@@ -25,7 +26,7 @@ public class ClamAvScanner : IVirusScanner
     {
         _logger.LogInformation("Starting scan of {Filename}", id);
 
-        await using var fs = await _store.Open(new(id, Enumerable.Empty<RangeRequest>()), cts);
+        await using var fs = await _fileSystemFactory.Open(new(id, Enumerable.Empty<RangeRequest>()), cts);
         var result = await _clam.SendAndScanFileAsync(fs, cts);
 
         if (result.Result == ClamScanResults.Error)

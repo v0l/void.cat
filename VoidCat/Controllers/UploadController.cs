@@ -6,23 +6,26 @@ using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Model.Paywall;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers
 {
     [Route("upload")]
     public class UploadController : Controller
     {
-        private readonly IFileStore _storage;
+        private readonly FileStoreFactory _storage;
         private readonly IFileMetadataStore _metadata;
         private readonly IPaywallStore _paywall;
         private readonly IPaywallFactory _paywallFactory;
         private readonly IFileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
+        private readonly IUserStore _userStore;
         private readonly ITimeSeriesStatsReporter _timeSeriesStats;
+        private readonly VoidSettings _settings;
 
-        public UploadController(IFileStore storage, IFileMetadataStore metadata, IPaywallStore paywall,
+        public UploadController(FileStoreFactory storage, IFileMetadataStore metadata, IPaywallStore paywall,
             IPaywallFactory paywallFactory, IFileInfoManager fileInfo, IUserUploadsStore userUploads,
-            ITimeSeriesStatsReporter timeSeriesStats)
+            ITimeSeriesStatsReporter timeSeriesStats, IUserStore userStore, VoidSettings settings)
         {
             _storage = storage;
             _metadata = metadata;
@@ -31,6 +34,8 @@ namespace VoidCat.Controllers
             _fileInfo = fileInfo;
             _userUploads = userUploads;
             _timeSeriesStats = timeSeriesStats;
+            _userStore = userStore;
+            _settings = settings;
         }
 
         /// <summary>
@@ -65,20 +70,29 @@ namespace VoidCat.Controllers
                     }
                 }
 
+                // detect store for ingress
+                var store = _settings.DefaultFileStore;
+                if (uid.HasValue)
+                {
+                    var user = await _userStore.Get<InternalVoidUser>(uid.Value);
+                    if (user?.Storage != default)
+                    {
+                        store = user.Storage!;
+                    }
+                }
+
                 var meta = new SecretVoidFileMeta
                 {
                     MimeType = mime,
                     Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
-                    Size = (ulong?) Request.ContentLength ?? 0UL
+                    Size = (ulong?)Request.ContentLength ?? 0UL,
+                    Storage = store
                 };
 
-                var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta)
-                {
-                    Hash = digest
-                }, HttpContext.RequestAborted);
+                var (segment, totalSegments) = ParseSegmentsHeader();
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments), HttpContext.RequestAborted);
 
                 // save metadata
                 await _metadata.Set(vf.Id, vf.Metadata!);
@@ -130,14 +144,20 @@ namespace VoidCat.Controllers
                 var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
                 if (meta == default) return UploadResult.Error("File not found");
 
-                var editSecret = Request.Headers.GetHeader("V-EditSecret");
-                var digest = Request.Headers.GetHeader("V-Digest");
-                var vf = await _storage.Ingress(new(Request.Body, meta)
+                // Parse V-Segment header
+                var (segment, totalSegments) = ParseSegmentsHeader();
+
+                // sanity check for append operations
+                if (segment <= 1 || totalSegments <= 1)
                 {
-                    Hash = digest,
+                    return UploadResult.Error("Malformed request, segment must be > 1 for append");
+                }
+
+                var editSecret = Request.Headers.GetHeader("V-EditSecret");
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments)
+                {
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
-                    Id = gid,
-                    IsAppend = true
+                    Id = gid
                 }, HttpContext.RequestAborted);
 
                 // update file size
@@ -160,6 +180,7 @@ namespace VoidCat.Controllers
         public async Task<IActionResult> GetInfo([FromRoute] string id)
         {
             if (!id.TryFromBase58Guid(out var fid)) return StatusCode(404);
+
             var uid = HttpContext.GetUserId();
             var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
 
@@ -240,6 +261,7 @@ namespace VoidCat.Controllers
                     Handle = req.Strike.Handle,
                     Cost = req.Strike.Cost
                 });
+
                 return Ok();
             }
 
@@ -268,6 +290,24 @@ namespace VoidCat.Controllers
 
             await _metadata.Update(gid, fileMeta);
             return Ok();
+        }
+
+        private (int Segment, int TotalSegments) ParseSegmentsHeader()
+        {
+            // Parse V-Segment header
+            int segment = 1, totalSegments = 1;
+            var segmentHeader = Request.Headers.GetHeader("V-Segment");
+            if (!string.IsNullOrEmpty(segmentHeader))
+            {
+                var split = segmentHeader.Split("/");
+                if (split.Length == 2 && int.TryParse(split[0], out var a) && int.TryParse(split[1], out var b))
+                {
+                    segment = a;
+                    totalSegments = b;
+                }
+            }
+
+            return (segment, totalSegments);
         }
     }
 

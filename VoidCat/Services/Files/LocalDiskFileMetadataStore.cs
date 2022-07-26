@@ -53,6 +53,7 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
         oldMeta.Expires = meta.Expires ?? oldMeta.Expires;
+        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
 
         await Set(id, oldMeta);
     }

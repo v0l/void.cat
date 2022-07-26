@@ -68,3 +68,28 @@ input[type="text"], input[type="number"], input[type="password"], select {
     margin: 5px;
     border: 0;
 }
+
+table {
+    width: 100%;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-collapse: collapse;
+}
+
+table tr:nth-child(2n) {
+    background-color: #111;
+}
+
+table th {
+    background-color: #222;
+    text-align: start;
+}
+
+pre.copy {
+    user-select: all;
+    width: fit-content;
+    border-radius: 4px;
+    border: 1px solid;
+    padding: 5px;
+}

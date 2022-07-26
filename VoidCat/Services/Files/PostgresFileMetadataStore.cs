@@ -13,7 +13,10 @@ public class PostgresFileMetadataStore : IFileMetadataStore
     {
         _connection = connection;
     }
-
+    
+    /// <inheritdoc />
+    public string? Key => "postgres";
+    
     /// <inheritdoc />
     public ValueTask<VoidFileMeta?> Get(Guid id)
     {
@@ -32,9 +35,15 @@ public class PostgresFileMetadataStore : IFileMetadataStore
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"")
-values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires)
-on conflict (""Id"") do update set ""Name"" = :name, ""Size"" = :size, ""Description"" = :description, ""MimeType"" = :mimeType, ""Expires"" = :expires",
+""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"")
+values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store)
+on conflict (""Id"") do update set 
+""Name"" = :name, 
+""Size"" = :size, 
+""Description"" = :description, 
+""MimeType"" = :mimeType, 
+""Expires"" = :expires,
+""Storage"" = :store",
             new
             {
                 id,
@@ -45,7 +54,8 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Size"" = :size, ""Descrip
                 mimeType = obj.MimeType,
                 digest = obj.Digest,
                 editSecret = obj.EditSecret,
-                expires = obj.Expires
+                expires = obj.Expires,
+                store = obj.Storage
             });
     }
 
@@ -82,6 +92,7 @@ on conflict (""Id"") do update set ""Name"" = :name, ""Size"" = :size, ""Descrip
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
         oldMeta.Expires = meta.Expires ?? oldMeta.Expires;
+        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
 
         await Set(id, oldMeta);
     }

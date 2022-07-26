@@ -4,6 +4,10 @@ export class RateCalculator {
         this.lastLoaded = 0;
     }
 
+    ResetLastLoaded() {
+        this.lastLoaded = 0;
+    }
+    
     ReportProgress(amount) {
         this.reports.push({
             time: new Date().getTime(),

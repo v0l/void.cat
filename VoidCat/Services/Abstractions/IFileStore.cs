@@ -8,6 +8,11 @@ namespace VoidCat.Services.Abstractions;
 public interface IFileStore
 {
     /// <summary>
+    /// Return key for named instance
+    /// </summary>
+    string? Key { get; }
+    
+    /// <summary>
     /// Ingress a file into the system (Upload)
     /// </summary>
     /// <param name="payload"></param>
@@ -24,6 +29,13 @@ public interface IFileStore
     /// <returns></returns>
     ValueTask Egress(EgressRequest request, Stream outStream, CancellationToken cts);
 
+    /// <summary>
+    /// Pre-Egress checks
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    ValueTask<EgressResult> StartEgress(EgressRequest request);
+    
     /// <summary>
     /// Deletes file data only, metadata must be deleted with <see cref="IFileInfoManager.Delete"/>
     /// </summary>

@@ -10,6 +10,7 @@ import {buf2hex, hasFlag} from "./Util";
 import moment from "moment";
 import {FileList} from "./FileList";
 import {VoidButton} from "./VoidButton";
+import ApiKeyList from "./ApiKeyList";
 
 export function Profile() {
     const [profile, setProfile] = useState();
@@ -210,6 +211,7 @@ export function Profile() {
                     {needsEmailVerify ? renderEmailVerify() : null}
                     <h1>Uploads</h1>
                     <FileList loadPage={(req) => Api.listUserFiles(profile.id, req)}/>
+                    {cantEditProfile ? <ApiKeyList/> : null}
                 </div>
             </div>
         );

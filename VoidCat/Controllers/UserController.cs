@@ -12,7 +12,8 @@ public class UserController : Controller
     private readonly IEmailVerification _emailVerification;
     private readonly IFileInfoManager _fileInfoManager;
 
-    public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification, IFileInfoManager fileInfoManager)
+    public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification,
+        IFileInfoManager fileInfoManager)
     {
         _store = store;
         _userUploads = userUploads;
@@ -42,6 +43,7 @@ public class UserController : Controller
         {
             var pUser = await _store.Get<PrivateVoidUser>(requestedId);
             if (pUser == default) return NotFound();
+
             return Json(pUser);
         }
 

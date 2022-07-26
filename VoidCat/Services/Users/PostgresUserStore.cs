@@ -43,8 +43,9 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
                 displayName = obj.DisplayName,
                 lastLogin = obj.LastLogin.ToUniversalTime(),
                 avatar = obj.Avatar,
-                flags = (int) obj.Flags
+                flags = (int)obj.Flags
             });
+
         if (obj.Roles.Any(a => a != Roles.User))
         {
             foreach (var r in obj.Roles.Where(a => a != Roles.User))
@@ -69,11 +70,13 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
         await using var conn = await _connection.Get();
         var user = await conn.QuerySingleOrDefaultAsync<T?>(@"select * from ""Users"" where ""Id"" = :id",
             new {id});
+
         if (user != default)
         {
             var roles = await conn.QueryAsync<string>(
                 @"select ""Role"" from ""UserRoles"" where ""User"" = :id",
                 new {id});
+
             foreach (var r in roles)
             {
                 user.Roles.Add(r);
@@ -106,11 +109,13 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
                 PagedSortBy.Name => "DisplayName",
                 _ => "Id"
             };
+
             var sortBy = request.SortOrder switch
             {
                 PageSortOrder.Dsc => "desc",
                 _ => "asc"
             };
+
             await using var iconn = await _connection.Get();
             var users = await iconn.ExecuteReaderAsync(
                 $@"select * from ""Users"" order by ""{orderBy}"" {sortBy} offset :offset limit :limit",
@@ -119,6 +124,7 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
                     offset = request.PageSize * request.Page,
                     limit = request.PageSize
                 });
+
             var rowParser = users.GetRowParser<PrivateVoidUser>();
             while (await users.ReadAsync())
             {
@@ -144,7 +150,7 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
         var emailFlag = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified) ? VoidUserFlags.EmailVerified : 0;
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
-            @"update ""Users"" set ""DisplayName"" = @displayName, ""Avatar"" = @avatar, ""Flags"" = :flags where ""Id"" = :id",
+            @"update ""Users"" set ""DisplayName"" = :displayName, ""Avatar"" = :avatar, ""Flags"" = :flags where ""Id"" = :id",
             new
             {
                 id = newUser.Id,
@@ -160,5 +166,19 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(@"update ""Users"" set ""LastLogin"" = :timestamp where ""Id"" = :id",
             new {id, timestamp});
+    }
+
+    /// <inheritdoc />
+    public async ValueTask AdminUpdateUser(PrivateVoidUser user)
+    {
+        await using var conn = await _connection.Get();
+        await conn.ExecuteAsync(
+            @"update ""Users"" set ""Email"" = :email, ""Storage"" = :storage where ""Id"" = :id",
+            new
+            {
+                id = user.Id,
+                email = user.Email,
+                storage = user.Storage
+            });
     }
 }

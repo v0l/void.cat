@@ -82,7 +82,12 @@ public class PrivateVoidUser : VoidUser
     /// <summary>
     /// Users email address
     /// </summary>
-    public string Email { get; init; } = null!;
+    public string Email { get; set; } = null!;
+    
+    /// <summary>
+    /// Users storage system for new uploads
+    /// </summary>
+    public string? Storage { get; set; }
 }
 
 /// <inheritdoc />

@@ -1,0 +1,35 @@
+.modal-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-bg .modal {
+    min-height: 100px;
+    min-width: 300px;
+    background-color: #bbb;
+    color: #000;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.modal-bg .modal .modal-header {
+    text-align: center;
+    border-bottom: 1px solid;
+    margin: 0;
+    line-height: 2em;
+    background-color: #222;
+    color: #bbb;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.modal-bg .modal .modal-body {
+    padding: 10px;
+}

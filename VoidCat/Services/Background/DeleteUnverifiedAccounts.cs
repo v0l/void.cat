@@ -1,5 +1,6 @@
 ﻿using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Services.Background;
 
@@ -23,7 +24,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var userStore = scope.ServiceProvider.GetRequiredService<IUserStore>();
                 var userUploads = scope.ServiceProvider.GetRequiredService<IUserUploadsStore>();
-                var fileStore = scope.ServiceProvider.GetRequiredService<IFileStore>();
+                var fileStore = scope.ServiceProvider.GetRequiredService<FileStoreFactory>();
                 var fileInfoManager = scope.ServiceProvider.GetRequiredService<IFileInfoManager>();
 
                 var accounts = await userStore.ListUsers(new(0, Int32.MaxValue));

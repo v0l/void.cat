@@ -11,14 +11,16 @@ public class InfoController : Controller
     private readonly IFileMetadataStore _fileMetadata;
     private readonly VoidSettings _settings;
     private readonly ITimeSeriesStatsReporter _timeSeriesStats;
+    private readonly IEnumerable<string?> _fileStores;
 
     public InfoController(IStatsReporter statsReporter, IFileMetadataStore fileMetadata, VoidSettings settings,
-        ITimeSeriesStatsReporter stats)
+        ITimeSeriesStatsReporter stats, IEnumerable<IFileStore> fileStores)
     {
         _statsReporter = statsReporter;
         _fileMetadata = fileMetadata;
         _settings = settings;
         _timeSeriesStats = stats;
+        _fileStores = fileStores.Select(a => a.Key);
     }
 
     /// <summary>
@@ -34,9 +36,10 @@ public class InfoController : Controller
 
         return new(bw, storeStats.Size, storeStats.Files, BuildInfo.GetBuildInfo(),
             _settings.CaptchaSettings?.SiteKey,
-            await _timeSeriesStats.GetBandwidth(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow));
+            await _timeSeriesStats.GetBandwidth(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow),
+            _fileStores);
     }
 
     public sealed record GlobalInfo(Bandwidth Bandwidth, ulong TotalBytes, long Count, BuildInfo BuildInfo,
-        string? CaptchaSiteKey, IEnumerable<BandwidthPoint> TimeSeriesMetrics);
+        string? CaptchaSiteKey, IEnumerable<BandwidthPoint> TimeSeriesMetrics, IEnumerable<string?> FileStores);
 }

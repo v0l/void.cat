@@ -75,6 +75,16 @@ namespace VoidCat.Model
         /// Prometheus server for querying metrics
         /// </summary>
         public Uri? Prometheus { get; init; }
+
+        /// <summary>
+        /// Select where to store metadata, if not set "local-disk" will be used
+        /// </summary>
+        public string MetadataStore { get; init; } = "local-disk";
+
+        /// <summary>
+        /// Select which store to use for files storage, if not set "local-disk" will be used
+        /// </summary>
+        public string DefaultFileStore { get; init; } = "local-disk";
     }
 
     public sealed class TorSettings
@@ -99,17 +109,18 @@ namespace VoidCat.Model
 
     public sealed class CloudStorageSettings
     {
-        public bool ServeFromCloud { get; init; }
-        public S3BlobConfig? S3 { get; set; }
+        public S3BlobConfig[]? S3 { get; init; }
     }
 
     public sealed class S3BlobConfig
     {
+        public string Name { get; init; } = null!;
         public string? AccessKey { get; init; }
         public string? SecretKey { get; init; }
         public Uri? ServiceUrl { get; init; }
         public string? Region { get; init; }
         public string? BucketName { get; init; } = "void-cat";
+        public bool Direct { get; init; }
     }
 
     public sealed class VirusScannerSettings
