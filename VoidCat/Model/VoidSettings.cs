@@ -121,6 +121,7 @@ namespace VoidCat.Model
         public string? Region { get; init; }
         public string? BucketName { get; init; } = "void-cat";
         public bool Direct { get; init; }
+        public bool SendChecksum { get; init; } = true;
     }
 
     public sealed class VirusScannerSettings

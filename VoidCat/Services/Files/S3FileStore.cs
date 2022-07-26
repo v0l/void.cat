@@ -40,8 +40,9 @@ public class S3FileStore : StreamFileStore, IFileStore
             ContentType = "application/octet-stream",
             AutoResetStreamPosition = false,
             AutoCloseStream = false,
-            ChecksumAlgorithm = ChecksumAlgorithm.SHA256,
-            ChecksumSHA256 = payload.Meta.Digest != default ? Convert.ToBase64String(payload.Meta.Digest!.FromHex()) : null,
+            ChecksumAlgorithm = _config.SendChecksum ? ChecksumAlgorithm.SHA256 : null,
+            ChecksumSHA256 = payload.Meta.Digest != default && _config.SendChecksum ?
+                Convert.ToBase64String(payload.Meta.Digest!.FromHex()) : null,
             Headers =
             {
                 ContentLength = (long)payload.Meta.Size
@@ -174,7 +175,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 BucketName = _config.BucketName,
                 Key = payload.Id.ToString(),
                 ContentType = "application/octet-stream",
-                ChecksumAlgorithm = ChecksumAlgorithm.SHA256
+                ChecksumAlgorithm = _config.SendChecksum ? ChecksumAlgorithm.SHA256 : null
             };
 
             var mStartResult = await _client.InitiateMultipartUploadAsync(mStart, cts);
@@ -193,7 +194,7 @@ public class S3FileStore : StreamFileStore, IFileStore
         fsTmp.Seek(0, SeekOrigin.Begin);
 
         var segmentLength = (ulong)fsTmp.Length;
-        var mbody = new UploadPartRequest()
+        var mBody = new UploadPartRequest()
         {
             UploadId = uploadId,
             BucketName = _config.BucketName,
@@ -202,7 +203,7 @@ public class S3FileStore : StreamFileStore, IFileStore
             InputStream = fsTmp
         };
 
-        var bodyResponse = await _client.UploadPartAsync(mbody, cts);
+        var bodyResponse = await _client.UploadPartAsync(mBody, cts);
         if (bodyResponse.HttpStatusCode != HttpStatusCode.OK)
         {
             await _client.AbortMultipartUploadAsync(new()
@@ -224,6 +225,8 @@ public class S3FileStore : StreamFileStore, IFileStore
                 BucketName = _config.BucketName,
                 Key = payload.Id.ToString(),
                 UploadId = uploadId,
+                ChecksumSHA256 = payload.Meta.Digest != default && _config.SendChecksum ?
+                    Convert.ToBase64String(payload.Meta.Digest!.FromHex()) : null,
                 PartETags = parts.Select(a =>
                 {
                     var pSplit = a.Split('|');
