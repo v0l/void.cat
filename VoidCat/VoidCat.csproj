@@ -14,26 +14,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.S3" Version="3.7.8.2" />
+		<PackageReference Include="AWSSDK.S3" Version="3.7.9.30" />
 		<PackageReference Include="Dapper" Version="2.0.123" />
 		<PackageReference Include="FluentMigrator" Version="3.3.2" />
 		<PackageReference Include="FluentMigrator.Runner" Version="3.3.2" />
 		<PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.7" />
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.16.1" />
 		<PackageReference Include="MSBuildGitHash" Version="2.0.2">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NBitcoin" Version="6.0.19" />
+		<PackageReference Include="NBitcoin" Version="7.0.10" />
 		<PackageReference Include="nClam" Version="7.0.0" />
-		<PackageReference Include="Npgsql" Version="6.0.4" />
-		<PackageReference Include="prometheus-net.AspNetCore" Version="5.0.2" />
+		<PackageReference Include="Npgsql" Version="6.0.5" />
+		<PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
 		<PackageReference Include="Seq.Extensions.Logging" Version="6.0.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.5.27-prerelease" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.48" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 	</ItemGroup>
 	<ItemGroup>

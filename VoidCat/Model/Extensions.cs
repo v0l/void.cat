@@ -12,13 +12,15 @@ public static class Extensions
 {
     public static AmazonS3Client CreateClient(this S3BlobConfig c)
     {
+        AWSConfigsS3.UseSignatureVersion4 = true;
         return new AmazonS3Client(new BasicAWSCredentials(c.AccessKey, c.SecretKey),
             new AmazonS3Config
             {
                 RegionEndpoint = !string.IsNullOrEmpty(c.Region) ? RegionEndpoint.GetBySystemName(c.Region) : null,
                 ServiceURL = c.ServiceUrl?.ToString(),
                 UseHttp = c.ServiceUrl?.Scheme == "http",
-                ForcePathStyle = true
+                ForcePathStyle = true,
+                SignatureVersion = "4"
             });
     }
 
