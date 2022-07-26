@@ -43,6 +43,7 @@ public class S3FileStore : StreamFileStore, IFileStore
             ChecksumAlgorithm = _config.SendChecksum ? ChecksumAlgorithm.SHA256 : null,
             ChecksumSHA256 = payload.Meta.Digest != default && _config.SendChecksum ?
                 Convert.ToBase64String(payload.Meta.Digest!.FromHex()) : null,
+            DisablePayloadSigning = _config.DisablePayloadSigning,
             Headers =
             {
                 ContentLength = (long)payload.Meta.Size
@@ -200,7 +201,8 @@ public class S3FileStore : StreamFileStore, IFileStore
             BucketName = _config.BucketName,
             PartNumber = payload.Segment,
             Key = payload.Id.ToString(),
-            InputStream = fsTmp
+            InputStream = fsTmp,
+            DisablePayloadSigning = _config.DisablePayloadSigning
         };
 
         var bodyResponse = await _client.UploadPartAsync(mBody, cts);
