@@ -19,8 +19,7 @@ public static class Extensions
                 RegionEndpoint = !string.IsNullOrEmpty(c.Region) ? RegionEndpoint.GetBySystemName(c.Region) : null,
                 ServiceURL = c.ServiceUrl?.ToString(),
                 UseHttp = c.ServiceUrl?.Scheme == "http",
-                ForcePathStyle = true,
-                SignatureVersion = "4"
+                ForcePathStyle = true
             });
     }
 
