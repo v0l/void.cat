@@ -186,9 +186,10 @@ else
 
 var app = builder.Build();
 
-// run migrations
-using (var migrationScope = app.Services.CreateScope())
+if (args.Contains("--run-migrations"))
 {
+    // run migrations
+    using var migrationScope = app.Services.CreateScope();
     var migrations = migrationScope.ServiceProvider.GetServices<IMigration>();
     var logger = migrationScope.ServiceProvider.GetRequiredService<ILogger<IMigration>>();
     foreach (var migration in migrations.OrderBy(a => a.Order))
@@ -201,6 +202,8 @@ using (var migrationScope = app.Services.CreateScope())
             return;
         }
     }
+    
+    return;
 }
 
 #if HostSPA
