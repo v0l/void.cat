@@ -48,7 +48,6 @@ namespace VoidCat.Controllers
         /// `V-Filename` - Sets the filename of the file.
         /// `V-Description` - Sets the description of the file.
         /// `V-Full-Digest` - Include a SHA256 hash of the entire file for verification purposes.
-        /// `V-Digest` - A SHA256 hash of the data you are sending in this request.
         /// </remarks>
         /// <param name="cli">True if you want to return only the url of the file in the response</param>
         /// <returns>Returns <see cref="UploadResult"/></returns>
