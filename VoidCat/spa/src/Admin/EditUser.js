@@ -8,7 +8,7 @@ export default function EditUser(props) {
     const onClose = props.onClose;
 
     const adminApi = useApi().AdminApi;
-    const fileStores = useSelector((state) => state.info?.stats?.fileStores ?? ["local-disk"])
+    const fileStores = useSelector((state) => state.info?.info?.fileStores ?? ["local-disk"])
     const [storage, setStorage] = useState(user.storage);
     const [email, setEmail] = useState(user.email);
 
