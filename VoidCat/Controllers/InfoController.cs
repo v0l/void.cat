@@ -34,12 +34,28 @@ public class InfoController : Controller
         var bw = await _statsReporter.GetBandwidth();
         var storeStats = await _fileMetadata.Stats();
 
-        return new(bw, storeStats.Size, storeStats.Files, BuildInfo.GetBuildInfo(),
-            _settings.CaptchaSettings?.SiteKey,
-            await _timeSeriesStats.GetBandwidth(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow),
-            _fileStores);
+        return new()
+        {
+            Bandwidth = bw,
+            TotalBytes = storeStats.Size,
+            Count = storeStats.Files,
+            BuildInfo = BuildInfo.GetBuildInfo(),
+            CaptchaSiteKey = _settings.CaptchaSettings?.SiteKey,
+            TimeSeriesMetrics = await _timeSeriesStats.GetBandwidth(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow),
+            FileStores = _fileStores,
+            UploadSegmentSize = _settings.UploadSegmentSize
+        };
     }
 
-    public sealed record GlobalInfo(Bandwidth Bandwidth, ulong TotalBytes, long Count, BuildInfo BuildInfo,
-        string? CaptchaSiteKey, IEnumerable<BandwidthPoint> TimeSeriesMetrics, IEnumerable<string?> FileStores);
+    public sealed class GlobalInfo
+    {
+        public Bandwidth Bandwidth { get; init; }
+        public ulong TotalBytes { get; init; }
+        public long Count { get; init; }
+        public BuildInfo BuildInfo { get; init; }
+        public string? CaptchaSiteKey { get; init; }
+        public IEnumerable<BandwidthPoint> TimeSeriesMetrics { get; init; }
+        public IEnumerable<string?> FileStores { get; init; }
+        public ulong? UploadSegmentSize { get; init; }
+    }
 }

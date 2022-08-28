@@ -7,7 +7,7 @@ import moment from "moment";
 import {useSelector} from "react-redux";
 
 export function GlobalStats() {
-    let stats = useSelector(state => state.info.stats);
+    let stats = useSelector(state => state.info.info);
 
     return (
         <Fragment>

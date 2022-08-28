@@ -11,7 +11,12 @@ namespace VoidCat.Model
         /// Data directory to store files in
         /// </summary>
         public string DataDirectory { get; init; } = "./data";
-
+        
+        /// <summary>
+        /// Size in bytes to split uploads into chunks
+        /// </summary>
+        public ulong? UploadSegmentSize { get; init; } = null;
+        
         /// <summary>
         /// Tor configuration
         /// </summary>

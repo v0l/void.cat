@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
-import {buf2hex, ConstName, FormatBytes} from "./Util";
+import {ConstName, FormatBytes} from "./Util";
 import {RateCalculator} from "./RateCalculator";
+import * as CryptoJS from 'crypto-js';
 
 import "./FileUpload.css";
 import {useSelector} from "react-redux";
@@ -20,6 +21,7 @@ export const DigestAlgo = "SHA-256";
 
 export function FileUpload(props) {
     const auth = useSelector(state => state.login.jwt);
+    const info = useSelector(state => state.info.info);
     const [speed, setSpeed] = useState(0);
     const [progress, setProgress] = useState(0);
     const [result, setResult] = useState();
@@ -84,14 +86,14 @@ export function FileUpload(props) {
     /**
      * Upload a segment of the file
      * @param segment {ArrayBuffer}
-     * @param id {string}
+     * @param fullDigest {string} Full file hash
+     * @param id {string?}
      * @param editSecret {string?}
-     * @param fullDigest {string?} Full file hash
      * @param part {int?} Segment number
      * @param partOf {int?} Total number of segments
      * @returns {Promise<any>}
      */
-    async function xhrSegment(segment, id, editSecret, fullDigest, part, partOf) {
+    async function xhrSegment(segment, fullDigest, id, editSecret, part, partOf) {
         setUState(UploadState.Uploading);
 
         return await new Promise((resolve, reject) => {
@@ -133,23 +135,36 @@ export function FileUpload(props) {
     }
 
     async function doXHRUpload() {
-        // upload file in segments of 50MB
-        const UploadSize = 50_000_000;
+        let uploadSize = info.uploadSegmentSize ?? Number.MAX_VALUE;
 
         setUState(UploadState.Hashing);
-        let digest = await crypto.subtle.digest(DigestAlgo, await props.file.arrayBuffer());
+        let hash = await digest(props.file);
+        if(props.file.size >= uploadSize) {
+            await doSplitXHRUpload(hash, uploadSize);
+        } else {
+            let xhr = await xhrSegment(props.file, hash);
+            handleXHRResult(xhr);
+        }
+    }
+
+    async function doSplitXHRUpload(hash, splitSize) {
         let xhr = null;
-        const segments = Math.ceil(props.file.size / UploadSize);
+        setProgress(0);
+        const segments = Math.ceil(props.file.size / splitSize);
         for (let s = 0; s < segments; s++) {
             calc.ResetLastLoaded();
-            let offset = s * UploadSize;
-            let slice = props.file.slice(offset, offset + UploadSize, props.file.type);
+            let offset = s * splitSize;
+            let slice = props.file.slice(offset, offset + splitSize, props.file.type);
             let segment = await slice.arrayBuffer();
-            xhr = await xhrSegment(segment, xhr?.file?.id, xhr?.file?.metadata?.editSecret, buf2hex(digest), s + 1, segments);
+            xhr = await xhrSegment(segment, xhr?.file?.id, xhr?.file?.metadata?.editSecret, hash, s + 1, segments);
             if (!xhr.ok) {
                 break;
             }
         }
+        handleXHRResult(xhr);
+    }
+    
+    function handleXHRResult(xhr) {
         if (xhr.ok) {
             setUState(UploadState.Done);
             setResult(xhr.file);
@@ -158,6 +173,19 @@ export function FileUpload(props) {
             setUState(UploadState.Failed);
             setResult(xhr.errorMessage);
         }
+    }
+    
+    async function digest(file) {
+        const chunkSize = 10_000_000;
+        let sha = CryptoJS.algo.SHA256.create();
+        for (let x = 0; x < Math.ceil(file.size / chunkSize); x++) {
+            let offset = x * chunkSize;
+            let slice = file.slice(offset, offset + chunkSize, file.type);
+            let data = Uint32Array.from(await slice.arrayBuffer());
+            sha.update(new CryptoJS.lib.WordArray.init(data, slice.length));
+            setProgress(offset / parseFloat(file.size));
+        }
+        return sha.finalize().toString();
     }
 
     function renderStatus() {

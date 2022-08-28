@@ -5,7 +5,7 @@ import {InlineProfile} from "./InlineProfile";
 import {useApi} from "./Api";
 import {logout, setProfile} from "./LoginState";
 import {useEffect} from "react";
-import {setStats} from "./SiteInfoStore";
+import {setInfo} from "./SiteInfoStore";
 
 export function Header() {
     const dispatch = useDispatch();
@@ -26,7 +26,7 @@ export function Header() {
     async function loadStats() {
         let req = await Api.info();
         if (req.ok) {
-            dispatch(setStats(await req.json()));
+            dispatch(setInfo(await req.json()));
         }
     }
 

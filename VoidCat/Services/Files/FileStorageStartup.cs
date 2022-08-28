@@ -30,11 +30,11 @@ public static class FileStorageStartup
             }
         }
 
-        if (!string.IsNullOrEmpty(settings.Postgres))
+        if (settings.HasPostgres())
         {
             services.AddTransient<IUserUploadsStore, PostgresUserUploadStore>();
             services.AddTransient<IFileStore, LocalDiskFileStore>();
-            if (settings.MetadataStore == "postgres")
+            if (settings.MetadataStore is "postgres" or "local-disk")
             {
                 services.AddSingleton<IFileMetadataStore, PostgresFileMetadataStore>();
             }
