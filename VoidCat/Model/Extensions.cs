@@ -232,5 +232,5 @@ public static class Extensions
         => !string.IsNullOrEmpty(settings.Redis);
 
     public static bool HasPrometheus(this VoidSettings settings)
-        => settings.Prometheus != null;
+        => settings.Prometheus?.Url != null;
 }

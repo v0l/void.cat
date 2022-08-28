@@ -11,12 +11,12 @@ namespace VoidCat.Model
         /// Data directory to store files in
         /// </summary>
         public string DataDirectory { get; init; } = "./data";
-        
+
         /// <summary>
         /// Size in bytes to split uploads into chunks
         /// </summary>
         public ulong? UploadSegmentSize { get; init; } = null;
-        
+
         /// <summary>
         /// Tor configuration
         /// </summary>
@@ -60,26 +60,26 @@ namespace VoidCat.Model
         /// Virus scanner settings
         /// </summary>
         public VirusScannerSettings? VirusScanner { get; init; }
-        
+
         /// <summary>
         /// Request header to unmask in the logs, otherwise all are masked
         /// </summary>
         public IEnumerable<string>? RequestHeadersLog { get; init; }
-        
+
         /// <summary>
         /// hCaptcha settings
         /// </summary>
         public CaptchaSettings? CaptchaSettings { get; init; }
-        
+
         /// <summary>
         /// Postgres database connection string
         /// </summary>
         public string? Postgres { get; init; }
-        
+
         /// <summary>
         /// Prometheus server for querying metrics
         /// </summary>
-        public Uri? Prometheus { get; init; }
+        public PrometheusSettings? Prometheus { get; init; }
 
         /// <summary>
         /// Select where to store metadata, if not set "local-disk" will be used
@@ -151,5 +151,12 @@ namespace VoidCat.Model
     {
         public string? SiteKey { get; init; }
         public string? Secret { get; init; }
+    }
+
+    public sealed class PrometheusSettings
+    {
+        public Uri? Url { get; init; }
+        public string? EgressQuery { get; init; }
+        public string? IngressQuery { get; init; }
     }
 }

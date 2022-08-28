@@ -11,25 +11,25 @@ public class PrometheusStatsReporter : ITimeSeriesStatsReporter
 {
     private readonly ILogger<PrometheusStatsReporter> _logger;
     private readonly HttpClient _client;
+    private readonly VoidSettings _settings;
 
     public PrometheusStatsReporter(ILogger<PrometheusStatsReporter> logger, HttpClient client, VoidSettings settings)
     {
         _client = client;
+        _settings = settings;
         _logger = logger;
 
-        _client.BaseAddress = settings.Prometheus;
+        _client.BaseAddress = settings.Prometheus!.Url;
     }
 
     public async ValueTask<IReadOnlyList<BandwidthPoint>> GetBandwidth(DateTime start, DateTime end)
     {
-        var q = "increase(egress{file=\"\"}[1d])";
-        return await QueryInner(q, start, end);
+        return await QueryInner(string.Format(_settings.Prometheus?.EgressQuery ?? string.Empty, string.Empty), start, end);
     }
 
     public async ValueTask<IReadOnlyList<BandwidthPoint>> GetBandwidth(Guid id, DateTime start, DateTime end)
     {
-        var q = $"increase(egress{{file=\"{id}\"}}[1d])";
-        return await QueryInner(q, start, end);
+        return await QueryInner(string.Format(_settings.Prometheus?.EgressQuery ?? string.Empty, id.ToString()), start, end);
     }
 
     private async Task<IReadOnlyList<BandwidthPoint>> QueryInner(string query, DateTime start, DateTime end)
