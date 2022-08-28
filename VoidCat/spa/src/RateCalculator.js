@@ -4,7 +4,8 @@ export class RateCalculator {
         this.lastLoaded = 0;
     }
 
-    ResetLastLoaded() {
+    Reset() {
+        this.reports = [];
         this.lastLoaded = 0;
     }
     

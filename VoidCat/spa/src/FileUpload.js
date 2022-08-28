@@ -30,7 +30,6 @@ export function FileUpload(props) {
     const calc = new RateCalculator();
 
     function handleProgress(e) {
-        console.log(e);
         if (e instanceof ProgressEvent) {
             let newProgress = e.loaded / e.total;
 
@@ -139,6 +138,7 @@ export function FileUpload(props) {
 
         setUState(UploadState.Hashing);
         let hash = await digest(props.file);
+        calc.Reset();
         if(props.file.size >= uploadSize) {
             await doSplitXHRUpload(hash, uploadSize);
         } else {
@@ -152,7 +152,7 @@ export function FileUpload(props) {
         setProgress(0);
         const segments = Math.ceil(props.file.size / splitSize);
         for (let s = 0; s < segments; s++) {
-            calc.ResetLastLoaded();
+            calc.Reset();
             let offset = s * splitSize;
             let slice = props.file.slice(offset, offset + splitSize, props.file.type);
             let segment = await slice.arrayBuffer();
@@ -176,13 +176,16 @@ export function FileUpload(props) {
     }
     
     async function digest(file) {
-        const chunkSize = 10_000_000;
+        const chunkSize = 100_000_000;
         let sha = CryptoJS.algo.SHA256.create();
         for (let x = 0; x < Math.ceil(file.size / chunkSize); x++) {
             let offset = x * chunkSize;
             let slice = file.slice(offset, offset + chunkSize, file.type);
             let data = Uint32Array.from(await slice.arrayBuffer());
             sha.update(new CryptoJS.lib.WordArray.init(data, slice.length));
+
+            calc.ReportLoaded(offset);
+            setSpeed(calc.RateWindow(5));
             setProgress(offset / parseFloat(file.size));
         }
         return sha.finalize().toString();
