@@ -12,7 +12,7 @@ export function Login() {
     const [password, setPassword] = useState();
     const [error, setError] = useState();
     const [captchaResponse, setCaptchaResponse] = useState();
-    const captchaKey = useSelector(state => state.info.stats?.captchaSiteKey);
+    const captchaKey = useSelector(state => state.info.info?.captchaSiteKey);
     const dispatch = useDispatch();
 
     async function login(fnLogin) {
