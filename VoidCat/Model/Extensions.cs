@@ -233,4 +233,7 @@ public static class Extensions
 
     public static bool HasPrometheus(this VoidSettings settings)
         => settings.Prometheus?.Url != null;
+
+    public static bool HasVirusScanner(this VoidSettings settings)
+        => settings.VirusScanner?.ClamAV != default || settings.VirusScanner?.VirusTotal != default;
 }

@@ -157,6 +157,5 @@ namespace VoidCat.Model
     {
         public Uri? Url { get; init; }
         public string? EgressQuery { get; init; }
-        public string? IngressQuery { get; init; }
     }
 }

@@ -1,195 +1,28 @@
-using System.Data;
-using System.Reflection;
-using System.Text;
-using FluentMigrator.Runner;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.HttpLogging;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
-using Npgsql;
 using Prometheus;
-using StackExchange.Redis;
+using VoidCat;
 using VoidCat.Model;
-using VoidCat.Services;
-using VoidCat.Services.Abstractions;
-using VoidCat.Services.Background;
-using VoidCat.Services.Captcha;
-using VoidCat.Services.Files;
-using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
-using VoidCat.Services.Paywall;
-using VoidCat.Services.Redis;
-using VoidCat.Services.Stats;
-using VoidCat.Services.Users;
-using VoidCat.Services.VirusScanner;
 
-// setup JsonConvert default settings
-JsonSerializerSettings ConfigJsonSettings(JsonSerializerSettings s)
-{
-    s.NullValueHandling = NullValueHandling.Ignore;
-    s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
-    s.MissingMemberHandling = MissingMemberHandling.Ignore;
-    return s;
-}
+JsonConvert.DefaultSettings = () => VoidStartup.ConfigJsonSettings(new());
 
-JsonConvert.DefaultSettings = () => ConfigJsonSettings(new());
-
-var builder = WebApplication.CreateBuilder(args);
-var services = builder.Services;
-
-var configuration = builder.Configuration;
-var voidSettings = configuration.GetSection("Settings").Get<VoidSettings>();
-services.AddSingleton(voidSettings);
-services.AddSingleton(voidSettings.Strike ?? new());
-
-var seqSettings = configuration.GetSection("Seq");
-builder.Logging.AddSeq(seqSettings);
-
-if (voidSettings.HasRedis())
-{
-    var cx = await ConnectionMultiplexer.ConnectAsync(voidSettings.Redis);
-    services.AddSingleton(cx);
-    services.AddSingleton(cx.GetDatabase());
-}
-
-services.AddHttpLogging((o) =>
-{
-    o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders | HttpLoggingFields.ResponsePropertiesAndHeaders;
-    o.RequestBodyLogLimit = 4096;
-    o.ResponseBodyLogLimit = 4096;
-
-    o.MediaTypeOptions.Clear();
-    o.MediaTypeOptions.AddText("application/json");
-
-    foreach (var h in voidSettings.RequestHeadersLog ?? Enumerable.Empty<string>())
-    {
-        o.RequestHeaders.Add(h);
-    }
-});
-services.AddHttpClient();
-services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please insert JWT with Bearer into field",
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] { }
-        }
-    });
-    var path = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
-    c.IncludeXmlComments(path);
-});
-services.AddCors(opt =>
-{
-    opt.AddDefaultPolicy(p =>
-    {
-        p.AllowAnyMethod()
-            .AllowAnyHeader()
-            .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
-    });
-});
-services.AddRazorPages();
-services.AddRouting();
-services.AddControllers()
-    .AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
-services.AddHealthChecks();
-
-services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new()
-        {
-            ValidateIssuer = true,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = voidSettings.JwtSettings.Issuer,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(voidSettings.JwtSettings.Key))
-        };
-    });
-
-services.AddAuthorization((opt) =>
-{
-    opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); });
-});
-
-// void.cat services
-//
-services.AddTransient<RazorPartialToStringRenderer>();
-services.AddTransient<IMigration, PopulateMetadataId>();
-services.AddTransient<IMigration, MigrateToPostgres>();
-services.AddTransient<IMigration, FixSize>();
-
-// file storage
-services.AddStorage(voidSettings);
-
-// stats
-services.AddMetrics(voidSettings);
-
-// paywall
-services.AddPaywallServices(voidSettings);
-
-// users
-services.AddUserServices(voidSettings);
-
-// background services
-services.AddHostedService<DeleteUnverifiedAccounts>();
-
-// virus scanner
-services.AddVirusScanner(voidSettings);
-
-// captcha
-services.AddCaptcha(voidSettings);
-
-// postgres
-if (!string.IsNullOrEmpty(voidSettings.Postgres))
-{
-    services.AddSingleton<PostgresConnectionFactory>();
-    services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(voidSettings.Postgres));
-
-    // fluent migrations
-    services.AddTransient<IMigration, FluentMigrationRunner>();
-    services.AddFluentMigratorCore()
-        .ConfigureRunner(r =>
-            r.AddPostgres()
-                .WithGlobalConnectionString(voidSettings.Postgres)
-                .ScanIn(typeof(Program).Assembly).For.Migrations());
-}
-
-if (voidSettings.HasRedis())
-{
-    services.AddTransient<ICache, RedisCache>();
-
-    // redis specific migrations
-    services.AddTransient<IMigration, UserLookupKeyHashMigration>();
-}
-else
-{
-    services.AddMemoryCache();
-    services.AddTransient<ICache, InMemoryCache>();
-}
-
-var app = builder.Build();
+RunModes mode = args.Length == 0 ? RunModes.All : 0;
 
 if (args.Contains("--run-migrations"))
 {
-    // run migrations
-    using var migrationScope = app.Services.CreateScope();
+    mode |= RunModes.Migrations;
+}
+
+if (args.Contains("--run-background-jobs"))
+{
+    mode |= RunModes.BackgroundJobs;
+}
+
+Console.WriteLine($"Running with modes: {mode}");
+
+async Task RunMigrations(IServiceProvider services)
+{
+    using var migrationScope = services.CreateScope();
     var migrations = migrationScope.ServiceProvider.GetServices<IMigration>();
     var logger = migrationScope.ServiceProvider.GetRequiredService<ILogger<IMigration>>();
     foreach (var migration in migrations.OrderBy(a => a.Order))
@@ -202,32 +35,109 @@ if (args.Contains("--run-migrations"))
             return;
         }
     }
-    
-    return;
 }
 
-#if HostSPA
-app.UseStaticFiles();
-#endif
-
-app.UseHttpLogging();
-app.UseRouting();
-app.UseCors();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseHealthChecks("/healthz");
-
-app.UseEndpoints(ep =>
+if (mode.HasFlag(RunModes.Webserver))
 {
-    ep.MapControllers();
-    ep.MapMetrics();
-    ep.MapRazorPages();
-#if HostSPA
-    ep.MapFallbackToFile("index.html");
-#endif
-});
+    var builder = WebApplication.CreateBuilder(args);
+    var services = builder.Services;
 
-app.Run();
+    var configuration = builder.Configuration;
+    var voidSettings = configuration.GetSection("Settings").Get<VoidSettings>();
+    services.AddSingleton(voidSettings);
+    services.AddSingleton(voidSettings.Strike ?? new());
+
+    var seqSettings = configuration.GetSection("Seq");
+    builder.Logging.AddSeq(seqSettings);
+
+    services.AddBaseServices(voidSettings);
+    services.AddDatabaseServices(voidSettings);
+    services.AddWebServices(voidSettings);
+
+    if (mode.HasFlag(RunModes.Migrations))
+    {
+        services.AddMigrations(voidSettings);
+    }
+
+    if (mode.HasFlag(RunModes.BackgroundJobs))
+    {
+        services.AddBackgroundServices(voidSettings);
+    }
+
+    var app = builder.Build();
+
+    if (mode.HasFlag(RunModes.Migrations))
+    {
+        await RunMigrations(app.Services);
+    }
+
+#if HostSPA
+    app.UseStaticFiles();
+#endif
+
+    app.UseHttpLogging();
+    app.UseRouting();
+    app.UseCors();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.UseHealthChecks("/healthz");
+
+    app.UseEndpoints(ep =>
+    {
+        ep.MapControllers();
+        ep.MapMetrics();
+        ep.MapRazorPages();
+#if HostSPA
+        ep.MapFallbackToFile("index.html");
+#endif
+    });
+
+    app.Run();
+}
+else
+{
+    // daemon style, dont run web server
+    var builder = Host.CreateDefaultBuilder(args);
+    builder.ConfigureServices((context, services) =>
+    {
+        var voidSettings = context.Configuration.GetSection("Settings").Get<VoidSettings>();
+        services.AddSingleton(voidSettings);
+        services.AddSingleton(voidSettings.Strike ?? new());
+
+        services.AddBaseServices(voidSettings);
+        services.AddDatabaseServices(voidSettings);
+        if (mode.HasFlag(RunModes.Migrations))
+        {
+            services.AddMigrations(voidSettings);
+        }
+
+        if (mode.HasFlag(RunModes.BackgroundJobs))
+        {
+            services.AddBackgroundServices(voidSettings);
+        }
+    });
+    builder.ConfigureLogging((context, logging) => { logging.AddSeq(context.Configuration.GetSection("Seq")); });
+
+    var app = builder.Build();
+    if (mode.HasFlag(RunModes.Migrations))
+    {
+        await RunMigrations(app.Services);
+    }
+
+    if (mode.HasFlag(RunModes.BackgroundJobs))
+    {
+        app.Run();
+    }
+}
+
+[Flags]
+internal enum RunModes
+{
+    Webserver = 1,
+    BackgroundJobs = 2,
+    Migrations = 4,
+    All = 255
+}

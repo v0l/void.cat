@@ -20,23 +20,15 @@ public static class VirusScannerStartup
         var avSettings = settings.VirusScanner;
         if (avSettings != default)
         {
-            var loadService = false;
-
             // load ClamAV scanner
             if (avSettings.ClamAV != default)
             {
-                loadService = true;
                 services.AddTransient<IClamClient>((_) =>
                     new ClamClient(avSettings.ClamAV.Endpoint.Host, avSettings.ClamAV.Endpoint.Port)
                     {
                         MaxStreamSize = avSettings.ClamAV.MaxStreamSize ?? 26240000
                     });
                 services.AddTransient<IVirusScanner, ClamAvScanner>();
-            }
-
-            if (loadService)
-            {
-                services.AddHostedService<Background.VirusScannerService>();
             }
         }
     }
