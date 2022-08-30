@@ -8,6 +8,11 @@ JsonConvert.DefaultSettings = () => VoidStartup.ConfigJsonSettings(new());
 
 RunModes mode = args.Length == 0 ? RunModes.All : 0;
 
+if (args.Contains("--run-webserver"))
+{
+    mode |= RunModes.Webserver;
+}
+
 if (args.Contains("--run-migrations"))
 {
     mode |= RunModes.Migrations;
