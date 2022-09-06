@@ -23,7 +23,11 @@ export default function ApiKeyList() {
             setNewApiKey(await rsp.json());
         }
     }
-
+    
+    function openDocs() {
+        window.open("/swagger", "_blank")
+    }
+    
     useEffect(() => {
         if (Api) {
             loadApiKeys();
@@ -38,6 +42,7 @@ export default function ApiKeyList() {
                 </div>
                 <div>
                     <VoidButton onClick={(e) => createApiKey()}>+New</VoidButton>
+                    <VoidButton onClick={(e) => openDocs()}>Docs</VoidButton>
                 </div>
             </div>
             <table>

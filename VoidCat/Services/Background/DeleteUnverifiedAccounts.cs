@@ -25,7 +25,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
                 var userStore = scope.ServiceProvider.GetRequiredService<IUserStore>();
                 var userUploads = scope.ServiceProvider.GetRequiredService<IUserUploadsStore>();
                 var fileStore = scope.ServiceProvider.GetRequiredService<FileStoreFactory>();
-                var fileInfoManager = scope.ServiceProvider.GetRequiredService<IFileInfoManager>();
+                var fileInfoManager = scope.ServiceProvider.GetRequiredService<FileInfoManager>();
 
                 var accounts = await userStore.ListUsers(new(0, Int32.MaxValue));
 

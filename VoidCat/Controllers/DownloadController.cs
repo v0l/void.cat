@@ -11,11 +11,11 @@ namespace VoidCat.Controllers;
 public class DownloadController : Controller
 {
     private readonly FileStoreFactory _storage;
-    private readonly IFileInfoManager _fileInfo;
+    private readonly FileInfoManager _fileInfo;
     private readonly IPaywallOrderStore _paywallOrders;
     private readonly ILogger<DownloadController> _logger;
 
-    public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, IFileInfoManager fileInfo,
+    public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, FileInfoManager fileInfo,
         IPaywallOrderStore paywall)
     {
         _storage = storage;

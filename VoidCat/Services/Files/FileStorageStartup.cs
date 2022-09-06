@@ -8,7 +8,7 @@ public static class FileStorageStartup
 {
     public static void AddStorage(this IServiceCollection services, VoidSettings settings)
     {
-        services.AddTransient<IFileInfoManager, FileInfoManager>();
+        services.AddTransient<FileInfoManager>();
         services.AddTransient<FileStoreFactory>();
         
         if (settings.CloudStorage != default)
@@ -19,7 +19,7 @@ public static class FileStorageStartup
                 services.AddTransient<IFileStore>((svc) =>
                     new S3FileStore(s3, 
                         svc.GetRequiredService<IAggregateStatsCollector>(),
-                        svc.GetRequiredService<IFileInfoManager>(),
+                        svc.GetRequiredService<FileInfoManager>(),
                         svc.GetRequiredService<ICache>()));
 
                 if (settings.MetadataStore == s3.Name)

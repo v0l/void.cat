@@ -3,8 +3,11 @@ using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
 
-/// <inheritdoc />
-public class FileInfoManager : IFileInfoManager
+/// <summary>
+/// Main interface for getting file info to serve to clients.
+/// This interface should wrap all stores and return the combined result
+/// </summary>
+public sealed class FileInfoManager
 {
     private readonly IFileMetadataStore _metadataStore;
     private readonly IPaywallStore _paywallStore;
@@ -24,19 +27,31 @@ public class FileInfoManager : IFileInfoManager
         _userUploadsStore = userUploadsStore;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Get all metadata for a single file
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public ValueTask<PublicVoidFile?> Get(Guid id)
     {
         return Get<PublicVoidFile, VoidFileMeta>(id);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Get all private metadata for a single file
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public ValueTask<PrivateVoidFile?> GetPrivate(Guid id)
     {
         return Get<PrivateVoidFile, SecretVoidFileMeta>(id);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Get all metadata for multiple files
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
     public async ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids)
     {
         var ret = new List<PublicVoidFile>();
@@ -52,7 +67,11 @@ public class FileInfoManager : IFileInfoManager
         return ret;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Deletes all file metadata
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public async ValueTask Delete(Guid id)
     {
         await _metadataStore.Delete(id);

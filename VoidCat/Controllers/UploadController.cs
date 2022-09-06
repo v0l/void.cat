@@ -17,14 +17,14 @@ namespace VoidCat.Controllers
         private readonly IFileMetadataStore _metadata;
         private readonly IPaywallStore _paywall;
         private readonly IPaywallFactory _paywallFactory;
-        private readonly IFileInfoManager _fileInfo;
+        private readonly FileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
         private readonly IUserStore _userStore;
         private readonly ITimeSeriesStatsReporter _timeSeriesStats;
         private readonly VoidSettings _settings;
 
         public UploadController(FileStoreFactory storage, IFileMetadataStore metadata, IPaywallStore paywall,
-            IPaywallFactory paywallFactory, IFileInfoManager fileInfo, IUserUploadsStore userUploads,
+            IPaywallFactory paywallFactory, FileInfoManager fileInfo, IUserUploadsStore userUploads,
             ITimeSeriesStatsReporter timeSeriesStats, IUserStore userStore, VoidSettings settings)
         {
             _storage = storage;

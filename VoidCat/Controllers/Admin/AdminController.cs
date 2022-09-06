@@ -12,11 +12,11 @@ public class AdminController : Controller
 {
     private readonly FileStoreFactory _fileStore;
     private readonly IFileMetadataStore _fileMetadata;
-    private readonly IFileInfoManager _fileInfo;
+    private readonly FileInfoManager _fileInfo;
     private readonly IUserStore _userStore;
     private readonly IUserUploadsStore _userUploads;
 
-    public AdminController(FileStoreFactory fileStore, IUserStore userStore, IFileInfoManager fileInfo,
+    public AdminController(FileStoreFactory fileStore, IUserStore userStore, FileInfoManager fileInfo,
         IFileMetadataStore fileMetadata, IUserUploadsStore userUploads)
     {
         _fileStore = fileStore;

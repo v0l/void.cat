@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Files;
 
 namespace VoidCat.Controllers;
 
@@ -10,10 +11,10 @@ public class UserController : Controller
     private readonly IUserStore _store;
     private readonly IUserUploadsStore _userUploads;
     private readonly IEmailVerification _emailVerification;
-    private readonly IFileInfoManager _fileInfoManager;
+    private readonly FileInfoManager _fileInfoManager;
 
     public UserController(IUserStore store, IUserUploadsStore userUploads, IEmailVerification emailVerification,
-        IFileInfoManager fileInfoManager)
+        FileInfoManager fileInfoManager)
     {
         _store = store;
         _userUploads = userUploads;

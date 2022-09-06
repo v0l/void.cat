@@ -9,13 +9,13 @@ namespace VoidCat.Services.Files;
 /// <inheritdoc cref="VoidCat.Services.Abstractions.IFileStore" />
 public class S3FileStore : StreamFileStore, IFileStore
 {
-    private readonly IFileInfoManager _fileInfo;
+    private readonly FileInfoManager _fileInfo;
     private readonly AmazonS3Client _client;
     private readonly S3BlobConfig _config;
     private readonly IAggregateStatsCollector _statsCollector;
     private readonly ICache _cache;
 
-    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, IFileInfoManager fileInfo, ICache cache) : base(stats)
+    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, FileInfoManager fileInfo, ICache cache) : base(stats)
     {
         _fileInfo = fileInfo;
         _cache = cache;

@@ -8,14 +8,12 @@ namespace VoidCat.Services.Files;
 public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
     private const string FilesDir = "files-v1";
-    private readonly ILogger<LocalDiskFileStore> _logger;
     private readonly VoidSettings _settings;
 
-    public LocalDiskFileStore(ILogger<LocalDiskFileStore> logger, VoidSettings settings, IAggregateStatsCollector stats)
+    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats)
         : base(stats)
     {
         _settings = settings;
-        _logger = logger;
 
         var dir = Path.Combine(_settings.DataDirectory, FilesDir);
         if (!Directory.Exists(dir))
@@ -55,7 +53,6 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         var fp = MapPath(id);
         if (File.Exists(fp))
         {
-            _logger.LogInformation("Deleting file: {Path}", fp);
             File.Delete(fp);
         }
 

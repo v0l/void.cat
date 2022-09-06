@@ -53,8 +53,8 @@ public class S3FileMetadataStore : IFileMetadataStore
         oldMeta.Description = meta.Description ?? oldMeta.Description;
         oldMeta.Name = meta.Name ?? oldMeta.Name;
         oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
-        oldMeta.Expires = meta.Expires ?? oldMeta.Expires;
         oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
+        oldMeta.Expires = meta.Expires;
 
         await Set(id, oldMeta);
     }

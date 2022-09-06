@@ -155,6 +155,7 @@ public static class VoidStartup
     public static void AddBackgroundServices(this IServiceCollection services, VoidSettings voidSettings)
     {
         services.AddHostedService<DeleteUnverifiedAccounts>();
+        services.AddHostedService<DeleteExpiredFiles>();
 
         if (voidSettings.HasVirusScanner())
         {
