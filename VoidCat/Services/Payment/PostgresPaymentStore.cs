@@ -18,11 +18,11 @@ public sealed class PostgresPaymentStore : IPaymentStore
     public async ValueTask<PaymentConfig?> Get(Guid id)
     {
         await using var conn = await _connection.Get();
-        var svc = await conn.QuerySingleOrDefaultAsync<DtoPaymentConfig>(
+        var dto = await conn.QuerySingleOrDefaultAsync<DtoPaymentConfig>(
             @"select * from ""Payment"" where ""File"" = :file", new {file = id});
-        if (svc != default)
+        if (dto != default)
         {
-            switch (svc.Service)
+            switch (dto.Service)
             {
                 case PaymentServices.Strike:
                 {
@@ -31,10 +31,11 @@ public sealed class PostgresPaymentStore : IPaymentStore
                             @"select ""Handle"" from ""PaymentStrike"" where ""File"" = :file", new {file = id});
                     return new StrikePaymentConfig
                     {
-                        Cost = new(svc.Amount, svc.Currency),
-                        File = svc.File,
+                        Cost = new(dto.Amount, dto.Currency),
+                        File = dto.File,
                         Handle = handle,
-                        Service = PaymentServices.Strike
+                        Service = PaymentServices.Strike,
+                        Required = dto.Required
                     };
                 }
             }
@@ -55,14 +56,15 @@ public sealed class PostgresPaymentStore : IPaymentStore
         await using var conn = await _connection.Get();
         await using var txn = await conn.BeginTransactionAsync();
         await conn.ExecuteAsync(
-            @"insert into ""Payment""(""File"", ""Service"", ""Amount"", ""Currency"") values(:file, :service, :amount, :currency)
-on conflict(""File"") do update set ""Service"" = :service, ""Amount"" = :amount, ""Currency"" = :currency",
+            @"insert into ""Payment""(""File"", ""Service"", ""Amount"", ""Currency"", ""Required"") values(:file, :service, :amount, :currency, :required)
+on conflict(""File"") do update set ""Service"" = :service, ""Amount"" = :amount, ""Currency"" = :currency, ""Required"" = :required",
             new
             {
                 file = id,
                 service = (int)obj.Service,
                 amount = obj.Cost.Amount,
-                currency = obj.Cost.Currency
+                currency = obj.Cost.Currency,
+                required = obj.Required
             });
 
         if (obj is StrikePaymentConfig sc)

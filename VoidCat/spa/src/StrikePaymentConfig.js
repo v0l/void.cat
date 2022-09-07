@@ -13,6 +13,7 @@ export function StrikePaymentConfig(props) {
     const [username, setUsername] = useState(payment?.handle ?? "hrf");
     const [currency, setCurrency] = useState(payment?.cost.currency ?? PaymentCurrencies.USD);
     const [price, setPrice] = useState(payment?.cost.amount ?? 1);
+    const [required, setRequired] = useState(payment?.required);
     const [saveStatus, setSaveStatus] = useState();
 
     async function saveStrikeConfig(e) {
@@ -24,7 +25,8 @@ export function StrikePaymentConfig(props) {
                     currency: currency,
                     amount: price
                 }
-            }
+            },
+            required
         };
 
         if (typeof onSaveConfig === "function") {
@@ -53,6 +55,8 @@ export function StrikePaymentConfig(props) {
                 </dd>
                 <dt>Price:</dt>
                 <dd><input type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value))}/></dd>
+                <dt>Required:</dt>
+                <dd><input type="checkbox" checked={required} onChange={(e) => setRequired(e.target.checked)}/></dd>
             </dl>
             <VoidButton onClick={saveStrikeConfig}>Save</VoidButton>
             {saveStatus ? <FeatherIcon icon="check-circle"/> : null}

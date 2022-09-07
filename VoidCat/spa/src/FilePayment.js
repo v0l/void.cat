@@ -34,14 +34,20 @@ export function FilePayment(props) {
     }
 
     if (!order) {
-        return (
-            <div className="payment">
-                <h3>
-                    You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this file.
-                </h3>
-                <VoidButton onClick={fetchOrder}>Pay</VoidButton>
-            </div>
-        );
+        if (pw.required) {
+            return (
+                <div className="payment">
+                    <h3>
+                        You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this file.
+                    </h3>
+                    <VoidButton onClick={fetchOrder}>Pay</VoidButton>
+                </div>
+            );
+        } else {
+            return (
+                <VoidButton onClick={fetchOrder}>Tip {FormatCurrency(pw.cost.amount, pw.cost.currency)}</VoidButton>
+            );
+        }
     } else {
         switch (pw.service) {
             case PaymentServices.Strike: {

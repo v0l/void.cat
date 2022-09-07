@@ -26,13 +26,24 @@ export function FilePreview() {
         }
     }
 
-    function renderTypes() {
+    function canAccessFile() {
+        if (info?.payment?.required === true && !order) {
+            return false;
+        }
+        return true;
+    }
+
+    function renderPayment() {
         if (info.payment && info.payment.service !== 0) {
             if (!order) {
                 return <FilePayment file={info} onPaid={loadInfo}/>;
             }
         }
 
+        return null;
+    }
+
+    function renderPreview() {
         if (info.metadata) {
             switch (info.metadata.mimeType) {
                 case "image/avif":
@@ -109,7 +120,7 @@ export function FilePreview() {
     }
 
     function renderVirusWarning() {
-        if(info.virusScan && info.virusScan.isVirus === true) {
+        if (info.virusScan && info.virusScan.isVirus === true) {
             let scanResult = info.virusScan;
             return (
                 <div className="virus-warning">
@@ -122,9 +133,9 @@ export function FilePreview() {
                     </pre>
                 </div>
             );
-        }    
+        }
     }
-    
+
     useEffect(() => {
         loadInfo();
     }, []);
@@ -149,7 +160,8 @@ export function FilePreview() {
                 <Fragment>
                     <Helmet>
                         <title>void.cat - {info.metadata?.name ?? info.id}</title>
-                        {info.metadata?.description ? <meta name="description" content={info.metadata?.description}/> : null}
+                        {info.metadata?.description ?
+                            <meta name="description" content={info.metadata?.description}/> : null}
                         {renderOpenGraphTags()}
                     </Helmet>
                     {renderVirusWarning()}
@@ -158,10 +170,13 @@ export function FilePreview() {
                             {info.uploader ? <InlineProfile profile={info.uploader}/> : null}
                         </div>
                         <div>
-                            <a className="btn" href={link} download={info.metadata?.name ?? info.id}>Download</a>
+                            {canAccessFile() ?
+                                <a className="btn" href={link}
+                                   download={info.metadata?.name ?? info.id}>Download</a> : null}
                         </div>
                     </div>
-                    {renderTypes()}
+                    {renderPayment()}
+                    {canAccessFile() ? renderPreview() : null}
                     <div className="file-stats">
                         <div>
                             <FeatherIcon icon="download-cloud"/>

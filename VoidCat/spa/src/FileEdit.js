@@ -7,6 +7,7 @@ import "./FileEdit.css";
 import {useSelector} from "react-redux";
 import {VoidButton} from "./VoidButton";
 import moment from "moment";
+import {PaymentServices} from "./Const";
 
 export function FileEdit(props) {
     const {Api} = useApi();
@@ -42,10 +43,10 @@ export function FileEdit(props) {
 
     function renderPaymentConfig() {
         switch (payment) {
-            case 0: {
+            case PaymentServices.None: {
                 return <NoPaymentConfig privateFile={privateFile} onSaveConfig={saveConfig}/>;
             }
-            case 1: {
+            case PaymentServices.Strike: {
                 return <StrikePaymentConfig file={file} privateFile={privateFile} onSaveConfig={saveConfig}/>
             }
         }

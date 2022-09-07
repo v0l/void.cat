@@ -60,13 +60,18 @@ a:hover {
     align-items: center;
 }
 
-input[type="text"], input[type="number"], input[type="password"], input[type="datetime-local"], select {
+input[type="text"], input[type="number"], input[type="password"], input[type="datetime-local"], input[type="checkbox"], select {
     display: inline-block;
     line-height: 1.1;
     border-radius: 10px;
     padding: 10px 20px;
     margin: 5px;
     border: 0;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
 }
 
 table {

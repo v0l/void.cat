@@ -15,7 +15,7 @@ namespace VoidCat.Controllers
     {
         private readonly FileStoreFactory _storage;
         private readonly IFileMetadataStore _metadata;
-        private readonly IPaymentStore _payment;
+        private readonly IPaymentStore _paymentStore;
         private readonly IPaymentFactory _paymentFactory;
         private readonly FileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
@@ -29,7 +29,7 @@ namespace VoidCat.Controllers
         {
             _storage = storage;
             _metadata = metadata;
-            _payment = payment;
+            _paymentStore = payment;
             _paymentFactory = paymentFactory;
             _fileInfo = fileInfo;
             _userUploads = userUploads;
@@ -214,7 +214,7 @@ namespace VoidCat.Controllers
         {
             var gid = id.FromBase58Guid();
             var file = await _fileInfo.Get(gid);
-            var config = await _payment.Get(gid);
+            var config = await _paymentStore.Get(gid);
 
             var provider = await _paymentFactory.CreateProvider(config!.Service);
             return await provider.CreateOrder(file!.Payment!);
@@ -231,7 +231,7 @@ namespace VoidCat.Controllers
         public async ValueTask<PaymentOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
         {
             var gid = id.FromBase58Guid();
-            var config = await _payment.Get(gid);
+            var config = await _paymentStore.Get(gid);
 
             var provider = await _paymentFactory.CreateProvider(config!.Service);
             return await provider.GetOrderStatus(order);
@@ -254,18 +254,19 @@ namespace VoidCat.Controllers
 
             if (req.Strike != default)
             {
-                await _payment.Add(gid, new StrikePaymentConfig()
+                await _paymentStore.Add(gid, new StrikePaymentConfig()
                 {
                     Service = PaymentServices.Strike,
                     Handle = req.Strike.Handle,
-                    Cost = req.Strike.Cost
+                    Cost = req.Strike.Cost,
+                    Required = req.Required
                 });
 
                 return Ok();
             }
 
             // if none set, delete config
-            await _payment.Delete(gid);
+            await _paymentStore.Delete(gid);
             return Ok();
         }
 
@@ -341,5 +342,7 @@ namespace VoidCat.Controllers
         public Guid EditSecret { get; init; }
 
         public StrikePaymentConfig? Strike { get; init; }
+        
+        public bool Required { get; init; }
     }
 }

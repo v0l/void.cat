@@ -100,7 +100,7 @@ public class DownloadController : Controller
         }
 
         // check payment order
-        if (meta.Payment != default && meta.Payment.Service != PaymentServices.None)
+        if (meta.Payment != default && meta.Payment.Service != PaymentServices.None && meta.Payment.Required)
         {
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId))
