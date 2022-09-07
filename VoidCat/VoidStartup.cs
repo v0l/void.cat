@@ -12,6 +12,7 @@ using StackExchange.Redis;
 using VoidCat.Model;
 using VoidCat.Services;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Analytics;
 using VoidCat.Services.Background;
 using VoidCat.Services.Captcha;
 using VoidCat.Services.Files;
@@ -150,6 +151,7 @@ public static class VoidStartup
         });
 
         services.AddTransient<RazorPartialToStringRenderer>();
+        services.AddAnalytics(voidSettings);
     }
 
     public static void AddBackgroundServices(this IServiceCollection services, VoidSettings voidSettings)

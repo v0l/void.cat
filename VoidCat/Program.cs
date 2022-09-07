@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using Prometheus;
 using VoidCat;
 using VoidCat.Model;
+using VoidCat.Services.Analytics;
 using VoidCat.Services.Migrations;
 
 JsonConvert.DefaultSettings = () => VoidStartup.ConfigJsonSettings(new());
@@ -90,6 +91,7 @@ if (mode.HasFlag(RunModes.Webserver))
 
     app.UseHealthChecks("/healthz");
 
+    app.UseMiddleware<AnalyticsMiddleware>();
     app.UseEndpoints(ep =>
     {
         ep.MapControllers();

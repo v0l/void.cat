@@ -236,4 +236,7 @@ public static class Extensions
 
     public static bool HasVirusScanner(this VoidSettings settings)
         => settings.VirusScanner?.ClamAV != default || settings.VirusScanner?.VirusTotal != default;
+
+    public static bool HasPlausible(this VoidSettings settings)
+        => settings.PlausibleAnalytics?.Endpoint != null;
 }

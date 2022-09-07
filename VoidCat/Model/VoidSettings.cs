@@ -90,6 +90,11 @@ namespace VoidCat.Model
         /// Select which store to use for files storage, if not set "local-disk" will be used
         /// </summary>
         public string DefaultFileStore { get; init; } = "local-disk";
+        
+        /// <summary>
+        /// Plausible Analytics endpoint url
+        /// </summary>
+        public PlausibleSettings? PlausibleAnalytics { get; init; }
     }
 
     public sealed class TorSettings
@@ -157,5 +162,11 @@ namespace VoidCat.Model
     {
         public Uri? Url { get; init; }
         public string? EgressQuery { get; init; }
+    }
+
+    public sealed class PlausibleSettings
+    {
+        public Uri? Endpoint { get; init; }
+        public string? Domain { get; init; }
     }
 }
