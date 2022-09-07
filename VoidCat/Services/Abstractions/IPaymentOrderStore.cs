@@ -1,11 +1,11 @@
-﻿using VoidCat.Model.Paywall;
+﻿using VoidCat.Model.Payments;
 
 namespace VoidCat.Services.Abstractions;
 
 /// <summary>
-/// Paywall order store
+/// Payment order store
 /// </summary>
-public interface IPaywallOrderStore : IBasicStore<PaywallOrder>
+public interface IPaymentOrderStore : IBasicStore<PaymentOrder>
 {
     /// <summary>
     /// Update the status of an order
@@ -13,5 +13,5 @@ public interface IPaywallOrderStore : IBasicStore<PaywallOrder>
     /// <param name="order"></param>
     /// <param name="status"></param>
     /// <returns></returns>
-    ValueTask UpdateStatus(Guid order, PaywallOrderStatus status);
+    ValueTask UpdateStatus(Guid order, PaymentOrderStatus status);
 }

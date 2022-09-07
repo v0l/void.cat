@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using VoidCat.Model.Paywall;
+using VoidCat.Model.Payments;
 
 namespace VoidCat.Model
 {
@@ -17,9 +17,9 @@ namespace VoidCat.Model
         public TMeta? Metadata { get; init; }
         
         /// <summary>
-        /// Optional paywall config
+        /// Optional payment config
         /// </summary>
-        public PaywallConfig? Paywall { get; init; }
+        public PaymentConfig? Payment { get; init; }
         
         /// <summary>
         /// User profile that uploaded the file

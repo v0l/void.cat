@@ -2,10 +2,10 @@
 import {useEffect} from "react";
 
 import {Countdown} from "./Countdown";
-import {PaywallOrderState} from "./Const";
+import {PaymentOrderState} from "./Const";
 import {useApi} from "./Api";
 
-export function LightningPaywall(props) {
+export function LightningPayment(props) {
     const {Api} = useApi();
     const file = props.file;
     const order = props.order;
@@ -23,7 +23,7 @@ export function LightningPaywall(props) {
         if (req.ok) {
             let order = await req.json();
 
-            if (order.status === PaywallOrderState.Paid && typeof onPaid === "function") {
+            if (order.status === PaymentOrderState.Paid && typeof onPaid === "function") {
                 onPaid(order);
             }
         }

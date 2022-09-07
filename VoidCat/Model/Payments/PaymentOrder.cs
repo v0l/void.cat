@@ -1,9 +1,9 @@
-namespace VoidCat.Model.Paywall;
+namespace VoidCat.Model.Payments;
 
 /// <summary>
-/// Status of paywall order
+/// Status of payment order
 /// </summary>
-public enum PaywallOrderStatus : byte
+public enum PaymentOrderStatus : byte
 {
     /// <summary>
     /// Invoice is not paid yet
@@ -22,9 +22,9 @@ public enum PaywallOrderStatus : byte
 }
 
 /// <summary>
-/// Base paywall order
+/// Base payment order
 /// </summary>
-public class PaywallOrder
+public class PaymentOrder
 {
     /// <summary>
     /// Unique id of the order
@@ -44,18 +44,18 @@ public class PaywallOrder
     /// <summary>
     /// The price of the order
     /// </summary>
-    public PaywallMoney Price { get; init; } = null!;
+    public PaymentMoney Price { get; init; } = null!;
     
     /// <summary>
     /// Current status of the order
     /// </summary>
-    public PaywallOrderStatus Status { get; set; }
+    public PaymentOrderStatus Status { get; set; }
 }
 
 /// <summary>
-/// A paywall order lightning network invoice
+/// A payment order lightning network invoice
 /// </summary>
-public class LightningPaywallOrder : PaywallOrder
+public class LightningPaymentOrder : PaymentOrder
 {
     /// <summary>
     /// Lightning invoice

@@ -1,7 +1,7 @@
 import {useState} from "react";
 
-import {StrikePaywallConfig} from "./StrikePaywallConfig";
-import {NoPaywallConfig} from "./NoPaywallConfig";
+import {StrikePaymentConfig} from "./StrikePaymentConfig";
+import {NoPaymentConfig} from "./NoPaymentConfig";
 import {useApi} from "./Api";
 import "./FileEdit.css";
 import {useSelector} from "react-redux";
@@ -13,7 +13,7 @@ export function FileEdit(props) {
     const file = props.file;
     const meta = file.metadata;
     const profile = useSelector(state => state.login.profile);
-    const [paywall, setPaywall] = useState(file.paywall?.service);
+    const [payment, setPayment] = useState(file.payment?.service);
     const [name, setName] = useState(meta?.name);
     const [description, setDescription] = useState(meta?.description);
     const [expiry, setExpiry] = useState(meta?.expires === undefined || meta?.expires === null ? null : moment(meta?.expires).unix() * 1000);
@@ -26,7 +26,7 @@ export function FileEdit(props) {
     }
 
     async function saveConfig(cfg) {
-        let req = await Api.setPaywallConfig(file.id, cfg);
+        let req = await Api.setPaymentConfig(file.id, cfg);
         return req.ok;
     }
 
@@ -40,13 +40,13 @@ export function FileEdit(props) {
         await Api.updateMetadata(file.id, meta);
     }
 
-    function renderPaywallConfig() {
-        switch (paywall) {
+    function renderPaymentConfig() {
+        switch (payment) {
             case 0: {
-                return <NoPaywallConfig privateFile={privateFile} onSaveConfig={saveConfig}/>;
+                return <NoPaymentConfig privateFile={privateFile} onSaveConfig={saveConfig}/>;
             }
             case 1: {
-                return <StrikePaywallConfig file={file} privateFile={privateFile} onSaveConfig={saveConfig}/>
+                return <StrikePaymentConfig file={file} privateFile={privateFile} onSaveConfig={saveConfig}/>
             }
         }
         return null;
@@ -81,13 +81,13 @@ export function FileEdit(props) {
                 <VoidButton onClick={(e) => saveMeta()} options={{showSuccess: true}}>Save</VoidButton>
             </div>
             <div className="flx-1">
-                <h3>Paywall Config</h3>
+                <h3>Payment Config</h3>
                 Type:
-                <select onChange={(e) => setPaywall(parseInt(e.target.value))} value={paywall}>
+                <select onChange={(e) => setPayment(parseInt(e.target.value))} value={payment}>
                     <option value={0}>None</option>
                     <option value={1}>Strike</option>
                 </select>
-                {renderPaywallConfig()}
+                {renderPaymentConfig()}
             </div>
         </div>
     );

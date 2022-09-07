@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
-using VoidCat.Services.Paywall;
+using VoidCat.Services.Payment;
 using VoidCat.Services.Users;
 
 namespace VoidCat.Services.Migrations;
@@ -15,20 +15,20 @@ public class MigrateToPostgres : IMigration
     private readonly VoidSettings _settings;
     private readonly IFileMetadataStore _fileMetadata;
     private readonly ICache _cache;
-    private readonly IPaywallStore _paywallStore;
+    private readonly IPaymentStore _paymentStore;
     private readonly IUserStore _userStore;
     private readonly IUserUploadsStore _userUploads;
     private readonly FileStoreFactory _fileStore;
 
     public MigrateToPostgres(VoidSettings settings, ILogger<MigrateToPostgres> logger, IFileMetadataStore fileMetadata,
-        ICache cache, IPaywallStore paywallStore, IUserStore userStore, IUserUploadsStore userUploads,
+        ICache cache, IPaymentStore paymentStore, IUserStore userStore, IUserUploadsStore userUploads,
         FileStoreFactory fileStore)
     {
         _logger = logger;
         _settings = settings;
         _fileMetadata = fileMetadata;
         _cache = cache;
-        _paywallStore = paywallStore;
+        _paymentStore = paymentStore;
         _userStore = userStore;
         _userUploads = userUploads;
         _fileStore = fileStore;
@@ -99,7 +99,7 @@ public class MigrateToPostgres : IMigration
 
     private async Task MigratePaywall()
     {
-        var cachePaywallStore = new CachePaywallStore(_cache);
+        var cachePaywallStore = new CachePaymentStore(_cache);
 
         var files = await _fileMetadata.ListFiles<VoidFileMeta>(new(0, int.MaxValue));
         await foreach (var file in files.Results)
@@ -109,7 +109,7 @@ public class MigrateToPostgres : IMigration
                 var old = await cachePaywallStore.Get(file.Id);
                 if (old != default)
                 {
-                    await _paywallStore.Add(file.Id, old);
+                    await _paymentStore.Add(file.Id, old);
                     _logger.LogInformation("Migrated paywall config for {File}", file.Id);
                 }
             }

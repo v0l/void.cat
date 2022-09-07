@@ -1,18 +1,18 @@
 import {useState} from "react";
 import FeatherIcon from "feather-icons-react";
-import {PaywallCurrencies} from "./Const";
+import {PaymentCurrencies} from "./Const";
 import {VoidButton} from "./VoidButton";
 
-export function StrikePaywallConfig(props) {
+export function StrikePaymentConfig(props) {
     const file = props.file;
     const privateFile = props.privateFile;
     const onSaveConfig = props.onSaveConfig;
-    const paywall = file.paywall;
+    const payment = file.payment;
     const editSecret = privateFile.metadata.editSecret;
 
-    const [username, setUsername] = useState(paywall?.handle ?? "hrf");
-    const [currency, setCurrency] = useState(paywall?.cost.currency ?? PaywallCurrencies.USD);
-    const [price, setPrice] = useState(paywall?.cost.amount ?? 1);
+    const [username, setUsername] = useState(payment?.handle ?? "hrf");
+    const [currency, setCurrency] = useState(payment?.cost.currency ?? PaymentCurrencies.USD);
+    const [price, setPrice] = useState(payment?.cost.amount ?? 1);
     const [saveStatus, setSaveStatus] = useState();
 
     async function saveStrikeConfig(e) {
@@ -31,7 +31,7 @@ export function StrikePaywallConfig(props) {
             if (await onSaveConfig(cfg)) {
                 setSaveStatus(true);
             } else {
-                alert("Error settings paywall config!");
+                alert("Error settings payment config!");
                 setSaveStatus(false);
             }
         }
@@ -45,10 +45,10 @@ export function StrikePaywallConfig(props) {
                 <dt>Currency:</dt>
                 <dd>
                     <select onChange={(e) => setCurrency(parseInt(e.target.value))} value={currency}>
-                        <option value={PaywallCurrencies.BTC}>BTC</option>
-                        <option value={PaywallCurrencies.USD}>USD</option>
-                        <option value={PaywallCurrencies.EUR}>EUR</option>
-                        <option value={PaywallCurrencies.GBP}>GBP</option>
+                        <option value={PaymentCurrencies.BTC}>BTC</option>
+                        <option value={PaymentCurrencies.USD}>USD</option>
+                        <option value={PaymentCurrencies.EUR}>EUR</option>
+                        <option value={PaymentCurrencies.GBP}>GBP</option>
                     </select>
                 </dd>
                 <dt>Price:</dt>

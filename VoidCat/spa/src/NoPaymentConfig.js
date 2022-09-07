@@ -2,7 +2,7 @@
 import {useState} from "react";
 import {VoidButton} from "./VoidButton";
 
-export function NoPaywallConfig(props) {
+export function NoPaymentConfig(props) {
     const [saveStatus, setSaveStatus] = useState();
     const privateFile = props.privateFile;
     const onSaveConfig = props.onSaveConfig;

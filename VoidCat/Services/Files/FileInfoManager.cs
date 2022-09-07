@@ -10,17 +10,17 @@ namespace VoidCat.Services.Files;
 public sealed class FileInfoManager
 {
     private readonly IFileMetadataStore _metadataStore;
-    private readonly IPaywallStore _paywallStore;
+    private readonly IPaymentStore _paymentStore;
     private readonly IStatsReporter _statsReporter;
     private readonly IUserStore _userStore;
     private readonly IVirusScanStore _virusScanStore;
     private readonly IUserUploadsStore _userUploadsStore;
 
-    public FileInfoManager(IFileMetadataStore metadataStore, IPaywallStore paywallStore, IStatsReporter statsReporter,
+    public FileInfoManager(IFileMetadataStore metadataStore, IPaymentStore paymentStore, IStatsReporter statsReporter,
         IUserStore userStore, IVirusScanStore virusScanStore, IUserUploadsStore userUploadsStore)
     {
         _metadataStore = metadataStore;
-        _paywallStore = paywallStore;
+        _paymentStore = paymentStore;
         _statsReporter = statsReporter;
         _userStore = userStore;
         _virusScanStore = virusScanStore;
@@ -75,7 +75,7 @@ public sealed class FileInfoManager
     public async ValueTask Delete(Guid id)
     {
         await _metadataStore.Delete(id);
-        await _paywallStore.Delete(id);
+        await _paymentStore.Delete(id);
         await _statsReporter.Delete(id);
         await _virusScanStore.Delete(id);
     }
@@ -84,11 +84,11 @@ public sealed class FileInfoManager
         where TMeta : VoidFileMeta where TFile : VoidFile<TMeta>, new()
     {
         var meta = _metadataStore.Get<TMeta>(id);
-        var paywall = _paywallStore.Get(id);
+        var payment = _paymentStore.Get(id);
         var bandwidth = _statsReporter.GetBandwidth(id);
         var virusScan = _virusScanStore.GetByFile(id);
         var uploader = _userUploadsStore.Uploader(id);
-        await Task.WhenAll(meta.AsTask(), paywall.AsTask(), bandwidth.AsTask(), virusScan.AsTask(), uploader.AsTask());
+        await Task.WhenAll(meta.AsTask(), payment.AsTask(), bandwidth.AsTask(), virusScan.AsTask(), uploader.AsTask());
 
         if (meta.Result == default) return default;
         var user = uploader.Result.HasValue ? await _userStore.Get<PublicVoidUser>(uploader.Result.Value) : null;
@@ -97,7 +97,7 @@ public sealed class FileInfoManager
         {
             Id = id,
             Metadata = meta.Result,
-            Paywall = paywall.Result,
+            Payment = payment.Result,
             Bandwidth = bandwidth.Result,
             Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null,
             VirusScan = virusScan.Result

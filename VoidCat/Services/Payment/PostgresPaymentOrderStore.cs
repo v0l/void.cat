@@ -1,33 +1,33 @@
 ﻿using Dapper;
-using VoidCat.Model.Paywall;
+using VoidCat.Model.Payments;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services.Paywall;
+namespace VoidCat.Services.Payment;
 
 /// <inheritdoc />
-public class PostgresPaywallOrderStore : IPaywallOrderStore
+public class PostgresPaymentOrderStore : IPaymentOrderStore
 {
     private readonly PostgresConnectionFactory _connection;
 
-    public PostgresPaywallOrderStore(PostgresConnectionFactory connection)
+    public PostgresPaymentOrderStore(PostgresConnectionFactory connection)
     {
         _connection = connection;
     }
 
     /// <inheritdoc />
-    public async ValueTask<PaywallOrder?> Get(Guid id)
+    public async ValueTask<PaymentOrder?> Get(Guid id)
     {
         await using var conn = await _connection.Get();
-        var order = await conn.QuerySingleOrDefaultAsync<DtoPaywallOrder>(
-            @"select * from ""PaywallOrder"" where ""Id"" = :id", new {id});
+        var order = await conn.QuerySingleOrDefaultAsync<DtoPaymentOrder>(
+            @"select * from ""PaymentOrder"" where ""Id"" = :id", new {id});
         if (order.Service is PaymentServices.Strike)
         {
-            var lnDetails = await conn.QuerySingleAsync<LightningPaywallOrder>(
-                @"select * from ""PaywallOrderLightning"" where ""Order"" = :id", new
+            var lnDetails = await conn.QuerySingleAsync<LightningPaymentOrder>(
+                @"select * from ""PaymentOrderLightning"" where ""Order"" = :id", new
                 {
                     id = order.Id
                 });
-            return new LightningPaywallOrder
+            return new LightningPaymentOrder
             {
                 Id = order.Id,
                 File = order.File,
@@ -43,18 +43,18 @@ public class PostgresPaywallOrderStore : IPaywallOrderStore
     }
 
     /// <inheritdoc />
-    public ValueTask<IReadOnlyList<PaywallOrder>> Get(Guid[] ids)
+    public ValueTask<IReadOnlyList<PaymentOrder>> Get(Guid[] ids)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public async ValueTask Add(Guid id, PaywallOrder obj)
+    public async ValueTask Add(Guid id, PaymentOrder obj)
     {
         await using var conn = await _connection.Get();
         await using var txn = await conn.BeginTransactionAsync();
         await conn.ExecuteAsync(
-            @"insert into ""PaywallOrder""(""Id"", ""File"", ""Service"", ""Currency"", ""Amount"", ""Status"") 
+            @"insert into ""PaymentOrder""(""Id"", ""File"", ""Service"", ""Currency"", ""Amount"", ""Status"") 
 values(:id, :file, :service, :currency, :amt, :status)",
             new
             {
@@ -66,10 +66,10 @@ values(:id, :file, :service, :currency, :amt, :status)",
                 status = (int) obj.Status
             });
 
-        if (obj is LightningPaywallOrder ln)
+        if (obj is LightningPaymentOrder ln)
         {
             await conn.ExecuteAsync(
-                @"insert into ""PaywallOrderLightning""(""Order"", ""Invoice"", ""Expire"") values(:order, :invoice, :expire)",
+                @"insert into ""PaymentOrderLightning""(""Order"", ""Invoice"", ""Expire"") values(:order, :invoice, :expire)",
                 new
                 {
                     order = id,
@@ -85,20 +85,20 @@ values(:id, :file, :service, :currency, :amt, :status)",
     public async ValueTask Delete(Guid id)
     {
         await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"delete from ""PaywallOrder"" where ""Id"" = :id", new {id});
+        await conn.ExecuteAsync(@"delete from ""PaymentOrder"" where ""Id"" = :id", new {id});
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateStatus(Guid order, PaywallOrderStatus status)
+    public async ValueTask UpdateStatus(Guid order, PaymentOrderStatus status)
     {
         await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"update ""PaywallOrder"" set ""Status"" = :status where ""Id"" = :id",
+        await conn.ExecuteAsync(@"update ""PaymentOrder"" set ""Status"" = :status where ""Id"" = :id",
             new {id = order, status = (int) status});
     }
 
-    private sealed class DtoPaywallOrder : PaywallOrder
+    private sealed class DtoPaymentOrder : PaymentOrder
     {
-        public PaywallCurrencies Currency { get; init; }
+        public PaymentCurrencies Currency { get; init; }
         public decimal Amount { get; init; }
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using VoidCat.Model;
-using VoidCat.Model.Paywall;
+using VoidCat.Model.Payments;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -15,22 +15,22 @@ namespace VoidCat.Controllers
     {
         private readonly FileStoreFactory _storage;
         private readonly IFileMetadataStore _metadata;
-        private readonly IPaywallStore _paywall;
-        private readonly IPaywallFactory _paywallFactory;
+        private readonly IPaymentStore _payment;
+        private readonly IPaymentFactory _paymentFactory;
         private readonly FileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
         private readonly IUserStore _userStore;
         private readonly ITimeSeriesStatsReporter _timeSeriesStats;
         private readonly VoidSettings _settings;
 
-        public UploadController(FileStoreFactory storage, IFileMetadataStore metadata, IPaywallStore paywall,
-            IPaywallFactory paywallFactory, FileInfoManager fileInfo, IUserUploadsStore userUploads,
+        public UploadController(FileStoreFactory storage, IFileMetadataStore metadata, IPaymentStore payment,
+            IPaymentFactory paymentFactory, FileInfoManager fileInfo, IUserUploadsStore userUploads,
             ITimeSeriesStatsReporter timeSeriesStats, IUserStore userStore, VoidSettings settings)
         {
             _storage = storage;
             _metadata = metadata;
-            _paywall = paywall;
-            _paywallFactory = paywallFactory;
+            _payment = payment;
+            _paymentFactory = paymentFactory;
             _fileInfo = fileInfo;
             _userUploads = userUploads;
             _timeSeriesStats = timeSeriesStats;
@@ -204,20 +204,20 @@ namespace VoidCat.Controllers
         }
 
         /// <summary>
-        /// Create a paywall order to pay
+        /// Create a payment order to pay
         /// </summary>
         /// <param name="id">File id</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("{id}/paywall")]
-        public async ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
+        [Route("{id}/payment")]
+        public async ValueTask<PaymentOrder?> CreateOrder([FromRoute] string id)
         {
             var gid = id.FromBase58Guid();
             var file = await _fileInfo.Get(gid);
-            var config = await _paywall.Get(gid);
+            var config = await _payment.Get(gid);
 
-            var provider = await _paywallFactory.CreateProvider(config!.Service);
-            return await provider.CreateOrder(file!.Paywall!);
+            var provider = await _paymentFactory.CreateProvider(config!.Service);
+            return await provider.CreateOrder(file!.Payment!);
         }
 
         /// <summary>
@@ -227,25 +227,25 @@ namespace VoidCat.Controllers
         /// <param name="order">Order id</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("{id}/paywall/{order:guid}")]
-        public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
+        [Route("{id}/payment/{order:guid}")]
+        public async ValueTask<PaymentOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
         {
             var gid = id.FromBase58Guid();
-            var config = await _paywall.Get(gid);
+            var config = await _payment.Get(gid);
 
-            var provider = await _paywallFactory.CreateProvider(config!.Service);
+            var provider = await _paymentFactory.CreateProvider(config!.Service);
             return await provider.GetOrderStatus(order);
         }
 
         /// <summary>
-        /// Update the paywall config
+        /// Update the payment config
         /// </summary>
         /// <param name="id">File id</param>
         /// <param name="req">Requested config to set on the file</param>
         /// <returns></returns>
         [HttpPost]
-        [Route("{id}/paywall")]
-        public async Task<IActionResult> SetPaywallConfig([FromRoute] string id, [FromBody] SetPaywallConfigRequest req)
+        [Route("{id}/payment")]
+        public async Task<IActionResult> SetPaymentConfig([FromRoute] string id, [FromBody] SetPaymentConfigRequest req)
         {
             var gid = id.FromBase58Guid();
             var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
@@ -254,7 +254,7 @@ namespace VoidCat.Controllers
 
             if (req.Strike != default)
             {
-                await _paywall.Add(gid, new StrikePaywallConfig()
+                await _payment.Add(gid, new StrikePaymentConfig()
                 {
                     Service = PaymentServices.Strike,
                     Handle = req.Strike.Handle,
@@ -265,7 +265,7 @@ namespace VoidCat.Controllers
             }
 
             // if none set, delete config
-            await _paywall.Delete(gid);
+            await _payment.Delete(gid);
             return Ok();
         }
 
@@ -335,11 +335,11 @@ namespace VoidCat.Controllers
             => new(false, null, message);
     }
 
-    public record SetPaywallConfigRequest
+    public record SetPaymentConfigRequest
     {
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid EditSecret { get; init; }
 
-        public StrikePaywallConfig? Strike { get; init; }
+        public StrikePaymentConfig? Strike { get; init; }
     }
 }

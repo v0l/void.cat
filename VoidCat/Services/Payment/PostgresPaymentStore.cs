@@ -1,25 +1,25 @@
 ﻿using Dapper;
-using VoidCat.Model.Paywall;
+using VoidCat.Model.Payments;
 using VoidCat.Services.Abstractions;
 
-namespace VoidCat.Services.Paywall;
+namespace VoidCat.Services.Payment;
 
 /// <inheritdoc />
-public sealed class PostgresPaywallStore : IPaywallStore
+public sealed class PostgresPaymentStore : IPaymentStore
 {
     private readonly PostgresConnectionFactory _connection;
 
-    public PostgresPaywallStore(PostgresConnectionFactory connection)
+    public PostgresPaymentStore(PostgresConnectionFactory connection)
     {
         _connection = connection;
     }
 
     /// <inheritdoc />
-    public async ValueTask<PaywallConfig?> Get(Guid id)
+    public async ValueTask<PaymentConfig?> Get(Guid id)
     {
         await using var conn = await _connection.Get();
-        var svc = await conn.QuerySingleOrDefaultAsync<DtoPaywallConfig>(
-            @"select * from ""Paywall"" where ""File"" = :file", new {file = id});
+        var svc = await conn.QuerySingleOrDefaultAsync<DtoPaymentConfig>(
+            @"select * from ""Payment"" where ""File"" = :file", new {file = id});
         if (svc != default)
         {
             switch (svc.Service)
@@ -28,8 +28,8 @@ public sealed class PostgresPaywallStore : IPaywallStore
                 {
                     var handle =
                         await conn.ExecuteScalarAsync<string>(
-                            @"select ""Handle"" from ""PaywallStrike"" where ""File"" = :file", new {file = id});
-                    return new StrikePaywallConfig
+                            @"select ""Handle"" from ""PaymentStrike"" where ""File"" = :file", new {file = id});
+                    return new StrikePaymentConfig
                     {
                         Cost = new(svc.Amount, svc.Currency),
                         File = svc.File,
@@ -44,18 +44,18 @@ public sealed class PostgresPaywallStore : IPaywallStore
     }
 
     /// <inheritdoc />
-    public ValueTask<IReadOnlyList<PaywallConfig>> Get(Guid[] ids)
+    public ValueTask<IReadOnlyList<PaymentConfig>> Get(Guid[] ids)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public async ValueTask Add(Guid id, PaywallConfig obj)
+    public async ValueTask Add(Guid id, PaymentConfig obj)
     {
         await using var conn = await _connection.Get();
         await using var txn = await conn.BeginTransactionAsync();
         await conn.ExecuteAsync(
-            @"insert into ""Paywall""(""File"", ""Service"", ""Amount"", ""Currency"") values(:file, :service, :amount, :currency)
+            @"insert into ""Payment""(""File"", ""Service"", ""Amount"", ""Currency"") values(:file, :service, :amount, :currency)
 on conflict(""File"") do update set ""Service"" = :service, ""Amount"" = :amount, ""Currency"" = :currency",
             new
             {
@@ -65,9 +65,9 @@ on conflict(""File"") do update set ""Service"" = :service, ""Amount"" = :amount
                 currency = obj.Cost.Currency
             });
 
-        if (obj is StrikePaywallConfig sc)
+        if (obj is StrikePaymentConfig sc)
         {
-            await conn.ExecuteAsync(@"insert into ""PaywallStrike""(""File"", ""Handle"") values(:file, :handle)
+            await conn.ExecuteAsync(@"insert into ""PaymentStrike""(""File"", ""Handle"") values(:file, :handle)
 on conflict(""File"") do update set ""Handle"" = :handle", new
             {
                 file = id,
@@ -82,12 +82,12 @@ on conflict(""File"") do update set ""Handle"" = :handle", new
     public async ValueTask Delete(Guid id)
     {
         await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"delete from ""Paywall"" where ""File"" = :file", new {file = id});
+        await conn.ExecuteAsync(@"delete from ""Payment"" where ""File"" = :file", new {file = id});
     }
 
-    private sealed class DtoPaywallConfig : PaywallConfig
+    private sealed class DtoPaymentConfig : PaymentConfig
     {
-        public PaywallCurrencies Currency { get; init; }
+        public PaymentCurrencies Currency { get; init; }
         public decimal Amount { get; init; }
     }
 }

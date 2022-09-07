@@ -37,19 +37,19 @@ export const ZiB = Math.pow(1024, 7);
  */
 export const YiB = Math.pow(1024, 8);
 
-export const PaywallCurrencies = {
+export const PaymentCurrencies = {
     BTC: 0,
     USD: 1,
     EUR: 2,
     GBP: 3
 }
 
-export const PaywallServices = {
+export const PaymentServices = {
     None: 0,
     Strike: 1
 }
 
-export const PaywallOrderState = {
+export const PaymentOrderState = {
     Unpaid: 0,
     Paid: 1,
     Expired: 2

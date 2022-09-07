@@ -4,7 +4,7 @@ import {TextPreview} from "./TextPreview";
 import FeatherIcon from "feather-icons-react";
 import "./FilePreview.css";
 import {FileEdit} from "./FileEdit";
-import {FilePaywall} from "./FilePaywall";
+import {FilePayment} from "./FilePayment";
 import {useApi} from "./Api";
 import {Helmet} from "react-helmet";
 import {FormatBytes} from "./Util";
@@ -27,9 +27,9 @@ export function FilePreview() {
     }
 
     function renderTypes() {
-        if (info.paywall && info.paywall.service !== 0) {
+        if (info.payment && info.payment.service !== 0) {
             if (!order) {
-                return <FilePaywall file={info} onPaid={loadInfo}/>;
+                return <FilePayment file={info} onPaid={loadInfo}/>;
             }
         }
 
@@ -132,7 +132,7 @@ export function FilePreview() {
     useEffect(() => {
         if (info) {
             let fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
-            let order = window.localStorage.getItem(`paywall-${info.id}`);
+            let order = window.localStorage.getItem(`payment-${info.id}`);
             if (order) {
                 let orderObj = JSON.parse(order);
                 setOrder(orderObj);

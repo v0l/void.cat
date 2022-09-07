@@ -18,7 +18,7 @@ using VoidCat.Services.Captcha;
 using VoidCat.Services.Files;
 using VoidCat.Services.InMemory;
 using VoidCat.Services.Migrations;
-using VoidCat.Services.Paywall;
+using VoidCat.Services.Payment;
 using VoidCat.Services.Redis;
 using VoidCat.Services.Stats;
 using VoidCat.Services.Users;
@@ -66,7 +66,7 @@ public static class VoidStartup
     {
         services.AddStorage(voidSettings);
         services.AddMetrics(voidSettings);
-        services.AddPaywallServices(voidSettings);
+        services.AddPaymentServices(voidSettings);
         services.AddUserServices(voidSettings);
         services.AddVirusScanner(voidSettings);
         services.AddCaptcha(voidSettings);

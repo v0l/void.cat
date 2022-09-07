@@ -1,16 +1,16 @@
-import "./FilePaywall.css";
+import "./FilePayment.css";
 import {FormatCurrency} from "./Util";
-import {PaywallServices} from "./Const";
+import {PaymentServices} from "./Const";
 import {useState} from "react";
-import {LightningPaywall} from "./LightningPaywall";
+import {LightningPayment} from "./LightningPayment";
 import {useApi} from "./Api";
 import {VoidButton} from "./VoidButton";
 
-export function FilePaywall(props) {
+export function FilePayment(props) {
     const {Api} = useApi();
     const file = props.file;
-    const pw = file.paywall;
-    const paywallKey = `paywall-${file.id}`;
+    const pw = file.payment;
+    const paymentKey = `payment-${file.id}`;
     const onPaid = props.onPaid;
 
     const [order, setOrder] = useState();
@@ -27,7 +27,7 @@ export function FilePaywall(props) {
     }
 
     function handlePaid(order) {
-        window.localStorage.setItem(paywallKey, JSON.stringify(order));
+        window.localStorage.setItem(paymentKey, JSON.stringify(order));
         if (typeof onPaid === "function") {
             onPaid();
         }
@@ -35,7 +35,7 @@ export function FilePaywall(props) {
 
     if (!order) {
         return (
-            <div className="paywall">
+            <div className="payment">
                 <h3>
                     You must pay {FormatCurrency(pw.cost.amount, pw.cost.currency)} to view this file.
                 </h3>
@@ -44,8 +44,8 @@ export function FilePaywall(props) {
         );
     } else {
         switch (pw.service) {
-            case PaywallServices.Strike: {
-                return <LightningPaywall file={file} order={order} onReset={reset} onPaid={handlePaid}/>;
+            case PaymentServices.Strike: {
+                return <LightningPayment file={file} order={order} onReset={reset} onPaid={handlePaid}/>;
             }
         }
         return null;
