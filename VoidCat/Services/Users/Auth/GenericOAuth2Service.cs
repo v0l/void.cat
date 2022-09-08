@@ -61,7 +61,7 @@ public abstract class GenericOAuth2Service : IOAuthProvider
             {"response_type", "code"},
             {"client_id", Details.ClientId!},
             {"scope", string.Join(" ", Scopes)},
-            {"prompt", "none"},
+            {"prompt", Prompt},
             {"redirect_uri", new Uri(_uri, $"/auth/{Id}/token").ToString()}
         };
 
@@ -78,6 +78,11 @@ public abstract class GenericOAuth2Service : IOAuthProvider
             {"code", code},
             {"redirect_uri", new Uri(_uri, $"/auth/{Id}/token").ToString()}
         };
+
+    /// <summary>
+    /// Prompt type for authorization
+    /// </summary>
+    protected virtual string Prompt => "none";
 
     /// <summary>
     /// Authorize url for this service
@@ -114,20 +119,29 @@ public abstract class GenericOAuth2Service : IOAuthProvider
             Expires = DateTime.UtcNow.AddSeconds(dto.ExpiresIn),
             TokenType = dto.TokenType,
             RefreshToken = dto.RefreshToken,
-            Scope = dto.Scope
+            Scope = dto.Scope,
+            IdToken = dto.IdToken
         };
     }
 
     protected class OAuthAccessToken
     {
-        [JsonProperty("access_token")] public string AccessToken { get; init; }
+        [JsonProperty("access_token")] 
+        public string AccessToken { get; init; }
 
-        [JsonProperty("expires_in")] public int ExpiresIn { get; init; }
+        [JsonProperty("expires_in")] 
+        public int ExpiresIn { get; init; }
 
-        [JsonProperty("token_type")] public string TokenType { get; init; }
+        [JsonProperty("token_type")] 
+        public string TokenType { get; init; }
 
-        [JsonProperty("refresh_token")] public string RefreshToken { get; init; }
+        [JsonProperty("refresh_token")] 
+        public string RefreshToken { get; init; }
 
-        [JsonProperty("scope")] public string Scope { get; init; }
+        [JsonProperty("scope")] 
+        public string Scope { get; init; }
+        
+        [JsonProperty("id_token")]
+        public string IdToken { get; init; }
     }
 }

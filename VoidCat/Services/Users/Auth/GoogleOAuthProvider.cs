@@ -20,17 +20,27 @@ public class GoogleOAuthProvider : GenericOAuth2Service
     /// <inheritdoc />
     public override ValueTask<InternalUser?> GetUserDetails(UserAuthToken token)
     {
-        var jwt = JwtPayload.Base64UrlDeserialize(token.AccessToken);
+        var jwt = new JwtSecurityToken(token.IdToken);
+
+        string? GetPayloadValue(string key)
+            => jwt.Payload.TryGetValue(key, out var v)
+                ? v as string
+                : default;
+
         return ValueTask.FromResult(new InternalUser()
         {
             Id = Guid.NewGuid(),
             Created = DateTimeOffset.UtcNow,
             LastLogin = DateTimeOffset.UtcNow,
             AuthType = AuthType.OAuth2,
-            Email = jwt.Jti,
-            DisplayName = jwt.Acr
+            Email = GetPayloadValue("email") ?? throw new InvalidOperationException("Failed to get email from Google JWT"),
+            DisplayName = GetPayloadValue("name"),
+            Avatar = GetPayloadValue("picture")
         })!;
     }
+
+    /// <inheritdoc />
+    protected override string Prompt => "select_account";
 
     /// <inheritdoc />
     protected override Uri AuthorizeEndpoint => new("https://accounts.google.com/o/oauth2/v2/auth");
@@ -44,8 +54,4 @@ public class GoogleOAuthProvider : GenericOAuth2Service
     /// <inheritdoc />
     protected override string[] Scopes => new[]
         {"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"};
-}
-
-public sealed class GoogleUserAccount
-{
 }

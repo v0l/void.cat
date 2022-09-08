@@ -20,4 +20,6 @@ public sealed class UserAuthToken
     public string RefreshToken { get; init; }
 
     public string Scope { get; init; }
+    
+    public string IdToken { get; init; }
 }
