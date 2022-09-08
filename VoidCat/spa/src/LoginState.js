@@ -4,8 +4,7 @@ const LocalStorageKey = "token";
 export const LoginState = createSlice({
     name: "Login",
     initialState: {
-        jwt: window.localStorage.getItem(LocalStorageKey) || (window.location.pathname === "/login" && window.location.hash.length > 1
-            ? window.location.hash.substring(1) : null),
+        jwt: window.localStorage.getItem(LocalStorageKey),
         profile: null
     },
     reducers: {

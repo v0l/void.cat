@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {InlineProfile} from "./InlineProfile";
 import {useApi} from "./Api";
-import {logout, setProfile} from "./LoginState";
+import {logout, setAuth, setProfile} from "./LoginState";
 import {useEffect} from "react";
 import {setInfo} from "./SiteInfoStore";
 
@@ -21,6 +21,11 @@ export function Header() {
             } else {
                 dispatch(logout());
             }
+        } else if(window.location.pathname === "/login" && window.location.hash.length > 1) {
+            dispatch(setAuth({
+                jwt: window.location.hash.substring(1),
+                profile: null
+            }));
         }
     }
     async function loadStats() {
@@ -33,7 +38,7 @@ export function Header() {
     useEffect(() => {
         initProfile();
         loadStats();
-    }, []);
+    }, [jwt]);
 
     return (
         <div className="header page">
