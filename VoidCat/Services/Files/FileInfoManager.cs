@@ -1,4 +1,5 @@
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
@@ -91,7 +92,7 @@ public sealed class FileInfoManager
         await Task.WhenAll(meta.AsTask(), payment.AsTask(), bandwidth.AsTask(), virusScan.AsTask(), uploader.AsTask());
 
         if (meta.Result == default) return default;
-        var user = uploader.Result.HasValue ? await _userStore.Get<PublicVoidUser>(uploader.Result.Value) : null;
+        var user = uploader.Result.HasValue ? await _userStore.Get<PublicUser>(uploader.Result.Value) : null;
 
         return new TFile()
         {
@@ -99,7 +100,7 @@ public sealed class FileInfoManager
             Metadata = meta.Result,
             Payment = payment.Result,
             Bandwidth = bandwidth.Result,
-            Uploader = user?.Flags.HasFlag(VoidUserFlags.PublicProfile) == true ? user : null,
+            Uploader = user?.Flags.HasFlag(UserFlags.PublicProfile) == true ? user : null,
             VirusScan = virusScan.Result
         };
     }

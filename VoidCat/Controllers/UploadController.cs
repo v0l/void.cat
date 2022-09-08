@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Model.Payments;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -73,7 +74,7 @@ namespace VoidCat.Controllers
                 var store = _settings.DefaultFileStore;
                 if (uid.HasValue)
                 {
-                    var user = await _userStore.Get<InternalVoidUser>(uid.Value);
+                    var user = await _userStore.Get<InternalUser>(uid.Value);
                     if (user?.Storage != default)
                     {
                         store = user.Storage!;

@@ -42,6 +42,8 @@ export function Login() {
             {captchaKey ? <HCaptcha sitekey={captchaKey} onVerify={setCaptchaResponse}/> : null}
             <VoidButton onClick={() => login(Api.login)}>Login</VoidButton>
             <VoidButton onClick={() => login(Api.register)}>Register</VoidButton>
+            <br/>
+            <VoidButton onClick={() => window.location.href = `/auth/discord`}>Login with Discord</VoidButton>
             {error ? <div className="error-msg">{error}</div> : null}
         </div>
     );

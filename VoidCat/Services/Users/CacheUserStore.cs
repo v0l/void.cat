@@ -1,4 +1,5 @@
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -21,25 +22,25 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public ValueTask<T?> Get<T>(Guid id) where T : VoidUser
+    public ValueTask<T?> Get<T>(Guid id) where T : User
     {
         return _cache.Get<T>(MapKey(id));
     }
 
     /// <inheritdoc />
-    public ValueTask<VoidUser?> Get(Guid id)
+    public ValueTask<User?> Get(Guid id)
     {
-        return Get<VoidUser>(id);
+        return Get<User>(id);
     }
 
     /// <inheritdoc />
-    public ValueTask<InternalVoidUser?> GetPrivate(Guid id)
+    public ValueTask<InternalUser?> GetPrivate(Guid id)
     {
-        return Get<InternalVoidUser>(id);
+        return Get<InternalUser>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask Set(Guid id, InternalVoidUser user)
+    public async ValueTask Set(Guid id, InternalUser user)
     {
         if (id != user.Id) throw new InvalidOperationException();
 
@@ -49,7 +50,7 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request)
+    public async ValueTask<PagedResult<PrivateUser>> ListUsers(PagedRequest request)
     {
         var users = (await _cache.GetList(UserList))
             .Select<string, Guid?>(a => Guid.TryParse(a, out var g) ? g : null)
@@ -61,9 +62,9 @@ public class CacheUserStore : IUserStore
             _ => users
         };
 
-        async IAsyncEnumerable<PrivateVoidUser> EnumerateUsers(IEnumerable<Guid> ids)
+        async IAsyncEnumerable<PrivateUser> EnumerateUsers(IEnumerable<Guid> ids)
         {
-            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PrivateVoidUser>(a)));
+            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PrivateUser>(a)));
             foreach (var user in usersLoaded)
             {
                 if (user != default)
@@ -83,17 +84,17 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateProfile(PublicVoidUser newUser)
+    public async ValueTask UpdateProfile(PublicUser newUser)
     {
-        var oldUser = await Get<InternalVoidUser>(newUser.Id);
+        var oldUser = await Get<InternalUser>(newUser.Id);
         if (oldUser == null) return;
 
         //retain flags
-        var isEmailVerified = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified);
+        var isEmailVerified = oldUser.Flags.HasFlag(UserFlags.EmailVerified);
 
         // update only a few props
         oldUser.Avatar = newUser.Avatar;
-        oldUser.Flags = newUser.Flags | (isEmailVerified ? VoidUserFlags.EmailVerified : 0);
+        oldUser.Flags = newUser.Flags | (isEmailVerified ? UserFlags.EmailVerified : 0);
         oldUser.DisplayName = newUser.DisplayName;
 
         await Set(newUser.Id, oldUser);
@@ -102,7 +103,7 @@ public class CacheUserStore : IUserStore
     /// <inheritdoc />
     public async ValueTask UpdateLastLogin(Guid id, DateTime timestamp)
     {
-        var user = await Get<InternalVoidUser>(id);
+        var user = await Get<InternalUser>(id);
         if (user != default)
         {
             user.LastLogin = timestamp;
@@ -111,9 +112,9 @@ public class CacheUserStore : IUserStore
     }
     
     /// <inheritdoc />
-    public async ValueTask AdminUpdateUser(PrivateVoidUser user)
+    public async ValueTask AdminUpdateUser(PrivateUser user)
     {
-        var oldUser = await Get<InternalVoidUser>(user.Id);
+        var oldUser = await Get<InternalUser>(user.Id);
         if (oldUser == null) return;
 
         oldUser.Email = user.Email;
@@ -125,12 +126,12 @@ public class CacheUserStore : IUserStore
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        var user = await Get<InternalVoidUser>(id);
+        var user = await Get<InternalUser>(id);
         if (user == default) throw new InvalidOperationException();
         await Delete(user);
     }
 
-    private async ValueTask Delete(PrivateVoidUser user)
+    private async ValueTask Delete(PrivateUser user)
     {
         await _cache.Delete(MapKey(user.Id));
         await _cache.RemoveFromList(UserList, user.Id.ToString());

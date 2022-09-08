@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using Newtonsoft.Json;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 using VoidCat.Services.Payment;
@@ -132,7 +133,7 @@ public class MigrateToPostgres : IMigration
                 var privateUser = await cacheUsers.Get<PrivateUser>(user.Id);
                 privateUser!.Password ??= privateUser.PasswordHash;
 
-                await _userStore.Set(privateUser!.Id, new InternalVoidUser()
+                await _userStore.Set(privateUser!.Id, new InternalUser()
                 {
                     Id = privateUser.Id,
                     Avatar = privateUser.Avatar,
@@ -154,7 +155,7 @@ public class MigrateToPostgres : IMigration
         }
     }
 
-    private class PrivateUser : PrivateVoidUser
+    private class PrivateUser : Model.User.PrivateUser
     {
         public string? PasswordHash { get; set; }
         public string? Password { get; set; }

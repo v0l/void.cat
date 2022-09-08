@@ -5,6 +5,7 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using VoidCat.Model.Exceptions;
+using VoidCat.Model.User;
 
 namespace VoidCat.Model;
 
@@ -219,8 +220,18 @@ public static class Extensions
         throw new ArgumentException("Unknown algo", nameof(algo));
     }
 
-    public static bool CheckPassword(this InternalVoidUser vu, string password)
+    /// <summary>
+    /// Validate password matches hashed password
+    /// </summary>
+    /// <param name="vu"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static bool CheckPassword(this InternalUser vu, string password)
     {
+        if (vu.AuthType != AuthType.Internal)
+            throw new InvalidOperationException("User type is not internal, cannot check password!");
+
         var hashParts = vu.Password.Split(":");
         return vu.Password == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
     }
@@ -239,4 +250,7 @@ public static class Extensions
 
     public static bool HasPlausible(this VoidSettings settings)
         => settings.PlausibleAnalytics?.Endpoint != null;
+
+    public static bool HasDiscord(this VoidSettings settings)
+        => settings.Discord != null;
 }

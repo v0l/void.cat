@@ -1,4 +1,4 @@
-using VoidCat.Model;
+using VoidCat.Model.User;
 
 namespace VoidCat.Services.Abstractions;
 

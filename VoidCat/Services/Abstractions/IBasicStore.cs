@@ -12,14 +12,7 @@ public interface IBasicStore<T>
     /// <param name="id"></param>
     /// <returns></returns>
     ValueTask<T?> Get(Guid id);
-    
-    /// <summary>
-    /// Get multiple items from the store
-    /// </summary>
-    /// <param name="ids"></param>
-    /// <returns></returns>
-    ValueTask<IReadOnlyList<T>> Get(Guid[] ids);
-    
+
     /// <summary>
     /// Add an item to the store
     /// </summary>

@@ -6,13 +6,13 @@ import {useEffect} from "react";
 export function UserLogin() {
     const auth = useSelector((state) => state.login.jwt);
     const navigate = useNavigate();
-    
+
     useEffect(() => {
-        if(auth){
+        if (auth) {
             navigate("/");
         }
     }, [auth]);
-    
+
     return (
         <div className="page">
             <Login/>

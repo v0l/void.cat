@@ -5,27 +5,30 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
+using VoidCat.Services.Users;
 
 namespace VoidCat.Controllers;
 
 [Route("auth")]
 public class AuthController : Controller
 {
-    private readonly IUserManager _manager;
+    private readonly UserManager _manager;
     private readonly VoidSettings _settings;
     private readonly ICaptchaVerifier _captchaVerifier;
     private readonly IApiKeyStore _apiKeyStore;
     private readonly IUserStore _userStore;
 
-    public AuthController(IUserManager userStore, VoidSettings settings, ICaptchaVerifier captchaVerifier, IApiKeyStore apiKeyStore,
-        IUserStore userStore1)
+    public AuthController(UserManager userManager, VoidSettings settings, ICaptchaVerifier captchaVerifier,
+        IApiKeyStore apiKeyStore,
+        IUserStore userStore)
     {
-        _manager = userStore;
+        _manager = userManager;
         _settings = settings;
         _captchaVerifier = captchaVerifier;
         _apiKeyStore = apiKeyStore;
-        _userStore = userStore1;
+        _userStore = userStore;
     }
 
     /// <summary>
@@ -97,6 +100,35 @@ public class AuthController : Controller
     }
 
     /// <summary>
+    /// Start OAuth2 authorize flow 
+    /// </summary>
+    /// <param name="provider">OAuth provider</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{provider}")]
+    public IActionResult Authorize([FromRoute] string provider)
+    {
+        return Redirect(_manager.Authorize(provider).ToString());
+    }
+
+    /// <summary>
+    /// Authorize user from OAuth2 code grant
+    /// </summary>
+    /// <param name="code">Code used to generate access token</param>
+    /// <param name="provider">OAuth provider</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("{provider}/token")]
+    public async Task<IActionResult> Token([FromRoute] string provider, [FromQuery] string code)
+    {
+        var newUser = await _manager.LoginOrRegister(code, provider);
+        var token = CreateToken(newUser, DateTime.UtcNow.AddHours(12));
+        var tokenWriter = new JwtSecurityTokenHandler();
+
+        return Redirect($"/login#{tokenWriter.WriteToken(token)}");
+    }
+
+    /// <summary>
     /// List api keys for the user
     /// </summary>
     /// <param name="id"></param>
@@ -145,7 +177,7 @@ public class AuthController : Controller
         return Json(key);
     }
 
-    private JwtSecurityToken CreateToken(VoidUser user, DateTime expiry)
+    private JwtSecurityToken CreateToken(User user, DateTime expiry)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSettings.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -171,19 +203,14 @@ public class AuthController : Controller
             Password = password;
         }
 
-        [Required]
-        [EmailAddress]
-        public string Username { get; }
+        [Required] [EmailAddress] public string Username { get; }
 
-        [Required]
-        [MinLength(6)]
-        public string Password { get; }
+        [Required] [MinLength(6)] public string Password { get; }
 
         public string? Captcha { get; init; }
     }
 
-    public sealed record LoginResponse(string? Jwt, string? Error = null, VoidUser? Profile = null);
-
+    public sealed record LoginResponse(string? Jwt, string? Error = null, User? Profile = null);
 
     public sealed record CreateApiKeyRequest(DateTime Expiry);
 }

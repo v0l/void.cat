@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace VoidCat.Model;
+namespace VoidCat.Model.User;
 
 public sealed class ApiKey
 {

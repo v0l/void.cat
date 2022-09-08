@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -15,25 +16,25 @@ public class PostgresUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask<VoidUser?> Get(Guid id)
+    public async ValueTask<User?> Get(Guid id)
     {
-        return await Get<PublicVoidUser>(id);
+        return await Get<PublicUser>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask<InternalVoidUser?> GetPrivate(Guid id)
+    public async ValueTask<InternalUser?> GetPrivate(Guid id)
     {
-        return await Get<InternalVoidUser>(id);
+        return await Get<InternalUser>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask Set(Guid id, InternalVoidUser obj)
+    public async ValueTask Set(Guid id, InternalUser obj)
     {
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Users""(""Id"", ""Email"", ""Password"", ""Created"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"") 
-values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :flags)",
+""Users""(""Id"", ""Email"", ""Password"", ""Created"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"", ""AuthType"") 
+values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :flags, :authType)",
             new
             {
                 Id = id,
@@ -43,7 +44,8 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
                 displayName = obj.DisplayName,
                 lastLogin = obj.LastLogin.ToUniversalTime(),
                 avatar = obj.Avatar,
-                flags = (int)obj.Flags
+                flags = (int)obj.Flags,
+                authType = (int)obj.AuthType
             });
 
         if (obj.Roles.Any(a => a != Roles.User))
@@ -65,7 +67,7 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
     }
 
     /// <inheritdoc />
-    public async ValueTask<T?> Get<T>(Guid id) where T : VoidUser
+    public async ValueTask<T?> Get<T>(Guid id) where T : User
     {
         await using var conn = await _connection.Get();
         var user = await conn.QuerySingleOrDefaultAsync<T?>(@"select * from ""Users"" where ""Id"" = :id",
@@ -96,12 +98,12 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
     }
 
     /// <inheritdoc />
-    public async ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request)
+    public async ValueTask<PagedResult<PrivateUser>> ListUsers(PagedRequest request)
     {
         await using var conn = await _connection.Get();
         var totalUsers = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Users""");
 
-        async IAsyncEnumerable<PrivateVoidUser> Enumerate()
+        async IAsyncEnumerable<PrivateUser> Enumerate()
         {
             var orderBy = request.SortBy switch
             {
@@ -125,7 +127,7 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
                     limit = request.PageSize
                 });
 
-            var rowParser = users.GetRowParser<PrivateVoidUser>();
+            var rowParser = users.GetRowParser<PrivateUser>();
             while (await users.ReadAsync())
             {
                 yield return rowParser(users);
@@ -142,12 +144,12 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateProfile(PublicVoidUser newUser)
+    public async ValueTask UpdateProfile(PublicUser newUser)
     {
-        var oldUser = await Get<InternalVoidUser>(newUser.Id);
+        var oldUser = await Get<InternalUser>(newUser.Id);
         if (oldUser == null) return;
 
-        var emailFlag = oldUser.Flags.HasFlag(VoidUserFlags.EmailVerified) ? VoidUserFlags.EmailVerified : 0;
+        var emailFlag = oldUser.Flags.HasFlag(UserFlags.EmailVerified) ? UserFlags.EmailVerified : 0;
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"update ""Users"" set ""DisplayName"" = :displayName, ""Avatar"" = :avatar, ""Flags"" = :flags where ""Id"" = :id",
@@ -169,7 +171,7 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
     }
 
     /// <inheritdoc />
-    public async ValueTask AdminUpdateUser(PrivateVoidUser user)
+    public async ValueTask AdminUpdateUser(PrivateUser user)
     {
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -42,14 +43,14 @@ public class UserController : Controller
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         if (loggedUser == requestedId)
         {
-            var pUser = await _store.Get<PrivateVoidUser>(requestedId);
+            var pUser = await _store.Get<PrivateUser>(requestedId);
             if (pUser == default) return NotFound();
 
             return Json(pUser);
         }
 
-        var user = await _store.Get<PublicVoidUser>(requestedId);
-        if (!(user?.Flags.HasFlag(VoidUserFlags.PublicProfile) ?? false)) return NotFound();
+        var user = await _store.Get<PublicUser>(requestedId);
+        if (!(user?.Flags.HasFlag(UserFlags.PublicProfile) ?? false)) return NotFound();
 
         return Json(user);
     }
@@ -62,12 +63,12 @@ public class UserController : Controller
     /// <param name="user"></param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicVoidUser user)
+    public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicUser user)
     {
         var loggedUser = await GetAuthorizedUser(id);
         if (loggedUser == default) return Unauthorized();
 
-        if (!loggedUser.Flags.HasFlag(VoidUserFlags.EmailVerified)) return Forbid();
+        if (!loggedUser.Flags.HasFlag(UserFlags.EmailVerified)) return Forbid();
 
         await _store.UpdateProfile(user);
         return Ok();
@@ -97,7 +98,7 @@ public class UserController : Controller
         // not logged in user files, check public flag
         var canViewUploads = loggedUser == user.Id || isAdmin;
         if (!canViewUploads &&
-            !user.Flags.HasFlag(VoidUserFlags.PublicUploads)) return Forbid();
+            !user.Flags.HasFlag(UserFlags.PublicUploads)) return Forbid();
 
         var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
         var files = await results.Results.ToListAsync();
@@ -123,7 +124,7 @@ public class UserController : Controller
         var user = await GetAuthorizedUser(id);
         if (user == default) return Unauthorized();
 
-        var isEmailVerified = (user?.Flags.HasFlag(VoidUserFlags.EmailVerified) ?? false);
+        var isEmailVerified = (user?.Flags.HasFlag(UserFlags.EmailVerified) ?? false);
         if (isEmailVerified) return UnprocessableEntity();
 
         await _emailVerification.SendNewCode(user!);
@@ -146,22 +147,22 @@ public class UserController : Controller
         var token = code.FromBase58Guid();
         if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
 
-        user.Flags |= VoidUserFlags.EmailVerified;
+        user.Flags |= UserFlags.EmailVerified;
         await _store.UpdateProfile(user.ToPublic());
         return Accepted();
     }
 
-    private async Task<InternalVoidUser?> GetAuthorizedUser(string id)
+    private async Task<InternalUser?> GetAuthorizedUser(string id)
     {
         var loggedUser = HttpContext.GetUserId();
         var gid = id.FromBase58Guid();
-        var user = await _store.Get<InternalVoidUser>(gid);
+        var user = await _store.Get<InternalUser>(gid);
         return user?.Id != loggedUser ? default : user;
     }
 
-    private async Task<InternalVoidUser?> GetRequestedUser(string id)
+    private async Task<InternalUser?> GetRequestedUser(string id)
     {
         var gid = id.FromBase58Guid();
-        return await _store.Get<InternalVoidUser>(gid);
+        return await _store.Get<InternalUser>(gid);
     }
 }

@@ -8,6 +8,11 @@ namespace VoidCat.Model
     public class VoidSettings
     {
         /// <summary>
+        /// Base site url, used for redirect urls
+        /// </summary>
+        public Uri SiteUrl { get; init; }
+
+        /// <summary>
         /// Data directory to store files in
         /// </summary>
         public string DataDirectory { get; init; } = "./data";
@@ -15,7 +20,7 @@ namespace VoidCat.Model
         /// <summary>
         /// Size in bytes to split uploads into chunks
         /// </summary>
-        public ulong? UploadSegmentSize { get; init; } = null;
+        public ulong? UploadSegmentSize { get; init; }
 
         /// <summary>
         /// Tor configuration
@@ -90,11 +95,16 @@ namespace VoidCat.Model
         /// Select which store to use for files storage, if not set "local-disk" will be used
         /// </summary>
         public string DefaultFileStore { get; init; } = "local-disk";
-        
+
         /// <summary>
         /// Plausible Analytics endpoint url
         /// </summary>
         public PlausibleSettings? PlausibleAnalytics { get; init; }
+
+        /// <summary>
+        /// Discord application settings
+        /// </summary>
+        public DiscordSettings? Discord { get; init; }
     }
 
     public sealed class TorSettings
@@ -168,5 +178,11 @@ namespace VoidCat.Model
     {
         public Uri? Endpoint { get; init; }
         public string? Domain { get; init; }
+    }
+
+    public sealed class DiscordSettings
+    {
+        public string? ClientId { get; init; }
+        public string? ClientSecret { get; init; }
     }
 }

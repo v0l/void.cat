@@ -1,13 +1,11 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-// ReSharper disable InconsistentNaming
-
-namespace VoidCat.Model;
+namespace VoidCat.Model.User;
 
 /// <summary>
 /// The base user object for the system
 /// </summary>
-public abstract class VoidUser
+public abstract class User
 {
     /// <summary>
     /// Unique Id of the user
@@ -43,13 +41,18 @@ public abstract class VoidUser
     /// <summary>
     /// Profile flags
     /// </summary>
-    public VoidUserFlags Flags { get; set; } = VoidUserFlags.PublicProfile;
+    public UserFlags Flags { get; set; } = UserFlags.PublicProfile;
 
+    /// <summary>
+    /// Account authentication type
+    /// </summary>
+    public AuthType AuthType { get; init; }
+    
     /// <summary>
     /// Returns the Public object for this user
     /// </summary>
     /// <returns></returns>
-    public PublicVoidUser ToPublic()
+    public PublicUser ToPublic()
     {
         return new()
         {
@@ -61,44 +64,4 @@ public abstract class VoidUser
             Flags = Flags
         };
     }
-}
-
-/// <summary>
-/// Internal user object used by the system
-/// </summary>
-public sealed class InternalVoidUser : PrivateVoidUser
-{
-    /// <summary>
-    /// A password hash for the user in the format <see cref="Extensions.HashPassword"/>
-    /// </summary>
-    public string Password { get; init; } = null!;
-}
-
-/// <summary>
-/// A user object which includes the Email
-/// </summary>
-public class PrivateVoidUser : VoidUser
-{
-    /// <summary>
-    /// Users email address
-    /// </summary>
-    public string Email { get; set; } = null!;
-    
-    /// <summary>
-    /// Users storage system for new uploads
-    /// </summary>
-    public string? Storage { get; set; }
-}
-
-/// <inheritdoc />
-public sealed class PublicVoidUser : VoidUser
-{
-}
-
-[Flags]
-public enum VoidUserFlags
-{
-    PublicProfile = 1,
-    PublicUploads = 2,
-    EmailVerified = 4
 }

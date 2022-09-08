@@ -1,4 +1,5 @@
 ﻿using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -31,7 +32,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
 
                 await foreach (var account in accounts.Results.WithCancellation(stoppingToken))
                 {
-                    if (!account.Flags.HasFlag(VoidUserFlags.EmailVerified) &&
+                    if (!account.Flags.HasFlag(UserFlags.EmailVerified) &&
                         account.Created.AddDays(7) < DateTimeOffset.UtcNow)
                     {
                         _logger.LogInformation("Deleting un-verified account: {Id}", account.Id.ToBase58());

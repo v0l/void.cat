@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -22,7 +23,7 @@ public abstract class BaseEmailVerification : IEmailVerification
     }
 
     /// <inheritdoc />
-    public async ValueTask<EmailVerificationCode> SendNewCode(PrivateVoidUser user)
+    public async ValueTask<EmailVerificationCode> SendNewCode(PrivateUser user)
     {
         var token = new EmailVerificationCode(user.Id, Guid.NewGuid(), DateTime.UtcNow.AddHours(HoursExpire));
         await SaveToken(token);
@@ -59,7 +60,7 @@ public abstract class BaseEmailVerification : IEmailVerification
     }
 
     /// <inheritdoc />
-    public async ValueTask<bool> VerifyCode(PrivateVoidUser user, Guid code)
+    public async ValueTask<bool> VerifyCode(PrivateUser user, Guid code)
     {
         var token = await GetToken(user.Id, code);
         if (token == default) return false;

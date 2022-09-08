@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
+using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -92,7 +93,7 @@ public class AdminController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("update-user")]
-    public async Task<IActionResult> UpdateUser([FromBody] PrivateVoidUser user)
+    public async Task<IActionResult> UpdateUser([FromBody] PrivateUser user)
     {
         var oldUser = await _userStore.Get(user.Id);
         if (oldUser == default) return BadRequest();
@@ -101,5 +102,5 @@ public class AdminController : Controller
         return Ok();
     }
 
-    public record AdminListedUser(PrivateVoidUser User, int Uploads);
+    public record AdminListedUser(PrivateUser User, int Uploads);
 }

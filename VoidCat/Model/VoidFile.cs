@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using VoidCat.Model.Payments;
+using VoidCat.Model.User;
 
 namespace VoidCat.Model
 {
@@ -24,7 +25,7 @@ namespace VoidCat.Model
         /// <summary>
         /// User profile that uploaded the file
         /// </summary>
-        public PublicVoidUser? Uploader { get; init; }
+        public PublicUser? Uploader { get; init; }
         
         /// <summary>
         /// Traffic stats for this file

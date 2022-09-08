@@ -14,11 +14,11 @@ public class CachePaymentStore : BasicCacheStore<PaymentConfig>, IPaymentStore
     /// <inheritdoc />
     public override async ValueTask<PaymentConfig?> Get(Guid id)
     {
-        var cfg = await Cache.Get<NoPaymentConfig>(MapKey(id));
+        var cfg = await _cache.Get<NoPaymentConfig>(MapKey(id));
         return cfg?.Service switch
         {
             PaymentServices.None => cfg,
-            PaymentServices.Strike => await Cache.Get<StrikePaymentConfig>(MapKey(id)),
+            PaymentServices.Strike => await _cache.Get<StrikePaymentConfig>(MapKey(id)),
             _ => default
         };
     }

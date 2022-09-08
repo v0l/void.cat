@@ -1,6 +1,6 @@
 ﻿using System.Data;
 using FluentMigrator;
-using VoidCat.Model;
+using VoidCat.Model.User;
 
 namespace VoidCat.Services.Migrations.Database;
 
@@ -11,13 +11,13 @@ public class Init : Migration
     {
         Create.Table("Users")
             .WithColumn("Id").AsGuid().PrimaryKey()
-            .WithColumn("Email").AsString().NotNullable().Indexed()
+            .WithColumn("Email").AsString().Indexed()
             .WithColumn("Password").AsString()
             .WithColumn("Created").AsDateTimeOffset().WithDefault(SystemMethods.CurrentUTCDateTime)
             .WithColumn("LastLogin").AsDateTimeOffset().Nullable()
             .WithColumn("Avatar").AsString().Nullable()
             .WithColumn("DisplayName").AsString().WithDefaultValue("void user")
-            .WithColumn("Flags").AsInt32().WithDefaultValue((int) VoidUserFlags.PublicProfile);
+            .WithColumn("Flags").AsInt32().WithDefaultValue((int) UserFlags.PublicProfile);
 
         Create.Table("Files")
             .WithColumn("Id").AsGuid().PrimaryKey()

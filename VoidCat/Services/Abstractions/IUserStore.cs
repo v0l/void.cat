@@ -1,11 +1,12 @@
 ﻿using VoidCat.Model;
+using VoidCat.Model.User;
 
 namespace VoidCat.Services.Abstractions;
 
 /// <summary>
 /// User store
 /// </summary>
-public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
+public interface IUserStore : IPublicPrivateStore<User, InternalUser>
 {
     /// <summary>
     /// Get a single user
@@ -13,7 +14,7 @@ public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
     /// <param name="id"></param>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    ValueTask<T?> Get<T>(Guid id) where T : VoidUser;
+    ValueTask<T?> Get<T>(Guid id) where T : User;
     
     /// <summary>
     /// Lookup a user by their email address
@@ -27,14 +28,14 @@ public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    ValueTask<PagedResult<PrivateVoidUser>> ListUsers(PagedRequest request);
+    ValueTask<PagedResult<PrivateUser>> ListUsers(PagedRequest request);
     
     /// <summary>
     /// Update a users profile
     /// </summary>
     /// <param name="newUser"></param>
     /// <returns></returns>
-    ValueTask UpdateProfile(PublicVoidUser newUser);
+    ValueTask UpdateProfile(PublicUser newUser);
 
     /// <summary>
     /// Updates the last login timestamp for the user
@@ -49,5 +50,5 @@ public interface IUserStore : IPublicPrivateStore<VoidUser, InternalVoidUser>
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>
-    ValueTask AdminUpdateUser(PrivateVoidUser user);
+    ValueTask AdminUpdateUser(PrivateUser user);
 }

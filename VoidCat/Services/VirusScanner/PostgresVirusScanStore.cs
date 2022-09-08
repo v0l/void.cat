@@ -31,14 +31,6 @@ public class PostgresVirusScanStore : IVirusScanStore
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<VirusScanResult>> Get(Guid[] ids)
-    {
-        await using var conn = await _connection.Get();
-        return (await conn.QueryAsync<VirusScanResult>(
-            @"select * from ""VirusScanResult"" where ""Id"" in :ids", new {ids = ids.ToArray()})).ToList();
-    }
-
-    /// <inheritdoc />
     public async ValueTask Add(Guid id, VirusScanResult obj)
     {
         await using var conn = await _connection.Get();
