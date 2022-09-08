@@ -1,15 +1,15 @@
+import "./FilePreview.css";
 import {Fragment, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
-import {TextPreview} from "./TextPreview";
+import {TextPreview} from "../Components/FilePreview/TextPreview";
 import FeatherIcon from "feather-icons-react";
-import "./FilePreview.css";
-import {FileEdit} from "./FileEdit";
-import {FilePayment} from "./FilePayment";
-import {useApi} from "./Api";
+import {FileEdit} from "../Components/FileEdit/FileEdit";
+import {FilePayment} from "../Components/FilePreview/FilePayment";
+import {useApi} from "../Components/Shared/Api";
 import {Helmet} from "react-helmet";
-import {FormatBytes} from "./Util";
-import {ApiHost} from "./Const";
-import {InlineProfile} from "./InlineProfile";
+import {FormatBytes} from "../Components/Shared/Util";
+import {ApiHost} from "../Components/Shared/Const";
+import {InlineProfile} from "../Components/Shared/InlineProfile";
 
 export function FilePreview() {
     const {Api} = useApi();

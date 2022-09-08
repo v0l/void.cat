@@ -1,5 +1,5 @@
 import "./FooterLinks.css"
-import StrikeLogo from "./image/strike.png";
+import StrikeLogo from "../../image/strike.png";
 import {useSelector} from "react-redux";
 
 export function FooterLinks() {

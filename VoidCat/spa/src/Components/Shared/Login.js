@@ -1,6 +1,6 @@
 ﻿import {useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import {setAuth} from "./LoginState";
+import {setAuth} from "../../LoginState";
 import {useApi} from "./Api";
 import "./Login.css";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
@@ -13,6 +13,7 @@ export function Login() {
     const [error, setError] = useState();
     const [captchaResponse, setCaptchaResponse] = useState();
     const captchaKey = useSelector(state => state.info.info?.captchaSiteKey);
+    const oAuthProviders = useSelector(state => state.info.info?.oAuthProviders);
     const dispatch = useDispatch();
 
     async function login(fnLogin) {
@@ -43,7 +44,10 @@ export function Login() {
             <VoidButton onClick={() => login(Api.login)}>Login</VoidButton>
             <VoidButton onClick={() => login(Api.register)}>Register</VoidButton>
             <br/>
-            <VoidButton onClick={() => window.location.href = `/auth/discord`}>Login with Discord</VoidButton>
+            {oAuthProviders ?
+                oAuthProviders.map(a => <VoidButton key={a} onClick={() => window.location.href = `/auth/${a}`}>
+                    Login with {a}
+                </VoidButton>) : null}
             {error ? <div className="error-msg">{error}</div> : null}
         </div>
     );

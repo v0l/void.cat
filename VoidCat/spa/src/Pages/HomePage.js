@@ -1,7 +1,7 @@
-﻿import {Dropzone} from "./Dropzone";
-import {GlobalStats} from "./GlobalStats";
-import {FooterLinks} from "./FooterLinks";
-import {MetricsGraph} from "./MetricsGraph";
+﻿import {Dropzone} from "../Components/FileUpload/Dropzone";
+import {GlobalStats} from "../Components/HomePage/GlobalStats";
+import {FooterLinks} from "../Components/HomePage/FooterLinks";
+import {MetricsGraph} from "../Components/HomePage/MetricsGraph";
 import {useSelector} from "react-redux";
 
 export function HomePage() {

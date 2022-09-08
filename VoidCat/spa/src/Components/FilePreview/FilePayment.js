@@ -1,10 +1,10 @@
 import "./FilePayment.css";
-import {FormatCurrency} from "./Util";
-import {PaymentServices} from "./Const";
 import {useState} from "react";
+import {FormatCurrency} from "../Shared/Util";
+import {PaymentServices} from "../Shared/Const";
 import {LightningPayment} from "./LightningPayment";
-import {useApi} from "./Api";
-import {VoidButton} from "./VoidButton";
+import {useApi} from "../Shared/Api";
+import {VoidButton} from "../Shared/VoidButton";
 
 export function FilePayment(props) {
     const {Api} = useApi();

@@ -1,7 +1,7 @@
 import {useState} from "react";
 import FeatherIcon from "feather-icons-react";
-import {PaymentCurrencies} from "./Const";
-import {VoidButton} from "./VoidButton";
+import {PaymentCurrencies} from "../Shared/Const";
+import {VoidButton} from "../Shared/VoidButton";
 
 export function StrikePaymentConfig(props) {
     const file = props.file;

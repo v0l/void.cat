@@ -3,9 +3,9 @@ import {Link} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
 import {InlineProfile} from "./InlineProfile";
 import {useApi} from "./Api";
-import {logout, setAuth, setProfile} from "./LoginState";
+import {logout, setAuth, setProfile} from "../../LoginState";
 import {useEffect} from "react";
-import {setInfo} from "./SiteInfoStore";
+import {setInfo} from "../../SiteInfoStore";
 
 export function Header() {
     const dispatch = useDispatch();

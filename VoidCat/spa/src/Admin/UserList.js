@@ -1,10 +1,10 @@
 import {useDispatch} from "react-redux";
 import {useEffect, useState} from "react";
-import {PagedSortBy, PageSortOrder} from "../Const";
-import {useApi} from "../Api";
-import {logout} from "../LoginState";
-import {PageSelector} from "../PageSelector";
 import moment from "moment";
+import {PagedSortBy, PageSortOrder} from "../Components/Shared/Const";
+import {useApi} from "../Components/Shared/Api";
+import {logout} from "../LoginState";
+import {PageSelector} from "../Components/Shared/PageSelector";
 
 export function UserList(props) {
     const {AdminApi} = useApi();

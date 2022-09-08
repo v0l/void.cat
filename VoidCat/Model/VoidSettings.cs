@@ -104,7 +104,12 @@ namespace VoidCat.Model
         /// <summary>
         /// Discord application settings
         /// </summary>
-        public DiscordSettings? Discord { get; init; }
+        public OAuthDetails? Discord { get; init; }
+        
+        /// <summary>
+        /// Google application settings
+        /// </summary>
+        public OAuthDetails? Google { get; init; }
     }
 
     public sealed class TorSettings
@@ -180,7 +185,7 @@ namespace VoidCat.Model
         public string? Domain { get; init; }
     }
 
-    public sealed class DiscordSettings
+    public sealed class OAuthDetails
     {
         public string? ClientId { get; init; }
         public string? ClientSecret { get; init; }

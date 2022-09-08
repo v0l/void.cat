@@ -1,4 +1,4 @@
-import {Login} from "./Login";
+import {Login} from "../Components/Shared/Login";
 import {useSelector} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import {useEffect} from "react";

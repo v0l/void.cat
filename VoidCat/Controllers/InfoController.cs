@@ -12,15 +12,17 @@ public class InfoController : Controller
     private readonly VoidSettings _settings;
     private readonly ITimeSeriesStatsReporter _timeSeriesStats;
     private readonly IEnumerable<string?> _fileStores;
+    private readonly IEnumerable<string> _oAuthProviders;
 
     public InfoController(IStatsReporter statsReporter, IFileMetadataStore fileMetadata, VoidSettings settings,
-        ITimeSeriesStatsReporter stats, IEnumerable<IFileStore> fileStores)
+        ITimeSeriesStatsReporter stats, IEnumerable<IFileStore> fileStores, IEnumerable<IOAuthProvider> oAuthProviders)
     {
         _statsReporter = statsReporter;
         _fileMetadata = fileMetadata;
         _settings = settings;
         _timeSeriesStats = stats;
         _fileStores = fileStores.Select(a => a.Key);
+        _oAuthProviders = oAuthProviders.Select(a => a.Id);
     }
 
     /// <summary>
@@ -43,7 +45,8 @@ public class InfoController : Controller
             CaptchaSiteKey = _settings.CaptchaSettings?.SiteKey,
             TimeSeriesMetrics = await _timeSeriesStats.GetBandwidth(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow),
             FileStores = _fileStores,
-            UploadSegmentSize = _settings.UploadSegmentSize
+            UploadSegmentSize = _settings.UploadSegmentSize,
+            OAuthProviders = _oAuthProviders
         };
     }
 
@@ -57,5 +60,6 @@ public class InfoController : Controller
         public IEnumerable<BandwidthPoint> TimeSeriesMetrics { get; init; }
         public IEnumerable<string?> FileStores { get; init; }
         public ulong? UploadSegmentSize { get; init; }
+        public IEnumerable<string> OAuthProviders { get; init; }
     }
 }

@@ -1,5 +1,5 @@
 import {Bar, BarChart, Tooltip, XAxis} from "recharts";
-import {FormatBytes} from "./Util";
+import {FormatBytes} from "../Shared/Util";
 import moment from "moment";
 
 export function MetricsGraph(props) {

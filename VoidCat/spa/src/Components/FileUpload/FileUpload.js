@@ -1,11 +1,11 @@
-import {useEffect, useState} from "react";
-import {ConstName, FormatBytes} from "./Util";
-import {RateCalculator} from "./RateCalculator";
-import * as CryptoJS from 'crypto-js';
-
 import "./FileUpload.css";
+import {useEffect, useState} from "react";
+import * as CryptoJS from 'crypto-js';
 import {useSelector} from "react-redux";
-import {ApiHost} from "./Const";
+
+import {ConstName, FormatBytes} from "../Shared/Util";
+import {RateCalculator} from "../Shared/RateCalculator";
+import {ApiHost} from "../Shared/Const";
 
 const UploadState = {
     NotStarted: 0,
@@ -139,7 +139,7 @@ export function FileUpload(props) {
         setUState(UploadState.Hashing);
         let hash = await digest(props.file);
         calc.Reset();
-        if(props.file.size >= uploadSize) {
+        if (props.file.size >= uploadSize) {
             await doSplitXHRUpload(hash, uploadSize);
         } else {
             let xhr = await xhrSegment(props.file, hash);
@@ -162,7 +162,7 @@ export function FileUpload(props) {
         }
         handleXHRResult(xhr);
     }
-    
+
     function handleXHRResult(xhr) {
         if (xhr.ok) {
             setUState(UploadState.Done);
@@ -173,7 +173,7 @@ export function FileUpload(props) {
             setResult(xhr.errorMessage);
         }
     }
-    
+
     async function digest(file) {
         const chunkSize = 100_000_000;
         let sha = CryptoJS.algo.SHA256.create();

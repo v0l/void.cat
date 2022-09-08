@@ -1,8 +1,7 @@
-﻿import {Fragment} from "react";
+﻿import "./GlobalStats.css";
+import {Fragment} from "react";
 import FeatherIcon from "feather-icons-react";
-import {FormatBytes} from "./Util";
-
-import "./GlobalStats.css";
+import {FormatBytes} from "../Shared/Util";
 import moment from "moment";
 import {useSelector} from "react-redux";
 

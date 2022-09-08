@@ -1,6 +1,6 @@
 ﻿import FeatherIcon from "feather-icons-react";
 import {useState} from "react";
-import {VoidButton} from "./VoidButton";
+import {VoidButton} from "../Shared/VoidButton";
 
 export function NoPaymentConfig(props) {
     const [saveStatus, setSaveStatus] = useState();

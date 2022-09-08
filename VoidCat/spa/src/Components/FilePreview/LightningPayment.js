@@ -1,9 +1,9 @@
 ﻿import QRCode from "qrcode.react";
 import {useEffect} from "react";
 
-import {Countdown} from "./Countdown";
-import {PaymentOrderState} from "./Const";
-import {useApi} from "./Api";
+import {Countdown} from "../Shared/Countdown";
+import {PaymentOrderState} from "../Shared/Const";
+import {useApi} from "../Shared/Api";
 
 export function LightningPayment(props) {
     const {Api} = useApi();

@@ -16,6 +16,11 @@ public static class UsersStartup
             services.AddTransient<IOAuthProvider, DiscordOAuthProvider>();
         }
 
+        if (settings.HasGoogle())
+        {
+            services.AddTransient<IOAuthProvider, GoogleOAuthProvider>();
+        }
+
         if (settings.HasPostgres())
         {
             services.AddTransient<IUserStore, PostgresUserStore>();

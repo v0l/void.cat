@@ -1,16 +1,17 @@
-import {Fragment, useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
-import {useApi} from "./Api";
-import {ApiHost, DefaultAvatar, UserFlags} from "./Const";
 import "./Profile.css";
+import {Fragment, useEffect, useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import {logout, setProfile as setGlobalProfile} from "./LoginState";
-import {DigestAlgo} from "./FileUpload";
-import {buf2hex, hasFlag} from "./Util";
 import moment from "moment";
-import {FileList} from "./FileList";
-import {VoidButton} from "./VoidButton";
-import ApiKeyList from "./ApiKeyList";
+import {useParams} from "react-router-dom";
+
+import {useApi} from "../Components/Shared/Api";
+import {ApiHost, DefaultAvatar, UserFlags} from "../Components/Shared/Const";
+import {logout, setProfile as setGlobalProfile} from "../LoginState";
+import {DigestAlgo} from "../Components/FileUpload/FileUpload";
+import {buf2hex, hasFlag} from "../Components/Shared/Util";
+import {FileList} from "../Components/Shared/FileList";
+import {VoidButton} from "../Components/Shared/VoidButton";
+import ApiKeyList from "../Components/Profile/ApiKeyList";
 
 export function Profile() {
     const [profile, setProfile] = useState();

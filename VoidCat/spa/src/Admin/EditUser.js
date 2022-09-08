@@ -1,7 +1,7 @@
-import {VoidButton} from "../VoidButton";
 import {useState} from "react";
 import {useSelector} from "react-redux";
-import {useApi} from "../Api";
+import {useApi} from "../Components/Shared/Api";
+import {VoidButton} from "../Components/Shared/VoidButton";
 
 export default function EditUser(props) {
     const user = props.user;

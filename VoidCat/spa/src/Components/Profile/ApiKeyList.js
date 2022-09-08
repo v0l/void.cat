@@ -1,8 +1,9 @@
-import {useApi} from "./Api";
 import {useEffect, useState} from "react";
-import {VoidButton} from "./VoidButton";
 import moment from "moment";
-import VoidModal from "./VoidModal";
+
+import {useApi} from "../Shared/Api";
+import {VoidButton} from "../Shared/VoidButton";
+import VoidModal from "../Shared/VoidModal";
 
 export default function ApiKeyList() {
     const {Api} = useApi();

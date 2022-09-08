@@ -1,12 +1,12 @@
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {Provider} from "react-redux";
 import store from "./Store";
-import {FilePreview} from "./FilePreview";
-import {HomePage} from "./HomePage";
+import {FilePreview} from "./Pages/FilePreview";
+import {HomePage} from "./Pages/HomePage";
 import {Admin} from "./Admin/Admin";
-import {UserLogin} from "./UserLogin";
-import {Profile} from "./Profile";
-import {Header} from "./Header";
+import {UserLogin} from "./Pages/UserLogin";
+import {Profile} from "./Pages/Profile";
+import {Header} from "./Components/Shared/Header";
 
 import './App.css';
 

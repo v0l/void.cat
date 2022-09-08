@@ -1,12 +1,13 @@
 ﻿import "./Admin.css";
-import {useSelector} from "react-redux";
-import {FileList} from "../FileList";
-import {UserList} from "./UserList";
-import {Navigate} from "react-router-dom";
-import {useApi} from "../Api";
-import {VoidButton} from "../VoidButton";
 import {useState} from "react";
-import VoidModal from "../VoidModal";
+import {useSelector} from "react-redux";
+import {Navigate} from "react-router-dom";
+
+import {FileList} from "../Components/Shared/FileList";
+import {UserList} from "./UserList";
+import {useApi} from "../Components/Shared/Api";
+import {VoidButton} from "../Components/Shared/VoidButton";
+import VoidModal from "../Components/Shared/VoidModal";
 import EditUser from "./EditUser";
 
 export function Admin() {
@@ -43,7 +44,7 @@ export function Admin() {
                     </td>
                 }}/>
 
-                {editUser !== null ? 
+                {editUser !== null ?
                     <VoidModal title="Edit user">
                         <EditUser user={editUser} onClose={() => setEditUser(null)}/>
                     </VoidModal> : null}

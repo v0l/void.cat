@@ -253,4 +253,7 @@ public static class Extensions
 
     public static bool HasDiscord(this VoidSettings settings)
         => settings.Discord != null;
+
+    public static bool HasGoogle(this VoidSettings settings)
+        => settings.Google != null;
 }

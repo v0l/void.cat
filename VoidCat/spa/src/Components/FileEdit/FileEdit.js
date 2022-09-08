@@ -1,13 +1,13 @@
+import "./FileEdit.css";
 import {useState} from "react";
+import {useSelector} from "react-redux";
+import moment from "moment";
 
 import {StrikePaymentConfig} from "./StrikePaymentConfig";
 import {NoPaymentConfig} from "./NoPaymentConfig";
-import {useApi} from "./Api";
-import "./FileEdit.css";
-import {useSelector} from "react-redux";
-import {VoidButton} from "./VoidButton";
-import moment from "moment";
-import {PaymentServices} from "./Const";
+import {useApi} from "../Shared/Api";
+import {VoidButton} from "../Shared/VoidButton";
+import {PaymentServices} from "../Shared/Const";
 
 export function FileEdit(props) {
     const {Api} = useApi();
