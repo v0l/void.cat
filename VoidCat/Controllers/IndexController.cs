@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
@@ -30,6 +31,12 @@ public class IndexController : Controller
         var manifestPath = Path.Combine(_webHost.WebRootPath, "asset-manifest.json");
         if (!System.IO.File.Exists(manifestPath)) return StatusCode(500);
 
+        // old format hash, return 404
+        if (id.Length == 40 && Regex.IsMatch(id, @"[0-9a-z]{40}"))
+        {
+            Response.StatusCode = 404;
+        }
+        
         var jsonManifest = await System.IO.File.ReadAllTextAsync(manifestPath);
         return View("~/Pages/Index.cshtml", new IndexModel
         {
