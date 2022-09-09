@@ -34,6 +34,22 @@ curl -X POST \
   "https://void.cat/upload?cli=true"
 ```
 
+Or you can create an alias function in `~/bash_aliases` like so: 
+```bash
+vcu() {
+  echo "Uploading $1"
+  curl -X POST \
+    -H "V-Content-Type: $(file --mime-type -b $1)" \
+    -H "V-Full-Digest: $(sha256sum -bz $1 | cut -d' ' -f1)" \
+    -H "V-Filename: $1" \
+    --data-binary @$1 \
+    "https://void.cat/upload?cli=true"
+  echo -e ""
+}
+```
+
+Uploading from cli will simply become `vcu memes.jpg`
+
 This command will return the direct download URL only. 
 To get the json output simply remove the `?cli=true` from the url.
 
