@@ -62,14 +62,13 @@ export function FileUpload(props) {
                 setUState(UploadState.Uploading);
             },
             pull: async (controller) => {
-                console.log(controller);
                 let chunk = await readChunk(controller.desiredSize);
                 if (chunk.byteLength === 0) {
                     controller.close();
                     return;
                 }
 
-                calc.ReportLoaded(chunk.byteLength);
+                calc.ReportProgress(chunk.byteLength);
                 setSpeed(calc.RateWindow(5));
                 setProgress(offset / props.file.size);
                 
