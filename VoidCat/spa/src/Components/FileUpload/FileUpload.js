@@ -83,7 +83,7 @@ export function FileUpload(props) {
             highWaterMark: 1024 * 1024
         });
 
-        let req = await fetch("https://localhost:7195/upload", {
+        let req = await fetch("/upload", {
             method: "POST",
             mode: "cors",
             body: rs,
