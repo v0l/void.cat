@@ -25,8 +25,12 @@ or paste your screenshots or files into the browser window.
 
 From cli you can upload with `curl`:
 ```bash
+export FILE=memes.jpg
 curl -X POST \
-  --data-binary @spicy_memes.jpg \
+  -H "V-Content-Type: $(file --mime-type -b $FILE)" \
+  -H "V-Full-Digest: $(sha256sum -bz $FILE | cut -d' ' -f1)" \
+  -H "V-Filename: $FILE" \
+  --data-binary @$FILE \
   "https://void.cat/upload?cli=true"
 ```
 
