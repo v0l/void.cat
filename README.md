@@ -50,6 +50,11 @@ vcu() {
 
 Uploading from cli will simply become `vcu memes.jpg`
 
+You can also upload files to your user account by specifying an API key in the curl command:
+```bash
+  -H "Authorization: Bearer MY_API_KEY"
+```
+
 This command will return the direct download URL only. 
 To get the json output simply remove the `?cli=true` from the url.
 
