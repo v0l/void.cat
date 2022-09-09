@@ -10,18 +10,20 @@ namespace VoidCat.Controllers;
 [Route("d")]
 public class DownloadController : Controller
 {
+    private readonly VoidSettings _settings;
     private readonly FileStoreFactory _storage;
     private readonly FileInfoManager _fileInfo;
     private readonly IPaymentOrderStore _paymentOrders;
     private readonly ILogger<DownloadController> _logger;
 
     public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, FileInfoManager fileInfo,
-        IPaymentOrderStore paymentOrderStore)
+        IPaymentOrderStore paymentOrderStore, VoidSettings settings)
     {
         _storage = storage;
         _logger = logger;
         _fileInfo = fileInfo;
         _paymentOrders = paymentOrderStore;
+        _settings = settings;
     }
 
     [HttpOptions]
@@ -108,6 +110,17 @@ public class DownloadController : Controller
                 Response.StatusCode = (int) HttpStatusCode.PaymentRequired;
                 return default;
             }
+        }
+
+        // prevent hot-linking viruses
+        var origin = Request.Headers.Origin.Count > 0 ? new Uri(Request.Headers.Origin.First()) : null;
+        var originWrong = !origin?.Host.Equals(_settings.SiteUrl.Host, StringComparison.InvariantCultureIgnoreCase) ??
+                          false;
+        if (meta.VirusScan?.IsVirus == true && originWrong)
+        {
+            Response.StatusCode = (int) HttpStatusCode.Redirect;
+            Response.Headers.Location = $"/{id.ToBase58()}";
+            return default;
         }
 
         Response.Headers.XFrameOptions = "SAMEORIGIN";
