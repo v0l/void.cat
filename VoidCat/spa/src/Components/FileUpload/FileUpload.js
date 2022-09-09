@@ -40,45 +40,66 @@ export function FileUpload(props) {
     }
 
     async function doStreamUpload() {
+        setUState(UploadState.Hashing);
+        let hash = await digest(props.file);
+        calc.Reset();
         let offset = 0;
+
+        async function readChunk(size) {
+            if (offset > props.file.size) {
+                return new Uint8Array(0);
+            }
+            let end = Math.min(offset + size, props.file.size);
+            let blob = props.file.slice(offset, end, props.file.type);
+            let data = await blob.arrayBuffer();
+            offset += data.byteLength;
+            return new Uint8Array(data);
+        }
+
         let rs = new ReadableStream({
             start: (controller) => {
-
+                console.log(controller);
+                setUState(UploadState.Uploading);
             },
             pull: async (controller) => {
-                if (offset > props.file.size) {
-                    controller.cancel();
+                console.log(controller);
+                let chunk = await readChunk(controller.desiredSize);
+                if (chunk.byteLength === 0) {
+                    controller.close();
+                    return;
                 }
 
-                let requestedSize = props.file.size / controller.desiredSize;
-                console.log(`Reading ${requestedSize} Bytes`);
-
-                let end = Math.min(offset + requestedSize, props.file.size);
-                let blob = props.file.slice(offset, end, props.file.type);
-                controller.enqueue(await blob.arrayBuffer());
-                offset += blob.size;
+                calc.ReportLoaded(chunk.byteLength);
+                setSpeed(calc.RateWindow(5));
+                setProgress(offset / props.file.size);
+                
+                controller.enqueue(chunk);
             },
             cancel: (reason) => {
-
-            }
+                console.log(reason);
+            },
+            type: "bytes"
         }, {
-            highWaterMark: 100
+            highWaterMark: 1024 * 1024
         });
 
-        let req = await fetch("/upload", {
+        let req = await fetch("https://localhost:7195/upload", {
             method: "POST",
+            mode: "cors",
             body: rs,
             headers: {
                 "Content-Type": "application/octet-stream",
                 "V-Content-Type": props.file.type,
-                "V-Filename": props.file.name
-            }
+                "V-Filename": props.file.name,
+                "V-Full-Digest": hash
+            },
+            duplex: 'half'
         });
 
         if (req.ok) {
             let rsp = await req.json();
             console.log(rsp);
-            setResult(rsp);
+            handleResult(rsp);
         }
     }
 
@@ -143,7 +164,7 @@ export function FileUpload(props) {
             await doSplitXHRUpload(hash, uploadSize);
         } else {
             let xhr = await xhrSegment(props.file, hash);
-            handleXHRResult(xhr);
+            handleResult(xhr);
         }
     }
 
@@ -160,18 +181,23 @@ export function FileUpload(props) {
                 break;
             }
         }
-        handleXHRResult(xhr);
+        handleResult(xhr);
     }
 
-    function handleXHRResult(xhr) {
-        if (xhr.ok) {
+    function handleResult(result) {
+        if (result.ok) {
             setUState(UploadState.Done);
-            setResult(xhr.file);
-            window.localStorage.setItem(xhr.file.id, JSON.stringify(xhr.file));
+            setResult(result.file);
+            window.localStorage.setItem(result.file.id, JSON.stringify(result.file));
         } else {
             setUState(UploadState.Failed);
-            setResult(xhr.errorMessage);
+            setResult(result.errorMessage);
         }
+    }
+
+    function getChromeVersion () {
+        let raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+        return raw ? parseInt(raw[2], 10) : false;
     }
 
     async function digest(file) {
@@ -220,7 +246,13 @@ export function FileUpload(props) {
 
     useEffect(() => {
         console.log(props.file);
-        doXHRUpload().catch(console.error);
+        
+        let chromeVersion = getChromeVersion();
+        if(chromeVersion >= 105) {
+            doStreamUpload().catch(console.error);
+        } else {
+            doXHRUpload().catch(console.error);
+        }        
     }, []);
 
     return (

@@ -87,12 +87,13 @@ namespace VoidCat.Controllers
                     Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
-                    Size = (ulong?)Request.ContentLength ?? 0UL,
+                    Size = (ulong?) Request.ContentLength ?? 0UL,
                     Storage = store
                 };
 
                 var (segment, totalSegments) = ParseSegmentsHeader();
-                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments), HttpContext.RequestAborted);
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments),
+                    HttpContext.RequestAborted);
 
                 // save metadata
                 await _metadata.Set(vf.Id, vf.Metadata!);
@@ -343,7 +344,7 @@ namespace VoidCat.Controllers
         public Guid EditSecret { get; init; }
 
         public StrikePaymentConfig? Strike { get; init; }
-        
+
         public bool Required { get; init; }
     }
 }

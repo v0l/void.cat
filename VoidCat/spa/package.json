@@ -8,6 +8,7 @@
     "@reduxjs/toolkit": "^1.7.2",
     "crypto-js": "^4.1.1",
     "feather-icons-react": "^0.5.0",
+    "http-proxy-middleware": "^2.0.6",
     "moment": "^2.29.4",
     "preval.macro": "^5.0.0",
     "qrcode.react": "^1.0.1",

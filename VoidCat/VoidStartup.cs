@@ -122,6 +122,7 @@ public static class VoidStartup
             {
                 p.AllowAnyMethod()
                     .AllowAnyHeader()
+                    .AllowCredentials()
                     .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
             });
         });

@@ -16,7 +16,7 @@ export function FooterLinks() {
             <a href="https://github.com/v0l/void.cat" target="_blank">
                 GitHub
             </a>
-            {profile ? <a href="/admin">Admin</a> : null}
+            {profile?.roles?.includes("Admin") ? <a href="/admin">Admin</a> : null}
         </div>
     );
 }
