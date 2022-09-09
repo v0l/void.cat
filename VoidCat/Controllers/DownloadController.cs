@@ -113,10 +113,10 @@ public class DownloadController : Controller
         }
 
         // prevent hot-linking viruses
-        var origin = Request.Headers.Origin.Count > 0 ? new Uri(Request.Headers.Origin.First()) : null;
-        var originWrong = !origin?.Host.Equals(_settings.SiteUrl.Host, StringComparison.InvariantCultureIgnoreCase) ??
-                          false;
-        if (meta.VirusScan?.IsVirus == true && originWrong)
+        var referer = Request.Headers.Referer.Count > 0 ? new Uri(Request.Headers.Referer.First()) : null;
+        var hasCorrectReferer = referer?.Host.Equals(_settings.SiteUrl.Host, StringComparison.InvariantCultureIgnoreCase) ??
+                               false;
+        if (meta.VirusScan?.IsVirus == true && !hasCorrectReferer)
         {
             Response.StatusCode = (int) HttpStatusCode.Redirect;
             Response.Headers.Location = $"/{id.ToBase58()}";
