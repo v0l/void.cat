@@ -2,6 +2,8 @@ import "./FileUpload.css";
 import {useEffect, useState} from "react";
 import * as CryptoJS from 'crypto-js';
 import {useSelector} from "react-redux";
+import sjcl from "sjcl";
+import {sjclcodec} from "../../codecBytes";
 
 import {ConstName, FormatBytes} from "../Shared/Util";
 import {RateCalculator} from "../Shared/RateCalculator";
@@ -18,6 +20,7 @@ const UploadState = {
 };
 
 export const DigestAlgo = "SHA-256";
+const BlockSize = 16;
 
 export function FileUpload(props) {
     const auth = useSelector(state => state.login.jwt);
@@ -27,6 +30,7 @@ export function FileUpload(props) {
     const [result, setResult] = useState();
     const [uState, setUState] = useState(UploadState.NotStarted);
     const [challenge, setChallenge] = useState();
+    const [encryptionKey, setEncryptionKey] = useState();
     const calc = new RateCalculator();
 
     function handleProgress(e) {
@@ -39,7 +43,19 @@ export function FileUpload(props) {
         }
     }
 
+    function generateEncryptionKey() {
+        let key = {
+            key: sjclcodec.toBits(window.crypto.getRandomValues(new Uint8Array(16))),
+            iv: sjclcodec.toBits(window.crypto.getRandomValues(new Uint8Array(12)))
+        };
+        setEncryptionKey(key);
+        return key;
+    }
+
     async function doStreamUpload() {
+        let key = generateEncryptionKey();
+        let aes = new sjcl.cipher.aes(key.key);
+
         setUState(UploadState.Hashing);
         let hash = await digest(props.file);
         calc.Reset();
@@ -56,13 +72,27 @@ export function FileUpload(props) {
             return new Uint8Array(data);
         }
 
+        async function readEncryptedChunk(size) {
+            if (offset >= props.file.size) {
+                return new Uint8Array(0);
+            }
+            size -= size % BlockSize;
+
+            let end = Math.min(offset + size, props.file.size);
+            let blob = props.file.slice(offset, end, props.file.type);
+            let data = new Uint8Array(await blob.arrayBuffer());
+            offset += data.byteLength;
+            let encryptedData = sjcl.mode.gcm.encrypt(aes, sjclcodec.toBits(data), key.iv);
+            return new Uint8Array(sjclcodec.fromBits(encryptedData));
+        }
+
         let rs = new ReadableStream({
-            start: (controller) => {
-                console.log(controller);
+            start: () => {
                 setUState(UploadState.Uploading);
             },
             pull: async (controller) => {
-                let chunk = await readChunk(controller.desiredSize);
+                let chunkSize = controller.desiredSize;
+                let chunk = key ? await readEncryptedChunk(chunkSize) : await readChunk(chunkSize);
                 if (chunk.byteLength === 0) {
                     controller.close();
                     return;
@@ -71,7 +101,6 @@ export function FileUpload(props) {
                 calc.ReportProgress(chunk.byteLength);
                 setSpeed(calc.RateWindow(5));
                 setProgress(offset / props.file.size);
-                
                 controller.enqueue(chunk);
             },
             cancel: (reason) => {
@@ -194,7 +223,7 @@ export function FileUpload(props) {
         }
     }
 
-    function getChromeVersion () {
+    function getChromeVersion() {
         let raw = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
         return raw ? parseInt(raw[2], 10) : false;
     }
@@ -217,10 +246,11 @@ export function FileUpload(props) {
 
     function renderStatus() {
         if (result) {
+            let link = encryptionKey ? `/${result.id}#${sjcl.codec.hex.fromBits(encryptionKey.key)}:${sjcl.codec.hex.fromBits(encryptionKey.iv)}` : `/${result.id}`;
             return uState === UploadState.Done ?
                 <dl>
                     <dt>Link:</dt>
-                    <dd><a target="_blank" href={`/${result.id}`}>{result.id}</a></dd>
+                    <dd><a target="_blank" href={link}>{result.id}</a></dd>
                 </dl>
                 : <b>{result}</b>;
         } else {
@@ -245,13 +275,13 @@ export function FileUpload(props) {
 
     useEffect(() => {
         console.log(props.file);
-        
+
         let chromeVersion = getChromeVersion();
-        if(chromeVersion >= 105) {
+        if (chromeVersion >= 105) {
             doStreamUpload().catch(console.error);
         } else {
             doXHRUpload().catch(console.error);
-        }        
+        }
     }, []);
 
     return (

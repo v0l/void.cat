@@ -18,7 +18,8 @@
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.2.1",
     "react-scripts": "5.0.0",
-    "recharts": "^2.1.10"
+    "recharts": "^2.1.10",
+    "sjcl": "^1.0.8"
   },
   "scripts": {
     "start": "react-scripts start",

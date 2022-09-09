@@ -10,6 +10,8 @@ import {Helmet} from "react-helmet";
 import {FormatBytes} from "../Components/Shared/Util";
 import {ApiHost} from "../Components/Shared/Const";
 import {InlineProfile} from "../Components/Shared/InlineProfile";
+import sjcl from "sjcl";
+import {sjclcodec} from "../codecBytes";
 
 export function FilePreview() {
     const {Api} = useApi();
@@ -143,6 +145,41 @@ export function FilePreview() {
     useEffect(() => {
         if (info) {
             let fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
+
+            // detect encrypted file link
+            let hashKey = window.location.hash.match(/#([0-9a-z]{32}):([0-9a-z]{24})/);
+            if (hashKey.length === 3) {
+                let [key, iv] = [sjcl.codec.hex.toBits(hashKey[1]), sjcl.codec.hex.toBits(hashKey[2])];
+                console.log(key, iv);
+                let aes = new sjcl.cipher.aes(key);
+
+                async function load() {
+                    let decryptStream = new window.TransformStream({
+                        transform: async (chunk, controller) => {
+                            chunk = await chunk;
+                            console.log("Transforming chunk:", chunk);
+
+                            let buff = sjclcodec.toBits(chunk);
+                            let decryptedBuff = sjclcodec.fromBits(sjcl.mode.gcm.decrypt(aes, buff, iv));
+                            console.log("Decrypted data:", decryptedBuff);
+                            controller.enqueue(new Uint8Array(decryptedBuff));
+                        }
+                    });
+                    let rsp = await fetch(fileLink);
+                    if (rsp.ok) {
+                        let reader = rsp.body
+                            .pipeThrough(decryptStream);
+
+                        console.log("Pipe reader", reader);
+                        let newResponse = new Response(reader);
+                        setLink(window.URL.createObjectURL(await newResponse.blob(), {type: info.metadata.mimeType}));
+                    }
+                }
+
+                load();
+                return;
+            }
+
             let order = window.localStorage.getItem(`payment-${info.id}`);
             if (order) {
                 let orderObj = JSON.parse(order);
