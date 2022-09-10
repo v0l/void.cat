@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "https://localhost:7195",
   "dependencies": {
+    "@craco/craco": "^6.4.5",
     "@hcaptcha/react-hcaptcha": "^1.1.1",
     "@reduxjs/toolkit": "^1.7.2",
     "crypto-js": "^4.1.1",
@@ -22,9 +23,9 @@
     "sjcl": "^1.0.8"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
