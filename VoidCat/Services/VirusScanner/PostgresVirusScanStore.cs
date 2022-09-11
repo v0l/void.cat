@@ -18,16 +18,16 @@ public class PostgresVirusScanStore : IVirusScanStore
     public async ValueTask<VirusScanResult?> Get(Guid id)
     {
         await using var conn = await _connection.Get();
-        return await conn.QuerySingleOrDefaultAsync<VirusScanResult>(
-            @"select * from ""VirusScanResult"" where ""Id"" = :id", new {id});
+        return await conn.QueryFirstOrDefaultAsync<VirusScanResult>(
+            @"select * from ""VirusScanResult"" where ""Id"" = :id order by ""ScanTime"" desc", new {id});
     }
 
     /// <inheritdoc />
     public async ValueTask<VirusScanResult?> GetByFile(Guid id)
     {
         await using var conn = await _connection.Get();
-        return await conn.QuerySingleOrDefaultAsync<VirusScanResult>(
-            @"select * from ""VirusScanResult"" where ""File"" = :file", new {file = id});
+        return await conn.QueryFirstOrDefaultAsync<VirusScanResult>(
+            @"select * from ""VirusScanResult"" where ""File"" = :file order by ""ScanTime"" desc", new {file = id});
     }
 
     /// <inheritdoc />
