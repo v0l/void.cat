@@ -29,7 +29,7 @@ public class VirusScannerService : BackgroundService
             var page = 0;
             while (true)
             {
-                var files = await _fileStore.ListFiles<VoidFileMeta>(new(page, 10));
+                var files = await _fileStore.ListFiles<VoidFileMeta>(new(page, 1_000));
                 if (files.Pages < page) break;
                 page++;
 
@@ -40,7 +40,7 @@ public class VirusScannerService : BackgroundService
 
                     // check for scans
                     var scan = await _scanStore.GetByFile(file.Id);
-                    if (scan == default)
+                    if (scan == default || scan.ScanTime < DateTime.UtcNow.Subtract(TimeSpan.FromDays(30)))
                     {
                         try
                         {
