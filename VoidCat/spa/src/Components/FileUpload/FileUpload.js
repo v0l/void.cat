@@ -96,7 +96,9 @@ export function FileUpload(props) {
         if (encrypt) {
             headers["V-EncryptionParams"] = JSON.stringify(enc.getParams());
         }
-        
+        if (auth) {
+            headers["Authorization"] = `Bearer ${auth}`;
+        }
         let req = await fetch("/upload", {
             method: "POST",
             mode: "cors",
