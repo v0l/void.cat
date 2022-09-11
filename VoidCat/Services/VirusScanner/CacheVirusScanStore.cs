@@ -23,7 +23,7 @@ public class CacheVirusScanStore : BasicCacheStore<VirusScanResult>, IVirusScanS
         var scans = await _cache.GetList(MapFilesKey(id));
         if (scans.Length > 0)
         {
-            return await Get(Guid.Parse(scans.First()));
+            return await Get(Guid.Parse(scans.Last()));
         }
 
         return default;

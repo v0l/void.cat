@@ -18,32 +18,33 @@ public class PostgresFileMetadataStore : IFileMetadataStore
     public string? Key => "postgres";
     
     /// <inheritdoc />
-    public ValueTask<VoidFileMeta?> Get(Guid id)
+    public ValueTask<FileMeta?> Get(Guid id)
     {
-        return Get<VoidFileMeta>(id);
+        return Get<FileMeta>(id);
     }
 
     /// <inheritdoc />
-    public ValueTask<SecretVoidFileMeta?> GetPrivate(Guid id)
+    public ValueTask<SecretFileMeta?> GetPrivate(Guid id)
     {
-        return Get<SecretVoidFileMeta>(id);
+        return Get<SecretFileMeta>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask Set(Guid id, SecretVoidFileMeta obj)
+    public async ValueTask Set(Guid id, SecretFileMeta obj)
     {
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"")
-values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store)
+""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"", ""EncryptionParams"")
+values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store, :encryptionParams)
 on conflict (""Id"") do update set 
 ""Name"" = :name, 
 ""Size"" = :size, 
 ""Description"" = :description, 
 ""MimeType"" = :mimeType, 
 ""Expires"" = :expires,
-""Storage"" = :store",
+""Storage"" = :store,
+""EncryptionParams"" = :encryptionParams",
             new
             {
                 id,
@@ -55,7 +56,8 @@ on conflict (""Id"") do update set
                 digest = obj.Digest,
                 editSecret = obj.EditSecret,
                 expires = obj.Expires?.ToUniversalTime(),
-                store = obj.Storage
+                store = obj.Storage,
+                encryptionParams = obj.EncryptionParams
             });
     }
 
@@ -67,7 +69,7 @@ on conflict (""Id"") do update set
     }
 
     /// <inheritdoc />
-    public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
+    public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta
     {
         await using var conn = await _connection.Get();
         return await conn.QuerySingleOrDefaultAsync<TMeta?>(@"select * from ""Files"" where ""Id"" = :id",
@@ -75,7 +77,7 @@ on conflict (""Id"") do update set
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
+    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta
     {
         await using var conn = await _connection.Get();
         var ret = await conn.QueryAsync<TMeta>("select * from \"Files\" where \"Id\" in :ids", new {ids});
@@ -83,22 +85,17 @@ on conflict (""Id"") do update set
     }
 
     /// <inheritdoc />
-    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
+    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta
     {
-        var oldMeta = await Get<SecretVoidFileMeta>(id);
+        var oldMeta = await Get<SecretFileMeta>(id);
         if (oldMeta == default) return;
 
-        oldMeta.Description = meta.Description ?? oldMeta.Description;
-        oldMeta.Name = meta.Name ?? oldMeta.Name;
-        oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
-        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
-        oldMeta.Expires = meta.Expires;
-
+        oldMeta.Patch(meta);
         await Set(id, oldMeta);
     }
 
     /// <inheritdoc />
-    public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
+    public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta
     {
         await using var conn = await _connection.Get();
         var count = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Files""");

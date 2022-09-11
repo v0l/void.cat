@@ -8,7 +8,7 @@ namespace VoidCat.Model;
 /// <summary>
 /// Base metadata must contain version number
 /// </summary>
-public interface IVoidFileMeta
+public interface IFileMeta
 {
     const int CurrentVersion = 3;
 
@@ -18,12 +18,12 @@ public interface IVoidFileMeta
 /// <summary>
 /// File metadata which is managed by <see cref="IFileMetadataStore"/>
 /// </summary>
-public record VoidFileMeta : IVoidFileMeta
+public record FileMeta : IFileMeta
 {
     /// <summary>
     /// Metadata version
     /// </summary>
-    public int Version { get; init; } = IVoidFileMeta.CurrentVersion;
+    public int Version { get; init; } = IFileMeta.CurrentVersion;
 
     /// <summary>
     /// Internal Id of the file
@@ -75,12 +75,17 @@ public record VoidFileMeta : IVoidFileMeta
     /// What storage system the file is on
     /// </summary>
     public string? Storage { get; set; }
+    
+    /// <summary>
+    /// Encryption params as JSON string
+    /// </summary>
+    public string? EncryptionParams { get; set; }
 }
 
 /// <summary>
 /// <see cref="VoidFile"/> with attached <see cref="EditSecret"/>
 /// </summary>
-public record SecretVoidFileMeta : VoidFileMeta
+public record SecretFileMeta : FileMeta
 {
     /// <summary>
     /// A secret key used to make edits to the file after its uploaded

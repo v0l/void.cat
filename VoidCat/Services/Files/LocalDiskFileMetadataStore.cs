@@ -22,13 +22,13 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     }
 
     /// <inheritdoc />
-    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta
+    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta
     {
         return GetMeta<TMeta>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta
+    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta
     {
         var ret = new List<TMeta>();
         foreach (var id in ids)
@@ -44,22 +44,17 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     }
 
     /// <inheritdoc />
-    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta
+    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta
     {
-        var oldMeta = await Get<SecretVoidFileMeta>(id);
+        var oldMeta = await Get<SecretFileMeta>(id);
         if (oldMeta == default) return;
 
-        oldMeta.Description = meta.Description ?? oldMeta.Description;
-        oldMeta.Name = meta.Name ?? oldMeta.Name;
-        oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
-        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
-        oldMeta.Expires = meta.Expires;
-
+        oldMeta.Patch(meta);
         await Set(id, oldMeta);
     }
 
     /// <inheritdoc />
-    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta
+    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta
     {
         async IAsyncEnumerable<TMeta> EnumerateFiles()
         {
@@ -102,26 +97,26 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
-        var files = await ListFiles<VoidFileMeta>(new(0, Int32.MaxValue));
+        var files = await ListFiles<FileMeta>(new(0, Int32.MaxValue));
         var count = await files.Results.CountAsync();
         var size = await files.Results.SumAsync(a => (long) a.Size);
         return new(count, (ulong) size);
     }
 
     /// <inheritdoc />
-    public ValueTask<VoidFileMeta?> Get(Guid id)
+    public ValueTask<FileMeta?> Get(Guid id)
     {
-        return GetMeta<VoidFileMeta>(id);
+        return GetMeta<FileMeta>(id);
     }
 
     /// <inheritdoc />
-    public ValueTask<SecretVoidFileMeta?> GetPrivate(Guid id)
+    public ValueTask<SecretFileMeta?> GetPrivate(Guid id)
     {
-        return GetMeta<SecretVoidFileMeta>(id);
+        return GetMeta<SecretFileMeta>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask Set(Guid id, SecretVoidFileMeta meta)
+    public async ValueTask Set(Guid id, SecretFileMeta meta)
     {
         var path = MapMeta(id);
         var json = JsonConvert.SerializeObject(meta);

@@ -35,7 +35,7 @@ public sealed class FileInfoManager
     /// <returns></returns>
     public ValueTask<PublicVoidFile?> Get(Guid id)
     {
-        return Get<PublicVoidFile, VoidFileMeta>(id);
+        return Get<PublicVoidFile, FileMeta>(id);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public sealed class FileInfoManager
     /// <returns></returns>
     public ValueTask<PrivateVoidFile?> GetPrivate(Guid id)
     {
-        return Get<PrivateVoidFile, SecretVoidFileMeta>(id);
+        return Get<PrivateVoidFile, SecretFileMeta>(id);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public sealed class FileInfoManager
     }
 
     private async ValueTask<TFile?> Get<TFile, TMeta>(Guid id)
-        where TMeta : VoidFileMeta where TFile : VoidFile<TMeta>, new()
+        where TMeta : FileMeta where TFile : VoidFile<TMeta>, new()
     {
         var meta = _metadataStore.Get<TMeta>(id);
         var payment = _paymentStore.Get(id);

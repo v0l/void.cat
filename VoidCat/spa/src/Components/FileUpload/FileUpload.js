@@ -1,13 +1,12 @@
 import "./FileUpload.css";
 import {useEffect, useState} from "react";
-import * as CryptoJS from 'crypto-js';
 import {useSelector} from "react-redux";
-import sjcl from "sjcl";
-import {sjclcodec} from "../../codecBytes";
 
-import {ConstName, FormatBytes} from "../Shared/Util";
-import {RateCalculator} from "../Shared/RateCalculator";
+import {buf2hex, ConstName, FormatBytes} from "../Shared/Util";
 import {ApiHost} from "../Shared/Const";
+import {StreamEncryption} from "../Shared/StreamEncryption";
+import {VoidButton} from "../Shared/VoidButton";
+import {useFileTransfer} from "../Shared/FileTransferHook";
 
 const UploadState = {
     NotStarted: 0,
@@ -20,45 +19,28 @@ const UploadState = {
 };
 
 export const DigestAlgo = "SHA-256";
-const BlockSize = 16;
 
 export function FileUpload(props) {
     const auth = useSelector(state => state.login.jwt);
     const info = useSelector(state => state.info.info);
-    const [speed, setSpeed] = useState(0);
-    const [progress, setProgress] = useState(0);
+    const {speed, progress, loaded, setFileSize, reset, update} = useFileTransfer();
     const [result, setResult] = useState();
     const [uState, setUState] = useState(UploadState.NotStarted);
     const [challenge, setChallenge] = useState();
     const [encryptionKey, setEncryptionKey] = useState();
-    const calc = new RateCalculator();
+    const [encrypt, setEncrypt] = useState(true);
 
     function handleProgress(e) {
         if (e instanceof ProgressEvent) {
-            let newProgress = e.loaded / e.total;
-
-            calc.ReportLoaded(e.loaded);
-            setSpeed(calc.RateWindow(5));
-            setProgress(newProgress);
+            loaded(e.loaded);
         }
     }
 
-    function generateEncryptionKey() {
-        let key = {
-            key: sjclcodec.toBits(window.crypto.getRandomValues(new Uint8Array(16))),
-            iv: sjclcodec.toBits(window.crypto.getRandomValues(new Uint8Array(12)))
-        };
-        setEncryptionKey(key);
-        return key;
-    }
-
     async function doStreamUpload() {
-        let key = generateEncryptionKey();
-        let aes = new sjcl.cipher.aes(key.key);
-
+        setFileSize(props.file.size);
         setUState(UploadState.Hashing);
         let hash = await digest(props.file);
-        calc.Reset();
+        reset();
         let offset = 0;
 
         async function readChunk(size) {
@@ -72,36 +54,23 @@ export function FileUpload(props) {
             return new Uint8Array(data);
         }
 
-        async function readEncryptedChunk(size) {
-            if (offset >= props.file.size) {
-                return new Uint8Array(0);
-            }
-            size -= size % BlockSize;
-
-            let end = Math.min(offset + size, props.file.size);
-            let blob = props.file.slice(offset, end, props.file.type);
-            let data = new Uint8Array(await blob.arrayBuffer());
-            offset += data.byteLength;
-            let encryptedData = sjcl.mode.gcm.encrypt(aes, sjclcodec.toBits(data), key.iv);
-            return new Uint8Array(sjclcodec.fromBits(encryptedData));
-        }
-
         let rs = new ReadableStream({
-            start: () => {
+            start: async () => {
                 setUState(UploadState.Uploading);
             },
             pull: async (controller) => {
-                let chunkSize = controller.desiredSize;
-                let chunk = key ? await readEncryptedChunk(chunkSize) : await readChunk(chunkSize);
-                if (chunk.byteLength === 0) {
-                    controller.close();
-                    return;
+                try {
+                    let chunk = await readChunk(controller.desiredSize);
+                    if (chunk.byteLength === 0) {
+                        controller.close();
+                        return;
+                    }
+                    update(chunk.length);
+                    controller.enqueue(chunk);
+                } catch (e) {
+                    console.error(e);
+                    throw e;
                 }
-
-                calc.ReportProgress(chunk.byteLength);
-                setSpeed(calc.RateWindow(5));
-                setProgress(offset / props.file.size);
-                controller.enqueue(chunk);
             },
             cancel: (reason) => {
                 console.log(reason);
@@ -111,16 +80,28 @@ export function FileUpload(props) {
             highWaterMark: 1024 * 1024
         });
 
-        let req = await fetch("/upload", {
+        let enc = encrypt ? (() => {
+            let ret = new StreamEncryption();
+            setEncryptionKey(ret.getKey());
+            return ret;
+        })() : null;
+        rs = encrypt ? rs.pipeThrough(enc.getEncryptionTransform()) : rs;
+
+        let headers = {
+            "Content-Type": "application/octet-stream",
+            "V-Content-Type": props.file.type,
+            "V-Filename": props.file.name,
+            "V-Full-Digest": hash
+        };
+        if (encrypt) {
+            headers["V-EncryptionParams"] = JSON.stringify(enc.getParams());
+        }
+        
+        let req = await fetch("https://localhost:7195/upload", {
             method: "POST",
             mode: "cors",
             body: rs,
-            headers: {
-                "Content-Type": "application/octet-stream",
-                "V-Content-Type": props.file.type,
-                "V-Filename": props.file.name,
-                "V-Full-Digest": hash
-            },
+            headers,
             duplex: 'half'
         });
 
@@ -183,11 +164,12 @@ export function FileUpload(props) {
     }
 
     async function doXHRUpload() {
+        setFileSize(props.file.size);
         let uploadSize = info.uploadSegmentSize ?? Number.MAX_VALUE;
 
         setUState(UploadState.Hashing);
         let hash = await digest(props.file);
-        calc.Reset();
+        reset();
         if (props.file.size >= uploadSize) {
             await doSplitXHRUpload(hash, uploadSize);
         } else {
@@ -198,10 +180,9 @@ export function FileUpload(props) {
 
     async function doSplitXHRUpload(hash, splitSize) {
         let xhr = null;
-        setProgress(0);
         const segments = Math.ceil(props.file.size / splitSize);
         for (let s = 0; s < segments; s++) {
-            calc.Reset();
+            reset();
             let offset = s * splitSize;
             let slice = props.file.slice(offset, offset + splitSize, props.file.type);
             xhr = await xhrSegment(slice, hash, xhr?.file?.id, xhr?.file?.metadata?.editSecret, s + 1, segments);
@@ -229,30 +210,36 @@ export function FileUpload(props) {
     }
 
     async function digest(file) {
-        const chunkSize = 100_000_000;
-        let sha = CryptoJS.algo.SHA256.create();
-        for (let x = 0; x < Math.ceil(file.size / chunkSize); x++) {
-            let offset = x * chunkSize;
-            let slice = file.slice(offset, offset + chunkSize, file.type);
-            let data = Uint32Array.from(await slice.arrayBuffer());
-            sha.update(new CryptoJS.lib.WordArray.init(data, slice.length));
-
-            calc.ReportLoaded(offset);
-            setSpeed(calc.RateWindow(5));
-            setProgress(offset / parseFloat(file.size));
-        }
-        return sha.finalize().toString();
+        let h = await window.crypto.subtle.digest(DigestAlgo, await file.arrayBuffer());
+        return buf2hex(new Uint8Array(h));
     }
 
     function renderStatus() {
         if (result) {
-            let link = encryptionKey ? `/${result.id}#${sjcl.codec.hex.fromBits(encryptionKey.key)}:${sjcl.codec.hex.fromBits(encryptionKey.iv)}` : `/${result.id}`;
+            let link = `/${result.id}`;
             return uState === UploadState.Done ?
                 <dl>
                     <dt>Link:</dt>
                     <dd><a target="_blank" href={link}>{result.id}</a></dd>
+                    {encryptionKey ? <>
+                        <dt>Encryption Key:</dt>
+                        <dd>
+                            <VoidButton onClick={() => navigator.clipboard.writeText(encryptionKey)}>Copy</VoidButton>
+                        </dd>
+                    </> : null}
                 </dl>
                 : <b>{result}</b>;
+        } else if (uState === UploadState.NotStarted) {
+            return (
+                <>
+                    <dl>
+                        <dt>Encrypt file:</dt>
+                        <dd><input type="checkbox" checked={encrypt} onChange={(e) => setEncrypt(e.target.checked)}/>
+                        </dd>
+                    </dl>
+                    <VoidButton onClick={() => doStreamUpload()}>Upload</VoidButton>
+                </>
+            )
         } else {
             return (
                 <dl>
@@ -274,11 +261,9 @@ export function FileUpload(props) {
     }
 
     useEffect(() => {
-        console.log(props.file);
-
         let chromeVersion = getChromeVersion();
         if (chromeVersion >= 105) {
-            doStreamUpload().catch(console.error);
+            //doStreamUpload().catch(console.error);
         } else {
             doXHRUpload().catch(console.error);
         }

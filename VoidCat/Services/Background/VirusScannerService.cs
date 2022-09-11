@@ -29,7 +29,7 @@ public class VirusScannerService : BackgroundService
             var page = 0;
             while (true)
             {
-                var files = await _fileStore.ListFiles<VoidFileMeta>(new(page, 1_000));
+                var files = await _fileStore.ListFiles<FileMeta>(new(page, 1_000));
                 if (files.Pages < page) break;
                 page++;
 

@@ -47,7 +47,7 @@ public class IndexController : Controller
 
     public class IndexModel
     {
-        public VoidFileMeta? Meta { get; init; }
+        public FileMeta? Meta { get; init; }
 
         public AssetManifest Manifest { get; init; }
     }

@@ -1,12 +1,26 @@
 export class RateCalculator {
     constructor() {
-        this.reports = [];
-        this.lastLoaded = 0;
+        this.Reset();
+        this.fileSize = 0;
     }
 
+    SetFileSize(size) {
+        this.fileSize = size;
+    }
+    
+    GetProgress() {
+        return this.progress;
+    }
+    
+    GetSpeed() {
+        return this.speed;
+    }
+    
     Reset() {
         this.reports = [];
         this.lastLoaded = 0;
+        this.progress = 0;
+        this.speed = 0;
     }
     
     ReportProgress(amount) {
@@ -14,6 +28,9 @@ export class RateCalculator {
             time: new Date().getTime(),
             amount
         });
+        this.lastLoaded += amount;
+        this.progress = this.lastLoaded / parseFloat(this.fileSize);
+        this.speed = this.RateWindow(5);
     }
 
     ReportLoaded(loaded) {
@@ -22,6 +39,8 @@ export class RateCalculator {
             amount: loaded - this.lastLoaded
         });
         this.lastLoaded = loaded;
+        this.progress = this.lastLoaded / parseFloat(this.fileSize);
+        this.speed = this.RateWindow(5);
     }
 
     RateWindow(s) {

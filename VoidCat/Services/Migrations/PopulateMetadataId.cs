@@ -24,7 +24,7 @@ public class PopulateMetadataId : IMigration
             return IMigration.MigrationResult.Skipped;
         }
 
-        var files = await _metadataStore.ListFiles<SecretVoidFileMeta>(new(0, Int32.MaxValue));
+        var files = await _metadataStore.ListFiles<SecretFileMeta>(new(0, Int32.MaxValue));
         await foreach (var file in files.Results)
         {
             // read-write file metadata 

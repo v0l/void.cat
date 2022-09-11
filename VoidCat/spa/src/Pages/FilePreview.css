@@ -27,3 +27,14 @@
     border: 1px solid red;
     margin-bottom: 5px;
 }
+
+.preview .encrypted {
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid #bbbbbb;
+    text-align: center;
+}
+
+.error {
+    color: red;
+}

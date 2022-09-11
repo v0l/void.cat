@@ -4,7 +4,7 @@ using VoidCat.Model.User;
 
 namespace VoidCat.Model
 {
-    public abstract record VoidFile<TMeta> where TMeta : VoidFileMeta
+    public abstract record VoidFile<TMeta> where TMeta : FileMeta
     {
         /// <summary>
         /// Id of the file
@@ -38,11 +38,11 @@ namespace VoidCat.Model
         public VirusScanResult? VirusScan { get; init; }
     }
 
-    public sealed record PublicVoidFile : VoidFile<VoidFileMeta>
+    public sealed record PublicVoidFile : VoidFile<FileMeta>
     {
     }
 
-    public sealed record PrivateVoidFile : VoidFile<SecretVoidFileMeta>
+    public sealed record PrivateVoidFile : VoidFile<SecretFileMeta>
     {
     }
 }

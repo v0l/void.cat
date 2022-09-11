@@ -81,14 +81,15 @@ namespace VoidCat.Controllers
                     }
                 }
 
-                var meta = new SecretVoidFileMeta
+                var meta = new SecretFileMeta
                 {
                     MimeType = mime,
                     Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
                     Size = (ulong?) Request.ContentLength ?? 0UL,
-                    Storage = store
+                    Storage = store,
+                    EncryptionParams = Request.Headers.GetHeader("V-EncryptionParams")
                 };
 
                 var (segment, totalSegments) = ParseSegmentsHeader();
@@ -142,7 +143,7 @@ namespace VoidCat.Controllers
             try
             {
                 var gid = id.FromBase58Guid();
-                var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
+                var meta = await _metadata.Get<SecretFileMeta>(gid);
                 if (meta == default) return UploadResult.Error("File not found");
 
                 // Parse V-Segment header
@@ -250,7 +251,7 @@ namespace VoidCat.Controllers
         public async Task<IActionResult> SetPaymentConfig([FromRoute] string id, [FromBody] SetPaymentConfigRequest req)
         {
             var gid = id.FromBase58Guid();
-            var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
+            var meta = await _metadata.Get<SecretFileMeta>(gid);
             if (meta == default) return NotFound();
             if (!meta.CanEdit(req.EditSecret)) return Unauthorized();
 
@@ -283,10 +284,10 @@ namespace VoidCat.Controllers
         /// </remarks>
         [HttpPost]
         [Route("{id}/meta")]
-        public async Task<IActionResult> UpdateFileMeta([FromRoute] string id, [FromBody] SecretVoidFileMeta fileMeta)
+        public async Task<IActionResult> UpdateFileMeta([FromRoute] string id, [FromBody] SecretFileMeta fileMeta)
         {
             var gid = id.FromBase58Guid();
-            var meta = await _metadata.Get<SecretVoidFileMeta>(gid);
+            var meta = await _metadata.Get<SecretFileMeta>(gid);
             if (meta == default) return NotFound();
             if (!meta.CanEdit(fileMeta.EditSecret)) return Unauthorized();
 

@@ -102,7 +102,7 @@ public class MigrateToPostgres : IMigration
     {
         var cachePaywallStore = new CachePaymentStore(_cache);
 
-        var files = await _fileMetadata.ListFiles<VoidFileMeta>(new(0, int.MaxValue));
+        var files = await _fileMetadata.ListFiles<FileMeta>(new(0, int.MaxValue));
         await foreach (var file in files.Results)
         {
             try
@@ -161,7 +161,7 @@ public class MigrateToPostgres : IMigration
         public string? Password { get; set; }
     }
 
-    private record UploaderSecretVoidFileMeta : SecretVoidFileMeta
+    private record UploaderSecretVoidFileMeta : SecretFileMeta
     {
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid? Uploader { get; set; }

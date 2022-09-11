@@ -36,7 +36,7 @@ public class AdminController : Controller
     [Route("file")]
     public async Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
     {
-        var files = await _fileMetadata.ListFiles<VoidFileMeta>(request);
+        var files = await _fileMetadata.ListFiles<FileMeta>(request);
 
         return new()
         {

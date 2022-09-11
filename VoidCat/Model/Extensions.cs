@@ -78,7 +78,7 @@ public static class Extensions
         return !string.IsNullOrEmpty(h.Value.ToString()) ? h.Value.ToString() : default;
     }
 
-    public static bool CanEdit(this SecretVoidFileMeta file, Guid? editSecret)
+    public static bool CanEdit(this SecretFileMeta file, Guid? editSecret)
     {
         return file.EditSecret == editSecret;
     }
@@ -234,6 +234,21 @@ public static class Extensions
 
         var hashParts = vu.Password.Split(":");
         return vu.Password == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
+    }
+
+    /// <summary>
+    /// Patch metadata
+    /// </summary>
+    /// <param name="oldMeta"></param>
+    /// <param name="meta"></param>
+    public static void Patch(this FileMeta oldMeta, FileMeta meta)
+    {
+        oldMeta.Description = meta.Description ?? oldMeta.Description;
+        oldMeta.Name = meta.Name ?? oldMeta.Name;
+        oldMeta.MimeType = meta.MimeType ?? oldMeta.MimeType;
+        oldMeta.Storage = meta.Storage ?? oldMeta.Storage;
+        oldMeta.Expires = meta.Expires;
+        oldMeta.EncryptionParams = meta.EncryptionParams ?? oldMeta.EncryptionParams;
     }
 
     public static bool HasPostgres(this VoidSettings settings)

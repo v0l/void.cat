@@ -24,7 +24,7 @@ public class FixSize : IMigration
     /// <inheritdoc />
     public async ValueTask<IMigration.MigrationResult> Migrate(string[] args)
     {
-        var files = await _fileMetadata.ListFiles<SecretVoidFileMeta>(new(0, int.MaxValue));
+        var files = await _fileMetadata.ListFiles<SecretFileMeta>(new(0, int.MaxValue));
         await foreach (var file in files.Results)
         {
             try

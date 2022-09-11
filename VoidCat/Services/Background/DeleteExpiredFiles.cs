@@ -27,7 +27,7 @@ public sealed class DeleteExpiredFiles : BackgroundService
             var fileInfoManager = scope.ServiceProvider.GetRequiredService<FileInfoManager>();
             var fileStoreFactory = scope.ServiceProvider.GetRequiredService<FileStoreFactory>();
 
-            var files = await metadata.ListFiles<SecretVoidFileMeta>(new(0, int.MaxValue));
+            var files = await metadata.ListFiles<SecretFileMeta>(new(0, int.MaxValue));
             await foreach (var f in files.Results.WithCancellation(stoppingToken))
             {
                 try

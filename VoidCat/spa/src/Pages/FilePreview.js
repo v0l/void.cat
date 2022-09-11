@@ -1,17 +1,19 @@
 import "./FilePreview.css";
 import {Fragment, useEffect, useState} from "react";
 import {useParams} from "react-router-dom";
-import {TextPreview} from "../Components/FilePreview/TextPreview";
 import FeatherIcon from "feather-icons-react";
+import {Helmet} from "react-helmet";
+
+import {TextPreview} from "../Components/FilePreview/TextPreview";
 import {FileEdit} from "../Components/FileEdit/FileEdit";
 import {FilePayment} from "../Components/FilePreview/FilePayment";
 import {useApi} from "../Components/Shared/Api";
-import {Helmet} from "react-helmet";
 import {FormatBytes} from "../Components/Shared/Util";
 import {ApiHost} from "../Components/Shared/Const";
 import {InlineProfile} from "../Components/Shared/InlineProfile";
-import sjcl from "sjcl";
-import {sjclcodec} from "../codecBytes";
+import {StreamEncryption} from "../Components/Shared/StreamEncryption";
+import {VoidButton} from "../Components/Shared/VoidButton";
+import {useFileTransfer} from "../Components/Shared/FileTransferHook";
 
 export function FilePreview() {
     const {Api} = useApi();
@@ -19,6 +21,9 @@ export function FilePreview() {
     const [info, setInfo] = useState();
     const [order, setOrder] = useState();
     const [link, setLink] = useState("#");
+    const [key, setKey] = useState("");
+    const [error, setError] = useState("");
+    const {speed, progress, update, setFileSize} = useFileTransfer();
 
     async function loadInfo() {
         let req = await Api.fileInfo(params.id);
@@ -28,11 +33,72 @@ export function FilePreview() {
         }
     }
 
+    function isFileEncrypted() {
+        return "string" === typeof info?.metadata?.encryptionParams
+    }
+
+    function isDecrypted() {
+        return link.startsWith("blob:");
+    }
+
+    function isPaymentRequired() {
+        return info?.payment?.required === true && !order;
+    }
+    
     function canAccessFile() {
-        if (info?.payment?.required === true && !order) {
+        if (isPaymentRequired()) {
+            return false;
+        }
+        if (isFileEncrypted() && !isDecrypted()) {
             return false;
         }
         return true;
+    }
+
+    async function decryptFile() {
+        try {
+            let hashKey = key.match(/([0-9a-z]{32}):([0-9a-z]{24})/);
+            if (hashKey?.length === 3) {
+                let [key, iv] = [hashKey[1], hashKey[2]];
+                let enc = new StreamEncryption(key, iv, info.metadata?.encryptionParams);
+
+                let rsp = await fetch(link);
+                if (rsp.ok) {
+                    let reader = rsp.body
+                        .pipeThrough(enc.getDecryptionTransform())
+                        .pipeThrough(decryptionProgressTransform());
+                    let newResponse = new Response(reader);
+                    setLink(window.URL.createObjectURL(await newResponse.blob(), {type: info.metadata.mimeType}));
+                }
+            } else {
+                setError("Invalid encryption key format");
+            }
+        } catch (e) {
+            setError(e.message);
+        }
+    }
+
+    function decryptionProgressTransform() {
+        return new window.TransformStream({
+            transform: (chunk, controller) => {
+                update(chunk.length);
+                controller.enqueue(chunk);            
+            }
+        });
+    }
+    
+    function renderEncryptedDownload() {
+        if (!isFileEncrypted() || isDecrypted() || isPaymentRequired()) return;
+        return (
+            <div className="encrypted">
+                <h3>This file is encrypted, please enter the encryption key:</h3>
+                <input type="password" placeholder="Encryption key" value={key}
+                       onChange={(e) => setKey(e.target.value)}/>
+                <VoidButton onClick={() => decryptFile()}>Decrypt</VoidButton>
+                {progress > 0 ? `${(100 * progress).toFixed(0)}% (${FormatBytes(speed)}/s)` : null}
+                {error ? <h4 className="error">{error}</h4> : null}
+            </div>
+        );
     }
 
     function renderPayment() {
@@ -46,6 +112,8 @@ export function FilePreview() {
     }
 
     function renderPreview() {
+        if (!canAccessFile()) return;
+
         if (info.metadata) {
             switch (info.metadata.mimeType) {
                 case "image/avif":
@@ -145,41 +213,8 @@ export function FilePreview() {
     useEffect(() => {
         if (info) {
             let fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
-
-            // detect encrypted file link
-            let hashKey = window.location.hash.match(/#([0-9a-z]{32}):([0-9a-z]{24})/);
-            if (hashKey.length === 3) {
-                let [key, iv] = [sjcl.codec.hex.toBits(hashKey[1]), sjcl.codec.hex.toBits(hashKey[2])];
-                console.log(key, iv);
-                let aes = new sjcl.cipher.aes(key);
-
-                async function load() {
-                    let decryptStream = new window.TransformStream({
-                        transform: async (chunk, controller) => {
-                            chunk = await chunk;
-                            console.log("Transforming chunk:", chunk);
-
-                            let buff = sjclcodec.toBits(chunk);
-                            let decryptedBuff = sjclcodec.fromBits(sjcl.mode.gcm.decrypt(aes, buff, iv));
-                            console.log("Decrypted data:", decryptedBuff);
-                            controller.enqueue(new Uint8Array(decryptedBuff));
-                        }
-                    });
-                    let rsp = await fetch(fileLink);
-                    if (rsp.ok) {
-                        let reader = rsp.body
-                            .pipeThrough(decryptStream);
-
-                        console.log("Pipe reader", reader);
-                        let newResponse = new Response(reader);
-                        setLink(window.URL.createObjectURL(await newResponse.blob(), {type: info.metadata.mimeType}));
-                    }
-                }
-
-                load();
-                return;
-            }
-
+            setFileSize(info.metadata.size);
+            
             let order = window.localStorage.getItem(`payment-${info.id}`);
             if (order) {
                 let orderObj = JSON.parse(order);
@@ -213,7 +248,8 @@ export function FilePreview() {
                         </div>
                     </div>
                     {renderPayment()}
-                    {canAccessFile() ? renderPreview() : null}
+                    {renderPreview()}
+                    {renderEncryptedDownload()}
                     <div className="file-stats">
                         <div>
                             <FeatherIcon icon="download-cloud"/>

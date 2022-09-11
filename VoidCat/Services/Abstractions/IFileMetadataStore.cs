@@ -5,7 +5,7 @@ namespace VoidCat.Services.Abstractions;
 /// <summary>
 /// File metadata contains all data about a file except for the file data itself
 /// </summary>
-public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVoidFileMeta>
+public interface IFileMetadataStore : IPublicPrivateStore<FileMeta, SecretFileMeta>
 {
     /// <summary>
     /// Get metadata for a single file
@@ -13,7 +13,7 @@ public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVo
     /// <param name="id"></param>
     /// <typeparam name="TMeta"></typeparam>
     /// <returns></returns>
-    ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : VoidFileMeta;
+    ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta;
     
     /// <summary>
     /// Get metadata for multiple files
@@ -21,7 +21,7 @@ public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVo
     /// <param name="ids"></param>
     /// <typeparam name="TMeta"></typeparam>
     /// <returns></returns>
-    ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : VoidFileMeta;
+    ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta;
     
     /// <summary>
     /// Update file metadata
@@ -30,7 +30,7 @@ public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVo
     /// <param name="meta"></param>
     /// <typeparam name="TMeta"></typeparam>
     /// <returns></returns>
-    ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : VoidFileMeta;
+    ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta;
     
     /// <summary>
     /// List all files in the store
@@ -38,7 +38,7 @@ public interface IFileMetadataStore : IPublicPrivateStore<VoidFileMeta, SecretVo
     /// <param name="request"></param>
     /// <typeparam name="TMeta"></typeparam>
     /// <returns></returns>
-    ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : VoidFileMeta;
+    ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta;
 
     /// <summary>
     /// Returns basic stats about the file store
