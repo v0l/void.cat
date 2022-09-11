@@ -97,7 +97,7 @@ export function FileUpload(props) {
             headers["V-EncryptionParams"] = JSON.stringify(enc.getParams());
         }
         
-        let req = await fetch("https://localhost:7195/upload", {
+        let req = await fetch("/upload", {
             method: "POST",
             mode: "cors",
             body: rs,
