@@ -7,6 +7,8 @@ import {ApiHost} from "../Shared/Const";
 import {StreamEncryption} from "../Shared/StreamEncryption";
 import {VoidButton} from "../Shared/VoidButton";
 import {useFileTransfer} from "../Shared/FileTransferHook";
+import sjcl from "sjcl";
+import {sjclcodec} from "../../codecBytes";
 
 const UploadState = {
     NotStarted: 0,
@@ -99,7 +101,7 @@ export function FileUpload(props) {
         if (auth) {
             headers["Authorization"] = `Bearer ${auth}`;
         }
-        let req = await fetch("/upload", {
+        let req = await fetch(`${ApiHost}/upload`, {
             method: "POST",
             mode: "cors",
             body: rs,
@@ -212,8 +214,17 @@ export function FileUpload(props) {
     }
 
     async function digest(file) {
-        let h = await window.crypto.subtle.digest(DigestAlgo, await file.arrayBuffer());
-        return buf2hex(new Uint8Array(h));
+        const ChunkSize = 1024 * 1024;
+        // must compute hash in chunks, subtle crypto cannot hash files > 2Gb
+        let sha = new sjcl.hash.sha256();
+        for (let x = 0; x < Math.ceil(file.size / ChunkSize); x++) {
+            let offset = x * ChunkSize;
+            let slice = file.slice(offset, offset + ChunkSize);
+            let chunk = await slice.arrayBuffer();
+            sha.update(sjclcodec.toBits(new Uint8Array(chunk)));
+            update(chunk.byteLength);
+        }
+        return buf2hex(sjclcodec.fromBits(sha.finalize()));
     }
 
     function renderStatus() {
