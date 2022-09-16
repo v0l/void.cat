@@ -1,3 +1,5 @@
+import './App.css';
+
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import {Provider} from "react-redux";
 import store from "./Store";
@@ -7,8 +9,8 @@ import {Admin} from "./Admin/Admin";
 import {UserLogin} from "./Pages/UserLogin";
 import {Profile} from "./Pages/Profile";
 import {Header} from "./Components/Shared/Header";
+import {Donate} from "./Pages/Donate";
 
-import './App.css';
 
 function App() {
     return (
@@ -22,6 +24,7 @@ function App() {
                         <Route exact path="/u/:id" element={<Profile/>}/>
                         <Route exact path="/admin" element={<Admin/>}/>
                         <Route exact path="/:id" element={<FilePreview/>}/>
+                        <Route exact path="/donate" element={<Donate/>}/>
                     </Routes>
                 </BrowserRouter>
             </Provider>

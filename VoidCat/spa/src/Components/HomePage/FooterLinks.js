@@ -1,6 +1,7 @@
 import "./FooterLinks.css"
 import StrikeLogo from "../../image/strike.png";
 import {useSelector} from "react-redux";
+import {Link} from "react-router-dom";
 
 export function FooterLinks() {
     const profile = useSelector(state => state.login.profile);
@@ -16,6 +17,7 @@ export function FooterLinks() {
             <a href="https://github.com/v0l/void.cat" target="_blank">
                 GitHub
             </a>
+            <Link to="/donate">Donate</Link>
             {profile?.roles?.includes("Admin") ? <a href="/admin">Admin</a> : null}
         </div>
     );
