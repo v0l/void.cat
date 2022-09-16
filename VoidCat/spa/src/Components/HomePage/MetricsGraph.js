@@ -9,7 +9,7 @@ export function MetricsGraph(props) {
 
     return (
         <BarChart
-            width={720}
+            width={Math.min(window.innerWidth, 900)}
             height={200}
             data={metrics.timeSeriesMetrics}
             margin={{left: 0, right: 0}}
