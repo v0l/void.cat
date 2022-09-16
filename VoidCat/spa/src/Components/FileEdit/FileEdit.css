@@ -1,8 +1,15 @@
 .file-edit {
     text-align: start;
+    margin: 0 10px;
 }
 
 .file-edit svg {
     vertical-align: middle;
     margin-left: 10px;
+}
+
+@media (max-width: 720px) {
+    .file-edit {
+        flex-direction: column;
+    }
 }

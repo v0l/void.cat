@@ -6,6 +6,12 @@
     margin-top: 10px;
 }
 
+@media (max-width: 720px) {
+    .upload {
+        flex-direction: column;
+    }
+}
+
 .upload .info {
     flex: 2;
 }

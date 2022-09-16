@@ -10,3 +10,7 @@
     line-height: 2;
     flex-grow: 1;
 }
+
+.header img.logo {
+    height: 80px;
+}

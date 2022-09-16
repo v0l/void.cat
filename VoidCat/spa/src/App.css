@@ -1,12 +1,11 @@
 .page {
-    width: 720px;
+    width: 900px;
     margin-left: auto;
     margin-right: auto;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
     .page {
         width: 100vw;
-        white-space: nowrap;
     }
 }

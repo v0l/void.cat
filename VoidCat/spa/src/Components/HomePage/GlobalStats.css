@@ -3,6 +3,7 @@
     grid-auto-flow: column;
     margin: 0 30px;
     line-height: 32px;
+    text-align: center;
 }
 
 .stats svg {
@@ -13,9 +14,9 @@
 .stats > div {
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
     .stats {
-        margin: 0 10px;
+        margin: 0 5px;
         font-size: 14px;
     }
 

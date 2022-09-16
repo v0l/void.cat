@@ -8,17 +8,11 @@
     text-align: center;
     user-select: none;
     cursor: pointer;
-    height: 200px;
+    height: 250px;
     font-size: x-large;
 }
 
 .drop small {
     display: block;
     font-size: x-small;
-}
-
-@media (max-width: 720px) {
-    .drop {
-        width: 100%;
-    }
 }

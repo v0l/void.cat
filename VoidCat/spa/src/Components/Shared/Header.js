@@ -1,10 +1,13 @@
 import "./Header.css";
+import VoidCat from "../../image/voidcat.png";
+
+import {useEffect} from "react";
 import {Link} from "react-router-dom";
 import {useDispatch, useSelector} from "react-redux";
+
 import {InlineProfile} from "./InlineProfile";
 import {useApi} from "./Api";
 import {logout, setAuth, setProfile} from "../../LoginState";
-import {useEffect} from "react";
 import {setInfo} from "../../SiteInfoStore";
 
 export function Header() {
@@ -42,8 +45,12 @@ export function Header() {
 
     return (
         <div className="header page">
+
+            <img src={VoidCat} alt="logo" className="logo"/>
             <div className="title">
-                <Link to="/">{window.location.hostname}</Link>
+                <Link to="/">
+                    {window.location.hostname}
+                </Link>
             </div>
             {profile ?
                 <InlineProfile profile={profile} options={{

@@ -1,16 +1,13 @@
 {
   "short_name": "void.cat",
   "name": "void.cat",
+  "id": "/",
+  "description": "Void.cat file hosting",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "logo.png",
+      "src": "voidcat_512.png",
       "type": "image/png",
-      "sizes": "64x64"
+      "sizes": "512x512"
     }
   ],
   "start_url": ".",
