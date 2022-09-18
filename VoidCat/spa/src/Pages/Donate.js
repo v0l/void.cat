@@ -2,7 +2,7 @@
 
 export function Donate() {
     const Hostname = "pay.v0l.io";
-    const StoreId = "CxjchLEkirhBWU17KeJrAe71g5TzrxsvsfLuFwrnyp5Q";
+    const StoreId = "GdRya8MAvZYhyviA4ypFgijBknNoDEkg12ro8efLcZp5";
 
     const [currency, setCurrency] = useState("USD");
     const [price, setPrice] = useState(1);
