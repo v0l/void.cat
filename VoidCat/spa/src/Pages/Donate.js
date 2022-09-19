@@ -1,17 +1,26 @@
-﻿import QRCode from "qrcode.react";
-import {useState} from "react";
+﻿import "./Donate.css"
+import QRCode from "qrcode.react";
+import {Fragment, useState} from "react";
 
 export function Donate() {
     const Hostname = "pay.v0l.io";
     const StoreId = "GdRya8MAvZYhyviA4ypFgijBknNoDEkg12ro8efLcZp5";
-    const RevTag = "kieranh";
 
     const [currency, setCurrency] = useState("USD");
     const [price, setPrice] = useState(1);
 
-    let revLink = `https://revolut.me/${RevTag}`;
+    const Links = [
+        {
+            name: "Revolut",
+            url: "https://revolut.me/kieranh"
+        },
+        {
+            name: "Strike",
+            url: "https://strike.me/kieran"
+        }
+    ];
     return (
-        <div className="page">
+        <div className="page donate">
             <h2>Donate with Bitcoin</h2>
             <form method="POST" action={`https://${Hostname}/api/v1/invoices`} className="flex">
                 <input type="hidden" name="storeId" value={StoreId}/>
@@ -31,13 +40,16 @@ export function Donate() {
                        src={`https://${Hostname}/img/paybutton/pay.svg`}
                        alt="Pay with BTCPay Server, a Self-Hosted Bitcoin Payment Processor"/>
             </form>
-            <h2>Donate with Revolut</h2>
-            <p>
-                <a target="_blank" href={revLink}>Revolut</a>
-            </p>
-            <QRCode value={revLink}
-                    includeMargin={true}
-                    size={256}/>
+
+            {Links.map(e => <Fragment key={e.name}>
+                <h2>Donate with {e.name}</h2>
+                <p>
+                    <a target="_blank" href={e.url}>{e.name}</a>
+                </p>
+                <QRCode value={e.url}
+                        includeMargin={true}
+                        size={256}/>
+            </Fragment>)}
         </div>
     );
 }
