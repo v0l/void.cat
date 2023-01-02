@@ -44,6 +44,7 @@ public static class Extensions
     public static Guid FromBase58Guid(this string base58)
     {
         var enc = new NBitcoin.DataEncoders.Base58Encoder();
+        base58 = Path.GetFileNameWithoutExtension(base58);
         var guidBytes = enc.DecodeData(base58);
         if (guidBytes.Length != 16) throw new VoidInvalidIdException(base58);
         return new Guid(guidBytes);
