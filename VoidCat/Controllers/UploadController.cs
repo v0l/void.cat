@@ -62,6 +62,9 @@ namespace VoidCat.Controllers
                 var uid = HttpContext.GetUserId();
                 var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
+                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
+                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
+
                 if (string.IsNullOrEmpty(mime) && !string.IsNullOrEmpty(filename))
                 {
                     if (new FileExtensionContentTypeProvider().TryGetContentType(filename, out var contentType))
@@ -87,13 +90,13 @@ namespace VoidCat.Controllers
                     Name = filename,
                     Description = Request.Headers.GetHeader("V-Description"),
                     Digest = Request.Headers.GetHeader("V-Full-Digest"),
-                    Size = (ulong?) Request.ContentLength ?? 0UL,
+                    Size = (ulong?)Request.ContentLength ?? 0UL,
                     Storage = store,
                     EncryptionParams = Request.Headers.GetHeader("V-EncryptionParams")
                 };
 
                 var (segment, totalSegments) = ParseSegmentsHeader();
-                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments),
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments, stripMetadata),
                     HttpContext.RequestAborted);
 
                 // save metadata
@@ -102,7 +105,7 @@ namespace VoidCat.Controllers
                 // attach file upload to user
                 if (uid.HasValue)
                 {
-                    await _userUploads.AddFile(uid!.Value, vf.Id);
+                    await _userUploads.AddFile(uid.Value, vf.Id);
                 }
 
                 if (cli)
@@ -156,7 +159,10 @@ namespace VoidCat.Controllers
                 }
 
                 var editSecret = Request.Headers.GetHeader("V-EditSecret");
-                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments)
+                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
+                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
+
+                var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments, stripMetadata)
                 {
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
                     Id = gid

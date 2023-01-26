@@ -18,5 +18,6 @@ RUN dotnet publish -c Release -o out VoidCat/VoidCat.csproj
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
+RUN apt update && apt install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "VoidCat.dll"]

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using VoidCat.Model;
 using VoidCat.Model.Exceptions;
 using VoidCat.Services.Abstractions;
@@ -9,11 +10,13 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
     private const string FilesDir = "files-v1";
     private readonly VoidSettings _settings;
+    private readonly StripMetadata _stripMetadata;
 
-    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats)
+    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats, StripMetadata stripMetadata)
         : base(stats)
     {
         _settings = settings;
+        _stripMetadata = stripMetadata;
 
         var dir = Path.Combine(_settings.DataDirectory, FilesDir);
         if (!Directory.Exists(dir))
@@ -28,7 +31,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         await using var fs = await Open(request, cts);
         await EgressFromStream(fs, request, outStream, cts);
     }
-    
+
     /// <inheritdoc />
     public ValueTask<EgressResult> StartEgress(EgressRequest request)
     {
@@ -37,14 +40,49 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
     /// <inheritdoc />
     public string Key => "local-disk";
-    
+
     /// <inheritdoc />
     public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
     {
-        var fPath = MapPath(payload.Id);
-        await using var fsTemp = new FileStream(fPath,
-            payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.Write);
-        return await IngressToStream(fsTemp, payload, cts);
+        var finalPath = MapPath(payload.Id);
+        await using var fsTemp = new FileStream(finalPath,
+            payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.ReadWrite);
+
+        var vf = await IngressToStream(fsTemp, payload, cts);
+        
+        if (payload.ShouldStripMetadata && payload.Segment == payload.TotalSegments)
+        {
+            fsTemp.Close();
+            var ext = Path.GetExtension(vf.Metadata!.Name);
+            var srcPath = $"{finalPath}_orig{ext}";
+            File.Move(finalPath, srcPath);
+            
+            var dstPath = $"{finalPath}_dst{ext}";
+            if (await _stripMetadata.TryStripMediaMetadata(srcPath, dstPath, cts))
+            {
+                File.Move(dstPath, finalPath);
+                File.Delete(srcPath);
+                
+                // recompute metadata
+                var fInfo = new FileInfo(finalPath);
+                var hash = await SHA256.Create().ComputeHashAsync(fInfo.OpenRead(), cts);
+                vf = vf with
+                {
+                    Metadata = vf.Metadata! with
+                    {
+                        Size = (ulong)fInfo.Length,
+                        Digest = hash.ToHex()
+                    }
+                };
+            }
+            else
+            {
+                // move orig file back
+                File.Move(srcPath, finalPath);
+            }
+        }
+
+        return vf;
     }
 
     /// <inheritdoc />

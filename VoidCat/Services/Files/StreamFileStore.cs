@@ -53,14 +53,14 @@ public abstract class StreamFileStore
         var meta = payload.Meta;
         if (payload.IsAppend)
         {
-            meta = meta! with
+            meta = meta with
             {
                 Size = meta.Size + totalSize
             };
         }
         else
         {
-            meta = meta! with
+            meta = meta with
             {
                 Uploaded = DateTimeOffset.UtcNow,
                 EditSecret = Guid.NewGuid(),
