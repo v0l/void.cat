@@ -34,7 +34,6 @@ public class StripMetadata
                 .OutputToFile(output, true, o =>
                 {
                     o.WithoutMetadata();
-                    o.CopyChannel();
                 })
                 .CancellableThrough(cts);
 
