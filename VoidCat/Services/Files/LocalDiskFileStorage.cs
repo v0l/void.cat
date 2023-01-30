@@ -10,9 +10,9 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
     private const string FilesDir = "files-v1";
     private readonly VoidSettings _settings;
-    private readonly StripMetadata _stripMetadata;
+    private readonly CompressContent _stripMetadata;
 
-    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats, StripMetadata stripMetadata)
+    public LocalDiskFileStore(VoidSettings settings, IAggregateStatsCollector stats, CompressContent stripMetadata)
         : base(stats)
     {
         _settings = settings;
@@ -58,9 +58,10 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             File.Move(finalPath, srcPath);
             
             var dstPath = $"{finalPath}_dst{ext}";
-            if (await _stripMetadata.TryStripMediaMetadata(srcPath, dstPath, cts))
+            var res = await _stripMetadata.TryCompressMedia(srcPath, dstPath, cts);
+            if (res.Success)
             {
-                File.Move(dstPath, finalPath);
+                File.Move(res.OutPath, finalPath);
                 File.Delete(srcPath);
                 
                 // recompute metadata
@@ -71,7 +72,8 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
                     Metadata = vf.Metadata! with
                     {
                         Size = (ulong)fInfo.Length,
-                        Digest = hash.ToHex()
+                        Digest = hash.ToHex(),
+                        MimeType = res.MimeType ?? vf.Metadata.MimeType
                     }
                 };
             }

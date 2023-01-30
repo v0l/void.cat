@@ -10,7 +10,7 @@ public static class FileStorageStartup
     {
         services.AddTransient<FileInfoManager>();
         services.AddTransient<FileStoreFactory>();
-        services.AddTransient<StripMetadata>();
+        services.AddTransient<CompressContent>();
         
         if (settings.CloudStorage != default)
         {
