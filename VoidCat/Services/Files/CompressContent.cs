@@ -20,7 +20,8 @@ public class CompressContent
         try
         {
             string? outMime = null;
-            switch (Path.GetExtension(input))
+            var inExt = Path.GetExtension(input).ToLower();
+            switch (inExt)
             {
                 case ".jpg":
                 case ".jpeg":
@@ -40,6 +41,10 @@ public class CompressContent
                 .OutputToFile(output, true, o =>
                 {
                     o.WithoutMetadata();
+                    if (inExt == ".gif")
+                    {
+                        o.Loop(0);
+                    }
                 })
                 .CancellableThrough(cts);
 
