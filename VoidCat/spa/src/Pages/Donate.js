@@ -1,6 +1,5 @@
 ﻿import "./Donate.css"
-import QRCode from "qrcode.react";
-import {Fragment, useState} from "react";
+import {useState} from "react";
 
 export function Donate() {
     const Hostname = "pay.v0l.io";
@@ -9,16 +8,6 @@ export function Donate() {
     const [currency, setCurrency] = useState("USD");
     const [price, setPrice] = useState(1);
 
-    const Links = [
-        {
-            name: "Revolut",
-            url: "https://revolut.me/kieranh"
-        },
-        {
-            name: "Strike",
-            url: "https://strike.me/kieran"
-        }
-    ];
     return (
         <div className="page donate">
             <h2>Donate with Bitcoin</h2>
@@ -40,16 +29,6 @@ export function Donate() {
                        src={`https://${Hostname}/img/paybutton/pay.svg`}
                        alt="Pay with BTCPay Server, a Self-Hosted Bitcoin Payment Processor"/>
             </form>
-
-            {Links.map(e => <Fragment key={e.name}>
-                <h2>Donate with {e.name}</h2>
-                <p>
-                    <a target="_blank" href={e.url}>{e.name}</a>
-                </p>
-                <QRCode value={e.url}
-                        includeMargin={true}
-                        size={256}/>
-            </Fragment>)}
         </div>
     );
 }
