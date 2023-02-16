@@ -16,7 +16,6 @@ public class PrometheusStatsCollector : IStatsCollector
     public ValueTask TrackIngress(Guid id, ulong amount)
     {
         _ingress.Inc(amount);
-        _ingress.WithLabels(id.ToString()).Inc(amount);
         return ValueTask.CompletedTask;
     }
 
@@ -24,7 +23,6 @@ public class PrometheusStatsCollector : IStatsCollector
     public ValueTask TrackEgress(Guid id, ulong amount)
     {
         _egress.Inc(amount);
-        _egress.WithLabels(id.ToString()).Inc(amount);
         return ValueTask.CompletedTask;
     }
 }
