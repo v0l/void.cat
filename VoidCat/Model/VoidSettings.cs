@@ -105,11 +105,23 @@ namespace VoidCat.Model
         /// Discord application settings
         /// </summary>
         public OAuthDetails? Discord { get; init; }
-        
+
         /// <summary>
         /// Google application settings
         /// </summary>
         public OAuthDetails? Google { get; init; }
+
+        /// <summary>
+        /// A list of trackers to attach to torrent files
+        /// </summary>
+        public List<string> TorrentTrackers { get; init; } = new()
+        {
+            "wss://tracker.btorrent.xyz",
+            "wss://tracker.openwebtorrent.com",
+            "udp://tracker.opentrackr.org:1337/announce",
+            "udp://tracker.openbittorrent.com:6969/announce",
+            "http://tracker.openbittorrent.com:80/announce"
+        };
     }
 
     public sealed class TorSettings

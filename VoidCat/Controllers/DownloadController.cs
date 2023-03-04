@@ -54,7 +54,7 @@ public class DownloadController : Controller
         {
             var t = await voidFile.Metadata!.MakeTorrent(
                 await _storage.Open(new(gid, Enumerable.Empty<RangeRequest>()), CancellationToken.None),
-                _settings.SiteUrl);
+                _settings.SiteUrl, _settings.TorrentTrackers);
 
             Response.Headers.ContentDisposition = $"inline; filename=\"{id}\"";
             Response.ContentType = "application/x-bittorent";

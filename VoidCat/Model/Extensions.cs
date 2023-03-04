@@ -49,6 +49,7 @@ public static class Extensions
         base58 = Path.GetFileNameWithoutExtension(base58);
         var guidBytes = enc.DecodeData(base58);
         if (guidBytes.Length != 16) throw new VoidInvalidIdException(base58);
+
         return new Guid(guidBytes);
     }
 
@@ -275,7 +276,7 @@ public static class Extensions
     public static bool HasGoogle(this VoidSettings settings)
         => settings.Google != null;
 
-    public static async Task<Torrent> MakeTorrent(this FileMeta meta, Stream fileStream, Uri baseAddress)
+    public static async Task<Torrent> MakeTorrent(this FileMeta meta, Stream fileStream, Uri baseAddress, List<string> trackers)
     {
         const int pieceSize = 262_144;
         const int pieceHashLen = 20;
@@ -313,6 +314,8 @@ public static class Extensions
             IsPrivate = false,
             PieceSize = pieceSize,
             Pieces = await BuildPieces(),
+            // ReSharper disable once CoVariantArrayConversion
+            Trackers = trackers.Select(a => new[] {a}).ToArray(),
             ExtraFields = new BDictionary
             {
                 {"url-list", webSeed.ToString()}
