@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using VoidCat.Model;
 using VoidCat.Model.Payments;
@@ -28,6 +29,7 @@ public class DownloadController : Controller
 
     [HttpOptions]
     [Route("{id}")]
+    [EnableCors("*")]
     public Task DownloadFileOptions([FromRoute] string id)
     {
         var gid = id.FromBase58Guid();
@@ -41,6 +43,7 @@ public class DownloadController : Controller
     [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 86400)]
     [HttpGet]
     [Route("{id}")]
+    [EnableCors("*")]
     public async Task DownloadFile([FromRoute] string id)
     {
         var gid = id.FromBase58Guid();

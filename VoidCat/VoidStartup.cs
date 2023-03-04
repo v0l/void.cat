@@ -78,6 +78,7 @@ public static class VoidStartup
         {
             o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders |
                               HttpLoggingFields.ResponsePropertiesAndHeaders;
+
             o.RequestBodyLogLimit = 4096;
             o.ResponseBodyLogLimit = 4096;
 
@@ -89,6 +90,7 @@ public static class VoidStartup
                 o.RequestHeaders.Add(h);
             }
         });
+
         services.AddHttpClient();
         services.AddSwaggerGen(c =>
         {
@@ -99,6 +101,7 @@ public static class VoidStartup
                 Name = "Authorization",
                 Type = SecuritySchemeType.ApiKey
             });
+
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
@@ -113,9 +116,11 @@ public static class VoidStartup
                     new string[] { }
                 }
             });
+
             var path = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
             c.IncludeXmlComments(path);
         });
+
         services.AddCors(opt =>
         {
             opt.AddDefaultPolicy(p =>
@@ -125,11 +130,20 @@ public static class VoidStartup
                     .AllowCredentials()
                     .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
             });
+
+            opt.AddPolicy("*", p =>
+            {
+                p.AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowAnyOrigin();
+            });
         });
+
         services.AddRazorPages();
         services.AddRouting();
         services.AddControllers()
             .AddNewtonsoftJson((opt) => { ConfigJsonSettings(opt.SerializerSettings); });
+
         services.AddHealthChecks();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -146,10 +160,7 @@ public static class VoidStartup
                 };
             });
 
-        services.AddAuthorization((opt) =>
-        {
-            opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); });
-        });
+        services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); }); });
 
         services.AddTransient<RazorPartialToStringRenderer>();
         services.AddAnalytics(voidSettings);
