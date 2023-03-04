@@ -277,7 +277,8 @@ public static class Extensions
 
     public static async Task<Torrent> MakeTorrent(this FileMeta meta, Stream fileStream, Uri baseAddress)
     {
-        const int pieceSize = 16_384;
+        const int pieceSize = 262_144;
+        const int pieceHashLen = 20;
         var webSeed = new UriBuilder(baseAddress)
         {
             Path = $"/d/{meta.Id.ToBase58()}"
@@ -286,15 +287,17 @@ public static class Extensions
         async Task<byte[]> BuildPieces()
         {
             fileStream.Seek(0, SeekOrigin.Begin);
-            var hashes = new List<byte[]>();
+            var chunks = (int)Math.Ceiling(meta.Size / (decimal)pieceSize);
+            var hashes = new byte[pieceHashLen * chunks];
             var chunk = new byte[pieceSize];
-            for (var x = 0; x < (int)Math.Ceiling(meta.Size / (decimal)pieceSize); x++)
+            for (var x = 0; x < chunks; x++)
             {
                 var rLen = await fileStream.ReadAsync(chunk, 0, chunk.Length);
-                hashes.Add(SHA1.HashData(chunk.AsSpan(0, rLen)));
+                var hash = SHA1.HashData(chunk.AsSpan(0, rLen));
+                Buffer.BlockCopy(hash, 0, hashes, x * pieceHashLen, pieceHashLen);
             }
 
-            return hashes.SelectMany(a => a).ToArray();
+            return hashes;
         }
 
         // build magnet link
@@ -305,7 +308,7 @@ public static class Extensions
                 FileName = meta.Name,
                 FileSize = (long)meta.Size
             },
-            Comment = meta.Description,
+            Comment = meta.Name,
             CreationDate = meta.Uploaded.UtcDateTime,
             IsPrivate = false,
             PieceSize = pieceSize,
