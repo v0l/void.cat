@@ -7,10 +7,7 @@ public sealed record RangeRequest(long? TotalSize, long? Start, long? End)
     public string OriginalString { get; private init; }
     
     public long? Size
-        => Start.HasValue ? (End ?? Math.Min(TotalSize!.Value, Start.Value + DefaultBufferSize)) - Start.Value : End;
-
-    public bool IsForFullFile
-        => Start is 0 && !End.HasValue;
+        => (Start.HasValue ? (End ?? Math.Min(TotalSize!.Value, Start.Value + DefaultBufferSize)) - Start.Value : End) + 1L;
 
     /// <summary>
     /// Return Content-Range header content for this range
