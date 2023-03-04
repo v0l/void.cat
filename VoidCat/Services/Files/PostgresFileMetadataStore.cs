@@ -35,8 +35,8 @@ public class PostgresFileMetadataStore : IFileMetadataStore
         await using var conn = await _connection.Get();
         await conn.ExecuteAsync(
             @"insert into 
-""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"", ""EncryptionParams"")
-values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store, :encryptionParams)
+""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"", ""EncryptionParams"", ""MagnetLink"")
+values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store, :encryptionParams, :magnetLink)
 on conflict (""Id"") do update set 
 ""Name"" = :name, 
 ""Size"" = :size, 
@@ -44,7 +44,8 @@ on conflict (""Id"") do update set
 ""MimeType"" = :mimeType, 
 ""Expires"" = :expires,
 ""Storage"" = :store,
-""EncryptionParams"" = :encryptionParams",
+""EncryptionParams"" = :encryptionParams,
+""MagnetLink"" = :magnetLink",
             new
             {
                 id,
@@ -57,7 +58,8 @@ on conflict (""Id"") do update set
                 editSecret = obj.EditSecret,
                 expires = obj.Expires?.ToUniversalTime(),
                 store = obj.Storage,
-                encryptionParams = obj.EncryptionParams
+                encryptionParams = obj.EncryptionParams,
+                magnetLink = obj.MagnetLink,
             });
     }
 

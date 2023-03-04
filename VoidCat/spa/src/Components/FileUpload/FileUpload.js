@@ -273,15 +273,6 @@ export function FileUpload(props) {
         return <div dangerouslySetInnerHTML={{__html: elm.outerHTML}}/>;
     }
 
-    useEffect(() => {
-        let chromeVersion = getChromeVersion();
-        if (chromeVersion >= 105) {
-            //doStreamUpload().catch(console.error);
-        } else {
-            doXHRUpload().catch(console.error);
-        }
-    }, []);
-
     return (
         <div className="upload">
             <div className="info">

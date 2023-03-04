@@ -49,21 +49,21 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.ReadWrite);
 
         var vf = await IngressToStream(fsTemp, payload, cts);
-        
+
         if (payload.ShouldStripMetadata && payload.Segment == payload.TotalSegments)
         {
             fsTemp.Close();
             var ext = Path.GetExtension(vf.Metadata!.Name);
             var srcPath = $"{finalPath}_orig{ext}";
             File.Move(finalPath, srcPath);
-            
+
             var dstPath = $"{finalPath}_dst{ext}";
             var res = await _stripMetadata.TryCompressMedia(srcPath, dstPath, cts);
             if (res.Success)
             {
                 File.Move(res.OutPath, finalPath);
                 File.Delete(srcPath);
-                
+
                 // recompute metadata
                 var fInfo = new FileInfo(finalPath);
                 var hash = await SHA256.Create().ComputeHashAsync(fInfo.OpenRead(), cts);
@@ -82,6 +82,12 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
                 // move orig file back
                 File.Move(srcPath, finalPath);
             }
+        }
+
+        if (payload.Segment == payload.TotalSegments)
+        {
+            var t = await vf.Metadata!.MakeTorrent(new FileStream(finalPath, FileMode.Open), _settings.SiteUrl);
+            vf.Metadata!.MagnetLink = t.GetMagnetLink();
         }
 
         return vf;

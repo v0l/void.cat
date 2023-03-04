@@ -4,6 +4,8 @@ using System.Text;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using BencodeNET.Objects;
+using BencodeNET.Torrents;
 using VoidCat.Model.Exceptions;
 using VoidCat.Model.User;
 
@@ -272,4 +274,48 @@ public static class Extensions
 
     public static bool HasGoogle(this VoidSettings settings)
         => settings.Google != null;
+
+    public static async Task<Torrent> MakeTorrent(this FileMeta meta, Stream fileStream, Uri baseAddress)
+    {
+        const int pieceSize = 16_384;
+        var webSeed = new UriBuilder(baseAddress)
+        {
+            Path = $"/d/{meta.Id.ToBase58()}"
+        };
+
+        async Task<byte[]> BuildPieces()
+        {
+            fileStream.Seek(0, SeekOrigin.Begin);
+            var hashes = new List<byte[]>();
+            var chunk = new byte[pieceSize];
+            for (var x = 0; x < (int)Math.Ceiling(meta.Size / (decimal)pieceSize); x++)
+            {
+                var rLen = await fileStream.ReadAsync(chunk, 0, chunk.Length);
+                hashes.Add(SHA1.HashData(chunk.AsSpan(0, rLen)));
+            }
+
+            return hashes.SelectMany(a => a).ToArray();
+        }
+
+        // build magnet link
+        var t = new Torrent()
+        {
+            File = new()
+            {
+                FileName = meta.Name,
+                FileSize = (long)meta.Size
+            },
+            Comment = meta.Description,
+            CreationDate = meta.Uploaded.UtcDateTime,
+            IsPrivate = false,
+            PieceSize = pieceSize,
+            Pieces = await BuildPieces(),
+            ExtraFields = new BDictionary
+            {
+                {"url-list", webSeed.ToString()}
+            }
+        };
+
+        return t;
+    }
 }

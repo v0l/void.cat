@@ -80,6 +80,11 @@ public record FileMeta : IFileMeta
     /// Encryption params as JSON string
     /// </summary>
     public string? EncryptionParams { get; set; }
+    
+    /// <summary>
+    /// Magnet link for downloads
+    /// </summary>
+    public string? MagnetLink { get; set; }
 }
 
 /// <summary>

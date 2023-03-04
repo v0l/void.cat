@@ -2,7 +2,7 @@
   "name": "spa",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://localhost:7195",
+  "proxy": "http://localhost:7195",
   "dependencies": {
     "@hcaptcha/react-hcaptcha": "^1.1.1",
     "@reduxjs/toolkit": "^1.7.2",
