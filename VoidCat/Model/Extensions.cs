@@ -315,7 +315,7 @@ public static class Extensions
             PieceSize = pieceSize,
             Pieces = await BuildPieces(),
             // ReSharper disable once CoVariantArrayConversion
-            Trackers = trackers.Select(a => new[] {a}).ToArray(),
+            Trackers = trackers.Select(a => new[] {Uri.EscapeDataString(a)}).ToArray(),
             ExtraFields = new BDictionary
             {
                 {"url-list", webSeed.ToString()}
