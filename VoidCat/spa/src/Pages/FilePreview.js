@@ -44,7 +44,7 @@ export function FilePreview() {
     function isPaymentRequired() {
         return info?.payment?.required === true && !order;
     }
-    
+
     function canAccessFile() {
         if (isPaymentRequired()) {
             return false;
@@ -82,11 +82,11 @@ export function FilePreview() {
         return new window.TransformStream({
             transform: (chunk, controller) => {
                 update(chunk.length);
-                controller.enqueue(chunk);            
+                controller.enqueue(chunk);
             }
         });
     }
-    
+
     function renderEncryptedDownload() {
         if (!isFileEncrypted() || isDecrypted() || isPaymentRequired()) return;
         return (
@@ -214,7 +214,7 @@ export function FilePreview() {
         if (info) {
             let fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
             setFileSize(info.metadata.size);
-            
+
             let order = window.localStorage.getItem(`payment-${info.id}`);
             if (order) {
                 let orderObj = JSON.parse(order);
@@ -242,9 +242,24 @@ export function FilePreview() {
                             {info.uploader ? <InlineProfile profile={info.uploader}/> : null}
                         </div>
                         <div>
-                            {canAccessFile() ?
-                                <a className="btn" href={link}
-                                   download={info.metadata?.name ?? info.id}>Download</a> : null}
+                            {canAccessFile() &&
+                                <>
+
+                                    <a className="btn" href={info?.metadata?.magnetLink}>
+                                        <FeatherIcon icon="link" size="14px" className="mr10"/>
+                                        Magnet
+                                    </a>
+                                    <a className="btn" href={`${link}.torrent`}
+                                       download={info.metadata?.name ?? info.id}>
+                                        <FeatherIcon icon="file" size="14px" className="mr10"/>
+                                        Torrent
+                                    </a>
+                                    <a className="btn" href={link}
+                                       download={info.metadata?.name ?? info.id}>
+                                        <FeatherIcon icon="download" size="14px" className="mr10"/>
+                                        Direct Download
+                                    </a>
+                                </>}
                         </div>
                     </div>
                     {renderPayment()}
