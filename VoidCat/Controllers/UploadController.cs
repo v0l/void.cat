@@ -73,6 +73,11 @@ namespace VoidCat.Controllers
                     }
                 }
 
+                if (string.IsNullOrEmpty(mime))
+                {
+                    mime = "application/octet-stream";
+                }
+
                 // detect store for ingress
                 var store = _settings.DefaultFileStore;
                 if (uid.HasValue)
