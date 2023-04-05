@@ -127,8 +127,16 @@ public static class VoidStartup
             {
                 p.AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowCredentials()
-                    .WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
+                    .AllowCredentials();
+
+                if (voidSettings.CorsOrigins.Count > 0)
+                {
+                    p.WithOrigins(voidSettings.CorsOrigins.Select(a => a.OriginalString).ToArray());
+                }
+                else
+                {
+                    p.AllowAnyOrigin();
+                }
             });
 
             opt.AddPolicy("*", p =>
