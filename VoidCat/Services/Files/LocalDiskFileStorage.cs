@@ -79,21 +79,21 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             }
             else
             {
-                // move orig file back
-                File.Move(srcPath, finalPath);
+                File.Delete(srcPath);
+                throw new Exception("Failed to strip metadata, please try again");
             }
         }
 
         if (payload.Segment == payload.TotalSegments)
         {
             var t = await vf.Metadata!.MakeTorrent(
-                new FileStream(finalPath, FileMode.Open), 
-                _settings.SiteUrl, 
+                new FileStream(finalPath, FileMode.Open),
+                _settings.SiteUrl,
                 _settings.TorrentTrackers);
 
             var ub = new UriBuilder(_settings.SiteUrl);
             ub.Path = $"/d/{vf.Id.ToBase58()}.torrent";
-            
+
             vf.Metadata!.MagnetLink = $"{t.GetMagnetLink()}&xs={Uri.EscapeDataString(ub.ToString())}";
         }
 
