@@ -22,28 +22,36 @@ public sealed class DeleteExpiredFiles : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var metadata = scope.ServiceProvider.GetRequiredService<IFileMetadataStore>();
-            var fileInfoManager = scope.ServiceProvider.GetRequiredService<FileInfoManager>();
-            var fileStoreFactory = scope.ServiceProvider.GetRequiredService<FileStoreFactory>();
-
-            var files = await metadata.ListFiles<SecretFileMeta>(new(0, int.MaxValue));
-            await foreach (var f in files.Results.WithCancellation(stoppingToken))
+            try
             {
-                try
-                {
-                    if (f.Expires < DateTime.Now)
-                    {
-                        await fileStoreFactory.DeleteFile(f.Id);
-                        await fileInfoManager.Delete(f.Id);
+                using var scope = _scopeFactory.CreateScope();
+                var metadata = scope.ServiceProvider.GetRequiredService<IFileMetadataStore>();
+                var fileInfoManager = scope.ServiceProvider.GetRequiredService<FileInfoManager>();
+                var fileStoreFactory = scope.ServiceProvider.GetRequiredService<FileStoreFactory>();
 
-                        _logger.LogInformation("Deleted file: {Id}", f.Id);
+                var files = await metadata.ListFiles<SecretFileMeta>(new(0, int.MaxValue));
+                await foreach (var f in files.Results.WithCancellation(stoppingToken))
+                {
+                    try
+                    {
+                        if (f.Expires < DateTime.Now)
+                        {
+                            await fileStoreFactory.DeleteFile(f.Id);
+                            await fileInfoManager.Delete(f.Id);
+
+                            _logger.LogInformation("Deleted file: {Id}", f.Id);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to delete file: {Id}", f.Id);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to delete file: {Id}", f.Id);
-                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to run delete expired file services");
             }
 
             await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
