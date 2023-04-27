@@ -59,6 +59,10 @@ namespace VoidCat.Controllers
         {
             try
             {
+                if (_settings.MaintenanceMode)
+                {
+                    throw new InvalidOperationException("Site is in maintenance mode");
+                }
                 var uid = HttpContext.GetUserId();
                 var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
@@ -150,6 +154,10 @@ namespace VoidCat.Controllers
         {
             try
             {
+                if (_settings.MaintenanceMode)
+                {
+                    throw new InvalidOperationException("Site is in maintenance mode");
+                }
                 var gid = id.FromBase58Guid();
                 var meta = await _metadata.Get<SecretFileMeta>(gid);
                 if (meta == default) return UploadResult.Error("File not found");

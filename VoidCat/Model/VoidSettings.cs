@@ -8,6 +8,11 @@ namespace VoidCat.Model
     public class VoidSettings
     {
         /// <summary>
+        /// Maintenance flag
+        /// </summary>
+        public bool MaintenanceMode { get; init; } = false;
+        
+        /// <summary>
         /// Base site url, used for redirect urls
         /// </summary>
         public Uri SiteUrl { get; init; }
