@@ -1,5 +1,6 @@
+using System.Collections.Immutable;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Files;
@@ -32,36 +33,47 @@ public sealed class FileInfoManager
     /// Get all metadata for a single file
     /// </summary>
     /// <param name="id"></param>
+    /// <param name="withEditSecret"></param>
     /// <returns></returns>
-    public ValueTask<PublicVoidFile?> Get(Guid id)
+    public async ValueTask<VoidFileResponse?> Get(Guid id, bool withEditSecret)
     {
-        return Get<PublicVoidFile, FileMeta>(id);
-    }
+        var meta = await _metadataStore.Get(id);
+        if (meta == default) return default;
 
-    /// <summary>
-    /// Get all private metadata for a single file
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    public ValueTask<PrivateVoidFile?> GetPrivate(Guid id)
-    {
-        return Get<PrivateVoidFile, SecretFileMeta>(id);
+        var payment = await _paymentStore.Get(id);
+        var bandwidth = await _statsReporter.GetBandwidth(id);
+        var virusScan = await _virusScanStore.GetByFile(id);
+        var uploader = await _userUploadsStore.Uploader(id);
+
+        var user = uploader.HasValue ? await _userStore.Get(uploader.Value) : null;
+
+        return new VoidFileResponse
+        {
+            Id = id,
+            Metadata = meta.ToMeta(withEditSecret),
+            Payment = payment,
+            Bandwidth = bandwidth,
+            Uploader = user?.Flags.HasFlag(UserFlags.PublicProfile) == true || withEditSecret ? user?.ToApiUser(false) : null,
+            VirusScan = virusScan?.ToVirusStatus()
+        };
     }
 
     /// <summary>
     /// Get all metadata for multiple files
     /// </summary>
     /// <param name="ids"></param>
+    /// <param name="withEditSecret"></param>
     /// <returns></returns>
-    public async ValueTask<IReadOnlyList<PublicVoidFile>> Get(Guid[] ids)
+    public async ValueTask<IReadOnlyList<VoidFileResponse>> Get(Guid[] ids, bool withEditSecret)
     {
-        var ret = new List<PublicVoidFile>();
-        foreach (var id in ids)
+        //todo: improve this
+        var ret = new List<VoidFileResponse>();
+        foreach (var i in ids)
         {
-            var v = await Get(id);
-            if (v != default)
+            var x = await Get(i, withEditSecret);
+            if (x != default)
             {
-                ret.Add(v);
+                ret.Add(x);
             }
         }
 
@@ -79,29 +91,5 @@ public sealed class FileInfoManager
         await _paymentStore.Delete(id);
         await _statsReporter.Delete(id);
         await _virusScanStore.Delete(id);
-    }
-
-    private async ValueTask<TFile?> Get<TFile, TMeta>(Guid id)
-        where TMeta : FileMeta where TFile : VoidFile<TMeta>, new()
-    {
-        var meta = _metadataStore.Get<TMeta>(id);
-        var payment = _paymentStore.Get(id);
-        var bandwidth = _statsReporter.GetBandwidth(id);
-        var virusScan = _virusScanStore.GetByFile(id);
-        var uploader = _userUploadsStore.Uploader(id);
-        await Task.WhenAll(meta.AsTask(), payment.AsTask(), bandwidth.AsTask(), virusScan.AsTask(), uploader.AsTask());
-
-        if (meta.Result == default) return default;
-        var user = uploader.Result.HasValue ? await _userStore.Get<PublicUser>(uploader.Result.Value) : null;
-
-        return new TFile()
-        {
-            Id = id,
-            Metadata = meta.Result,
-            Payment = payment.Result,
-            Bandwidth = bandwidth.Result,
-            Uploader = user?.Flags.HasFlag(UserFlags.PublicProfile) == true ? user : null,
-            VirusScan = virusScan.Result
-        };
     }
 }

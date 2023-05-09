@@ -7,22 +7,30 @@
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<SpaRoot>spa\</SpaRoot>
 		<DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
-		<HostSPA>True</HostSPA>
-		<DefineConstants Condition="'$(HostSPA)' == 'True'">$(DefineConstants);HostSPA</DefineConstants>
 		<DocumentationFile>$(AssemblyName).xml</DocumentationFile>
-		<Version>4.2.0</Version>
+		<Version>5.0.0</Version>
+		<NoWarn>CS1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AWSSDK.S3" Version="3.7.103.41" />
 		<PackageReference Include="BencodeNET" Version="5.0.0" />
-		<PackageReference Include="Dapper" Version="2.0.123" />
+		<PackageReference Include="BTCPayServer.Lightning.Common" Version="1.3.21" />
 		<PackageReference Include="FFMpegCore" Version="5.1.0" />
-		<PackageReference Include="FluentMigrator" Version="3.3.2" />
-		<PackageReference Include="FluentMigrator.Runner" Version="3.3.2" />
-		<PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.3.2" />
+		<PackageReference Include="Google.Protobuf" Version="3.22.3" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.54.0">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.7" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.16.1" />
 		<PackageReference Include="MSBuildGitHash" Version="2.0.2">
@@ -32,11 +40,15 @@
 		<PackageReference Include="NBitcoin" Version="7.0.25" />
 		<PackageReference Include="nClam" Version="7.0.0" />
 		<PackageReference Include="Npgsql" Version="7.0.2" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.1" />
 		<PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
 		<PackageReference Include="Seq.Extensions.Logging" Version="6.1.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.6.104" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<!--<Protobuf Include="Services/Lightning/proto/*.proto" GrpcServices="Client" ProtoRoot="Services/Lightning/proto" />-->
 	</ItemGroup>
 	<ItemGroup>
 		<!-- Don't publish the SPA source files, but do show them in the project files list -->
@@ -61,27 +73,13 @@
 	  <Compile Remove="Pages\EmailCode.cshtml.cs" />
 	</ItemGroup>
 
-	<Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
-		<!-- Ensure Node.js is installed -->
-		<Exec Command="node --version" ContinueOnError="true">
-			<Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
-		</Exec>
-		<Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
-		<Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
-		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn install" />
-	</Target>
-
-	<Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish" Condition="'$(HostSPA)' == 'True'">
-		<!-- As part of publishing, ensure the JS resources are freshly built in production mode -->
-		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn install" />
-		<Exec WorkingDirectory="$(SpaRoot)" Command="npx yarn build" />
-	</Target>
-	<Target Name="IncludeBuildFiles" AfterTargets="PublishRunWebpack" Condition="'$(HostSPA)' == 'True'">
+	<Target Name="IncludeBuildFiles" AfterTargets="ComputeFilesToPublish">
 		<ItemGroup>
 			<_CopyItems Include="$(SpaRoot)build\**\*.*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" />
 	</Target>
+	
 	<ItemGroup>
 		<AssemblyMetadata Include="%(AssemblyMetadataCommand.Identity)">
 			<Value>$(Value)</Value>
@@ -91,6 +89,9 @@
 			<_Parameter2>$([System.DateTime]::UtcNow.ToBinary())</_Parameter2>
 		</AssemblyAttributes>
 		<Compile Include="$(IntermediateOutputPath)\build_date.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Migrations\" />
 	</ItemGroup>
 	<Target Name="GetBuildDate" BeforeTargets="CoreCompile">
 		<WriteCodeFragment Language="C#" OutputFile="$(IntermediateOutputPath)\build_date.cs" AssemblyAttributes="@(AssemblyAttributes)" />

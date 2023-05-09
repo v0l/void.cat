@@ -6,8 +6,9 @@ using Amazon.Runtime;
 using Amazon.S3;
 using BencodeNET.Objects;
 using BencodeNET.Torrents;
+using VoidCat.Database;
 using VoidCat.Model.Exceptions;
-using VoidCat.Model.User;
+using File = VoidCat.Database.File;
 
 namespace VoidCat.Model;
 
@@ -82,7 +83,7 @@ public static class Extensions
         return !string.IsNullOrEmpty(h.Value.ToString()) ? h.Value.ToString() : default;
     }
 
-    public static bool CanEdit(this SecretFileMeta file, Guid? editSecret)
+    public static bool CanEdit(this File file, Guid? editSecret)
     {
         return file.EditSecret == editSecret;
     }
@@ -231,12 +232,15 @@ public static class Extensions
     /// <param name="password"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public static bool CheckPassword(this InternalUser vu, string password)
+    public static bool CheckPassword(this Database.User vu, string password)
     {
-        if (vu.AuthType != AuthType.Internal)
+        if (vu.AuthType != UserAuthType.Internal)
             throw new InvalidOperationException("User type is not internal, cannot check password!");
 
-        var hashParts = vu.Password.Split(":");
+        if (string.IsNullOrEmpty(vu.Password))
+            throw new InvalidOperationException("User password is not set");
+
+        var hashParts = vu.Password!.Split(":");
         return vu.Password == password.Hash(hashParts[0], hashParts.Length == 3 ? hashParts[1] : null);
     }
 
@@ -245,7 +249,7 @@ public static class Extensions
     /// </summary>
     /// <param name="oldMeta"></param>
     /// <param name="meta"></param>
-    public static void Patch(this FileMeta oldMeta, FileMeta meta)
+    public static void Patch(this File oldMeta, File meta)
     {
         oldMeta.Description = meta.Description ?? oldMeta.Description;
         oldMeta.Name = meta.Name ?? oldMeta.Name;
@@ -276,13 +280,14 @@ public static class Extensions
     public static bool HasGoogle(this VoidSettings settings)
         => settings.Google != null;
 
-    public static async Task<Torrent> MakeTorrent(this FileMeta meta, Stream fileStream, Uri baseAddress, List<string> trackers)
+    public static async Task<Torrent> MakeTorrent(this VoidFileMeta meta, Guid id, Stream fileStream, Uri baseAddress,
+        List<string> trackers)
     {
         const int pieceSize = 262_144;
         const int pieceHashLen = 20;
         var webSeed = new UriBuilder(baseAddress)
         {
-            Path = $"/d/{meta.Id.ToBase58()}"
+            Path = $"/d/{id.ToBase58()}"
         };
 
         async Task<byte[]> BuildPieces()
@@ -310,7 +315,7 @@ public static class Extensions
                 FileSize = (long)meta.Size
             },
             Comment = meta.Name,
-            CreationDate = meta.Uploaded.UtcDateTime,
+            CreationDate = meta.Uploaded,
             IsPrivate = false,
             PieceSize = pieceSize,
             Pieces = await BuildPieces(),
@@ -323,5 +328,73 @@ public static class Extensions
         };
 
         return t;
+    }
+
+    public static VoidFileResponse ToResponse(this File f, bool withEditSecret)
+    {
+        return new()
+        {
+            Id = f.Id,
+            Metadata = f.ToMeta(withEditSecret)
+        };
+    }
+
+    public static VoidFileMeta ToMeta(this File f, bool withEditSecret)
+    {
+        return new()
+        {
+            Name = f.Name,
+            Description = f.Description,
+            Uploaded = f.Uploaded,
+            MimeType = f.MimeType,
+            Size = f.Size,
+            Digest = f.Digest,
+            Expires = f.Expires,
+            EditSecret = withEditSecret ? f.EditSecret : null,
+            Storage = f.Storage,
+            EncryptionParams = f.EncryptionParams,
+            MagnetLink = f.MagnetLink
+        };
+    }
+
+    public static ApiUser ToApiUser(this User u, bool isSelf)
+    {
+        return new()
+        {
+            Id = u.Id,
+            Name = u.DisplayName,
+            Avatar = u.Avatar,
+            Created = u.Created,
+            NeedsVerification = isSelf ? !u.Flags.HasFlag(UserFlags.EmailVerified) : null,
+            PublicProfile = u.Flags.HasFlag(UserFlags.PublicProfile),
+            PublicUploads = u.Flags.HasFlag(UserFlags.PublicUploads),
+            Roles = u.Roles.Select(a => a.Role).ToList()
+        };
+    }
+
+    public static AdminApiUser ToAdminApiUser(this User u, bool isSelf)
+    {
+        return new()
+        {
+            Id = u.Id,
+            Name = u.DisplayName,
+            Avatar = u.Avatar,
+            Created = u.Created,
+            NeedsVerification = isSelf ? !u.Flags.HasFlag(UserFlags.EmailVerified) : null,
+            PublicProfile = u.Flags.HasFlag(UserFlags.PublicProfile),
+            PublicUploads = u.Flags.HasFlag(UserFlags.PublicUploads),
+            Roles = u.Roles.Select(a => a.Role).ToList(),
+            Storage = u.Storage,
+            Email = u.Email
+        };
+    }
+    public static VirusStatus ToVirusStatus(this VirusScanResult r)
+    {
+        return new()
+        {
+            ScanTime = r.ScanTime,
+            IsVirus = r.Score > 0.7m,
+            Names = r.Names
+        };
     }
 }

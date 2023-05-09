@@ -1,4 +1,4 @@
-﻿using VoidCat.Model;
+﻿using VoidCat.Database;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.VirusScanner;
@@ -14,13 +14,13 @@ public class CacheVirusScanStore : BasicCacheStore<VirusScanResult>, IVirusScanS
     public override async ValueTask Add(Guid id, VirusScanResult obj)
     {
         await base.Add(id, obj);
-        await _cache.AddToList(MapFilesKey(id), obj.Id.ToString());
+        await Cache.AddToList(MapFilesKey(id), obj.Id.ToString());
     }
 
     /// <inheritdoc />
     public async ValueTask<VirusScanResult?> GetByFile(Guid id)
     {
-        var scans = await _cache.GetList(MapFilesKey(id));
+        var scans = await Cache.GetList(MapFilesKey(id));
         if (scans.Length > 0)
         {
             return await Get(Guid.Parse(scans.Last()));

@@ -9,13 +9,13 @@ namespace VoidCat.Services.Files;
 /// <inheritdoc cref="VoidCat.Services.Abstractions.IFileStore" />
 public class S3FileStore : StreamFileStore, IFileStore
 {
-    private readonly FileInfoManager _fileInfo;
+    private readonly IFileMetadataStore _fileInfo;
     private readonly AmazonS3Client _client;
     private readonly S3BlobConfig _config;
     private readonly IAggregateStatsCollector _statsCollector;
     private readonly ICache _cache;
 
-    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, FileInfoManager fileInfo, ICache cache) : base(stats)
+    public S3FileStore(S3BlobConfig settings, IAggregateStatsCollector stats, IFileMetadataStore fileInfo, ICache cache) : base(stats)
     {
         _fileInfo = fileInfo;
         _cache = cache;
@@ -28,7 +28,7 @@ public class S3FileStore : StreamFileStore, IFileStore
     public string Key => _config.Name;
 
     /// <inheritdoc />
-    public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
+    public async ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
         if (payload.IsMultipart) return await IngressMultipart(payload, cts);
 
@@ -75,15 +75,15 @@ public class S3FileStore : StreamFileStore, IFileStore
             Key = request.Id.ToString(),
             ResponseHeaderOverrides = new()
             {
-                ContentDisposition = $"inline; filename=\"{meta?.Metadata?.Name}\"",
-                ContentType = meta?.Metadata?.MimeType
+                ContentDisposition = $"inline; filename=\"{meta?.Name}\"",
+                ContentType = meta?.MimeType
             }
         });
 
         return new(new Uri(url));
     }
 
-    public async ValueTask<PagedResult<PublicVoidFile>> ListFiles(PagedRequest request)
+    public async ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
     {
         try
         {
@@ -103,7 +103,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 _ => objs.S3Objects.AsEnumerable()
             };
 
-            async IAsyncEnumerable<PublicVoidFile> EnumerateFiles(IEnumerable<S3Object> page)
+            async IAsyncEnumerable<Database.File> EnumerateFiles(IEnumerable<S3Object> page)
             {
                 foreach (var item in page)
                 {
@@ -133,7 +133,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 Page = request.Page,
                 PageSize = request.PageSize,
                 TotalResults = 0,
-                Results = AsyncEnumerable.Empty<PublicVoidFile>()
+                Results = AsyncEnumerable.Empty<Database.File>()
             };
         }
     }
@@ -163,7 +163,7 @@ public class S3FileStore : StreamFileStore, IFileStore
         return obj.ResponseStream;
     }
 
-    private async Task<PrivateVoidFile> IngressMultipart(IngressPayload payload, CancellationToken cts)
+    private async Task<Database.File> IngressMultipart(IngressPayload payload, CancellationToken cts)
     {
         string? uploadId = null;
         var cacheKey = $"s3:{_config.Name}:multipart-upload-id:{payload.Id}";

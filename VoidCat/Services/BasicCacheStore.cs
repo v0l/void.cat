@@ -5,29 +5,29 @@ namespace VoidCat.Services;
 /// <inheritdoc />
 public abstract class BasicCacheStore<TStore> : IBasicStore<TStore>
 {
-    protected readonly ICache _cache;
+    protected readonly ICache Cache;
 
     protected BasicCacheStore(ICache cache)
     {
-        _cache = cache;
+        Cache = cache;
     }
 
     /// <inheritdoc />
     public virtual ValueTask<TStore?> Get(Guid id)
     {
-        return _cache.Get<TStore>(MapKey(id));
+        return Cache.Get<TStore>(MapKey(id));
     }
 
     /// <inheritdoc />
     public virtual ValueTask Add(Guid id, TStore obj)
     {
-        return _cache.Set(MapKey(id), obj);
+        return Cache.Set(MapKey(id), obj);
     }
 
     /// <inheritdoc />
     public virtual ValueTask Delete(Guid id)
     {
-        return _cache.Delete(MapKey(id));
+        return Cache.Delete(MapKey(id));
     }
 
     /// <summary>

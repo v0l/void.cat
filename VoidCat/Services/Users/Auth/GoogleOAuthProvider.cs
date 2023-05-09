@@ -1,6 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 
 namespace VoidCat.Services.Users.Auth;
 
@@ -18,7 +18,7 @@ public class GoogleOAuthProvider : GenericOAuth2Service
     public override string Id => "google";
 
     /// <inheritdoc />
-    public override ValueTask<InternalUser?> GetUserDetails(UserAuthToken token)
+    public override ValueTask<User?> GetUserDetails(UserAuthToken token)
     {
         var jwt = new JwtSecurityToken(token.IdToken);
 
@@ -27,14 +27,14 @@ public class GoogleOAuthProvider : GenericOAuth2Service
                 ? v as string
                 : default;
 
-        return ValueTask.FromResult(new InternalUser()
+        return ValueTask.FromResult(new User()
         {
             Id = Guid.NewGuid(),
-            Created = DateTimeOffset.UtcNow,
-            LastLogin = DateTimeOffset.UtcNow,
-            AuthType = AuthType.OAuth2,
+            Created = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow,
+            AuthType = UserAuthType.OAuth2,
             Email = GetPayloadValue("email") ?? throw new InvalidOperationException("Failed to get email from Google JWT"),
-            DisplayName = GetPayloadValue("name"),
+            DisplayName = GetPayloadValue("name") ?? "void user",
             Avatar = GetPayloadValue("picture")
         })!;
     }

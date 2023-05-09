@@ -1,4 +1,4 @@
-using VoidCat.Model.Payments;
+using VoidCat.Database;
 
 namespace VoidCat.Services.Abstractions;
 
@@ -12,12 +12,12 @@ public interface IPaymentProvider
     /// </summary>
     /// <param name="file"></param>
     /// <returns></returns>
-    ValueTask<PaymentOrder?> CreateOrder(PaymentConfig file);
+    ValueTask<PaywallOrder?> CreateOrder(Paywall file);
 
     /// <summary>
     /// Get the status of an existing order with the provider
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    ValueTask<PaymentOrder?> GetOrderStatus(Guid id);
+    ValueTask<PaywallOrder?> GetOrderStatus(Guid id);
 }

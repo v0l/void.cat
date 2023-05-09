@@ -1,4 +1,4 @@
-﻿using VoidCat.Model.User;
+﻿using VoidCat.Database;
 
 namespace VoidCat.Services.Abstractions;
 
@@ -30,5 +30,5 @@ public interface IOAuthProvider
     /// </summary>
     /// <param name="token"></param>
     /// <returns></returns>
-    ValueTask<InternalUser?> GetUserDetails(UserAuthToken token);
+    ValueTask<User?> GetUserDetails(UserAuthToken token);
 }

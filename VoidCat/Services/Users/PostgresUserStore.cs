@@ -1,6 +1,6 @@
-﻿using Dapper;
+﻿using Microsoft.EntityFrameworkCore;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -8,129 +8,84 @@ namespace VoidCat.Services.Users;
 /// <inheritdoc />
 public class PostgresUserStore : IUserStore
 {
-    private readonly PostgresConnectionFactory _connection;
+    private readonly VoidContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public PostgresUserStore(PostgresConnectionFactory connection)
+    public PostgresUserStore(VoidContext db, IServiceScopeFactory scopeFactory)
     {
-        _connection = connection;
+        _db = db;
+        _scopeFactory = scopeFactory;
     }
 
     /// <inheritdoc />
     public async ValueTask<User?> Get(Guid id)
     {
-        return await Get<PublicUser>(id);
+        return await _db.Users
+            .AsNoTracking()
+            .Include(a => a.Roles)
+            .SingleOrDefaultAsync(a => a.Id == id);
     }
 
     /// <inheritdoc />
-    public async ValueTask<InternalUser?> GetPrivate(Guid id)
+    public async ValueTask Add(User obj)
     {
-        return await Get<InternalUser>(id);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Set(Guid id, InternalUser obj)
-    {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"insert into 
-""Users""(""Id"", ""Email"", ""Password"", ""Created"", ""LastLogin"", ""DisplayName"", ""Avatar"", ""Flags"", ""AuthType"") 
-values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :flags, :authType)",
-            new
-            {
-                Id = id,
-                email = obj.Email,
-                password = obj.Password,
-                created = obj.Created,
-                displayName = obj.DisplayName,
-                lastLogin = obj.LastLogin.ToUniversalTime(),
-                avatar = obj.Avatar,
-                flags = (int)obj.Flags,
-                authType = (int)obj.AuthType
-            });
-
-        if (obj.Roles.Any(a => a != Roles.User))
-        {
-            foreach (var r in obj.Roles.Where(a => a != Roles.User))
-            {
-                await conn.ExecuteAsync(
-                    @"insert into ""UserRoles""(""User"", ""Role"") values(:user, :role)",
-                    new {user = obj.Id, role = r});
-            }
-        }
+        _db.Users.Add(obj);
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"delete from ""Users"" where ""Id"" = :id", new {id});
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<T?> Get<T>(Guid id) where T : User
-    {
-        await using var conn = await _connection.Get();
-        var user = await conn.QuerySingleOrDefaultAsync<T?>(@"select * from ""Users"" where ""Id"" = :id",
-            new {id});
-
-        if (user != default)
-        {
-            var roles = await conn.QueryAsync<string>(
-                @"select ""Role"" from ""UserRoles"" where ""User"" = :id",
-                new {id});
-
-            foreach (var r in roles)
-            {
-                user.Roles.Add(r);
-            }
-        }
-
-        return user;
+        await _db.Users
+            .Where(a => a.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask<Guid?> LookupUser(string email)
     {
-        await using var conn = await _connection.Get();
-        return await conn.QuerySingleOrDefaultAsync<Guid?>(
-            @"select ""Id"" from ""Users"" where ""Email"" = :email",
-            new {email});
+        return await _db.Users
+            .AsNoTracking()
+            .Where(a => a.Email == email)
+            .Select(a => a.Id)
+            .SingleOrDefaultAsync();
     }
 
     /// <inheritdoc />
-    public async ValueTask<PagedResult<PrivateUser>> ListUsers(PagedRequest request)
+    public async ValueTask<PagedResult<User>> ListUsers(PagedRequest request)
     {
-        await using var conn = await _connection.Get();
-        var totalUsers = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Users""");
+        var totalUsers = await _db.Users.CountAsync();
 
-        async IAsyncEnumerable<PrivateUser> Enumerate()
+        async IAsyncEnumerable<User> Enumerate()
         {
-            var orderBy = request.SortBy switch
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
+            var q = db.Users.AsNoTracking().AsQueryable();
+            switch (request.SortBy, request.SortOrder)
             {
-                PagedSortBy.Date => "Created",
-                PagedSortBy.Name => "DisplayName",
-                _ => "Id"
-            };
+                case (PagedSortBy.Id, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Id);
+                    break;
+                case (PagedSortBy.Id, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Id);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.DisplayName);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.DisplayName);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Created);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Created);
+                    break;
+            }
 
-            var sortBy = request.SortOrder switch
+            await foreach (var r in q.Skip(request.Page * request.PageSize).Take(request.PageSize).AsAsyncEnumerable())
             {
-                PageSortOrder.Dsc => "desc",
-                _ => "asc"
-            };
-
-            await using var iconn = await _connection.Get();
-            var users = await iconn.ExecuteReaderAsync(
-                $@"select * from ""Users"" order by ""{orderBy}"" {sortBy} offset :offset limit :limit",
-                new
-                {
-                    offset = request.PageSize * request.Page,
-                    limit = request.PageSize
-                });
-
-            var rowParser = users.GetRowParser<PrivateUser>();
-            while (await users.ReadAsync())
-            {
-                yield return rowParser(users);
+                yield return r;
             }
         }
 
@@ -144,43 +99,42 @@ values(:id, :email, :password, :created, :lastLogin, :displayName, :avatar, :fla
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateProfile(PublicUser newUser)
+    public async ValueTask UpdateProfile(User newUser)
     {
-        var oldUser = await Get<InternalUser>(newUser.Id);
-        if (oldUser == null) return;
+        var u = await _db.Users
+            .FindAsync(newUser.Id);
 
-        var emailFlag = oldUser.Flags.HasFlag(UserFlags.EmailVerified) ? UserFlags.EmailVerified : 0;
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"update ""Users"" set ""DisplayName"" = :displayName, ""Avatar"" = :avatar, ""Flags"" = :flags where ""Id"" = :id",
-            new
-            {
-                id = newUser.Id,
-                displayName = newUser.DisplayName,
-                avatar = newUser.Avatar,
-                flags = newUser.Flags | emailFlag
-            });
+        if (u == null) return;
+
+        var emailFlag = u.Flags.HasFlag(UserFlags.EmailVerified) ? UserFlags.EmailVerified : 0;
+        u.DisplayName = newUser.DisplayName;
+        u.Avatar = newUser.Avatar;
+        u.Flags = newUser.Flags | emailFlag;
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask UpdateLastLogin(Guid id, DateTime timestamp)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"update ""Users"" set ""LastLogin"" = :timestamp where ""Id"" = :id",
-            new {id, timestamp});
+        var u = await _db.Users
+            .FindAsync(id);
+
+        if (u == null) return;
+
+        u.LastLogin = timestamp;
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public async ValueTask AdminUpdateUser(PrivateUser user)
+    public async ValueTask AdminUpdateUser(User user)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"update ""Users"" set ""Email"" = :email, ""Storage"" = :storage where ""Id"" = :id",
-            new
-            {
-                id = user.Id,
-                email = user.Email,
-                storage = user.Storage
-            });
+        var u = await _db.Users
+            .FindAsync(user.Id);
+
+        if (u == null) return;
+
+        u.Email = user.Email;
+        u.Storage = user.Storage;
+        await _db.SaveChangesAsync();
     }
 }

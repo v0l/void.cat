@@ -1,4 +1,5 @@
 ﻿using VoidCat.Model;
+using File = VoidCat.Database.File;
 
 namespace VoidCat.Services.Abstractions;
 
@@ -18,7 +19,7 @@ public interface IFileStore
     /// <param name="payload"></param>
     /// <param name="cts"></param>
     /// <returns></returns>
-    ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts);
+    ValueTask<File> Ingress(IngressPayload payload, CancellationToken cts);
 
     /// <summary>
     /// Egress a file from the system (Download)

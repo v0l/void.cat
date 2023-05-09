@@ -1,4 +1,4 @@
-using VoidCat.Model.Payments;
+using VoidCat.Database;
 
 namespace VoidCat.Services.Abstractions;
 
@@ -12,5 +12,5 @@ public interface IPaymentFactory
     /// </summary>
     /// <param name="svc"></param>
     /// <returns></returns>
-    ValueTask<IPaymentProvider> CreateProvider(PaymentServices svc);
+    ValueTask<IPaymentProvider> CreateProvider(PaywallService svc);
 }

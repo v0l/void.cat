@@ -40,14 +40,16 @@ public class IndexController : Controller
         var jsonManifest = await System.IO.File.ReadAllTextAsync(manifestPath);
         return View("~/Pages/Index.cshtml", new IndexModel
         {
-            Meta = await _fileMetadata.Get(gid),
+            Id = gid,
+            Meta = (await _fileMetadata.Get(gid))?.ToMeta(false),
             Manifest = JsonConvert.DeserializeObject<AssetManifest>(jsonManifest)!
         });
     }
 
     public class IndexModel
     {
-        public FileMeta? Meta { get; init; }
+        public Guid Id { get; init; }
+        public VoidFileMeta? Meta { get; init; }
 
         public AssetManifest Manifest { get; init; }
     }

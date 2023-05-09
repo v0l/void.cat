@@ -4,8 +4,8 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Users;
 
@@ -57,7 +57,7 @@ public class AuthController : Controller
             var user = await _manager.Login(req.Username, req.Password);
             var token = CreateToken(user, DateTime.UtcNow.AddHours(12));
             var tokenWriter = new JwtSecurityTokenHandler();
-            return new(tokenWriter.WriteToken(token), Profile: user.ToPublic());
+            return new(tokenWriter.WriteToken(token), Profile: user.ToApiUser(true));
         }
         catch (Exception ex)
         {
@@ -91,7 +91,7 @@ public class AuthController : Controller
             var newUser = await _manager.Register(req.Username, req.Password);
             var token = CreateToken(newUser, DateTime.UtcNow.AddHours(12));
             var tokenWriter = new JwtSecurityTokenHandler();
-            return new(tokenWriter.WriteToken(token), Profile: newUser.ToPublic());
+            return new(tokenWriter.WriteToken(token), Profile: newUser.ToApiUser(true));
         }
         catch (Exception ex)
         {
@@ -189,7 +189,7 @@ public class AuthController : Controller
             new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
         };
 
-        claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a)));
+        claims.AddRange(user.Roles.Select(a => new Claim(ClaimTypes.Role, a.Role)));
 
         return new JwtSecurityToken(_settings.JwtSettings.Issuer, claims: claims,
             signingCredentials: credentials);
@@ -210,7 +210,7 @@ public class AuthController : Controller
         public string? Captcha { get; init; }
     }
 
-    public sealed record LoginResponse(string? Jwt, string? Error = null, User? Profile = null);
+    public sealed record LoginResponse(string? Jwt, string? Error = null, ApiUser? Profile = null);
 
     public sealed record CreateApiKeyRequest(DateTime Expiry);
 }

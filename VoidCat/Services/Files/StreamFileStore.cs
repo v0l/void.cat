@@ -31,7 +31,7 @@ public abstract class StreamFileStore
         }
     }
 
-    protected async ValueTask<PrivateVoidFile> IngressToStream(Stream outStream, IngressPayload payload,
+    protected async ValueTask<Database.File> IngressToStream(Stream outStream, IngressPayload payload,
         CancellationToken cts)
     {
         var id = payload.Id;
@@ -48,13 +48,14 @@ public abstract class StreamFileStore
         return HandleCompletedUpload(payload, total);
     }
 
-    protected PrivateVoidFile HandleCompletedUpload(IngressPayload payload, ulong totalSize)
+    protected Database.File HandleCompletedUpload(IngressPayload payload, ulong totalSize)
     {
         var meta = payload.Meta;
         if (payload.IsAppend)
         {
             meta = meta with
             {
+                Id = payload.Id,
                 Size = meta.Size + totalSize
             };
         }
@@ -62,19 +63,14 @@ public abstract class StreamFileStore
         {
             meta = meta with
             {
-                Uploaded = DateTimeOffset.UtcNow,
+                Id = payload.Id,
+                Uploaded = DateTime.UtcNow,
                 EditSecret = Guid.NewGuid(),
                 Size = totalSize
             };
         }
 
-        var vf = new PrivateVoidFile()
-        {
-            Id = payload.Id,
-            Metadata = meta
-        };
-
-        return vf;
+        return meta;
     }
 
     private async Task<ulong> IngressInternal(Guid id, Stream ingress, Stream outStream,

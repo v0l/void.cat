@@ -29,8 +29,9 @@ public class VirusScannerService : BackgroundService
             var page = 0;
             while (true)
             {
-                var files = await _fileStore.ListFiles<FileMeta>(new(page, 1_000));
+                var files = await _fileStore.ListFiles(new(page, 1_000));
                 if (files.Pages < page) break;
+
                 page++;
 
                 await foreach (var file in files.Results.WithCancellation(stoppingToken))
@@ -46,8 +47,7 @@ public class VirusScannerService : BackgroundService
                         {
                             var result = await _scanner.ScanFile(file.Id, stoppingToken);
                             await _scanStore.Add(result.Id, result);
-                            _logger.LogInformation("Scanned file {Id}, IsVirus = {Result}", result.File,
-                                result.IsVirus);
+                            _logger.LogInformation("Scanned file {Id}, IsVirus = {Result}", result.File, result.Score);
                         }
                         catch (RateLimitedException rx)
                         {

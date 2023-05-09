@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.StaticFiles;
 using Newtonsoft.Json;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.Payments;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
+using File = VoidCat.Database.File;
 
 namespace VoidCat.Controllers
 {
@@ -63,6 +63,7 @@ namespace VoidCat.Controllers
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
                 }
+
                 var uid = HttpContext.GetUserId();
                 var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
@@ -86,14 +87,14 @@ namespace VoidCat.Controllers
                 var store = _settings.DefaultFileStore;
                 if (uid.HasValue)
                 {
-                    var user = await _userStore.Get<InternalUser>(uid.Value);
+                    var user = await _userStore.Get(uid.Value);
                     if (user?.Storage != default)
                     {
                         store = user.Storage!;
                     }
                 }
 
-                var meta = new SecretFileMeta
+                var meta = new File
                 {
                     MimeType = mime,
                     Name = filename,
@@ -109,7 +110,7 @@ namespace VoidCat.Controllers
                     HttpContext.RequestAborted);
 
                 // save metadata
-                await _metadata.Set(vf.Id, vf.Metadata!);
+                await _metadata.Add(vf);
 
                 // attach file upload to user
                 if (uid.HasValue)
@@ -126,7 +127,7 @@ namespace VoidCat.Controllers
                     return Content(urlBuilder.Uri.ToString(), "text/plain");
                 }
 
-                return Json(UploadResult.Success(vf));
+                return Json(UploadResult.Success(vf.ToResponse(true)));
             }
             catch (Exception ex)
             {
@@ -158,8 +159,9 @@ namespace VoidCat.Controllers
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
                 }
+
                 var gid = id.FromBase58Guid();
-                var meta = await _metadata.Get<SecretFileMeta>(gid);
+                var meta = await _metadata.Get(gid);
                 if (meta == default) return UploadResult.Error("File not found");
 
                 // Parse V-Segment header
@@ -182,8 +184,8 @@ namespace VoidCat.Controllers
                 }, HttpContext.RequestAborted);
 
                 // update file size
-                await _metadata.Set(vf.Id, vf.Metadata!);
-                return UploadResult.Success(vf);
+                await _metadata.Update(vf.Id, vf);
+                return UploadResult.Success(vf.ToResponse(true));
             }
             catch (Exception ex)
             {
@@ -205,7 +207,10 @@ namespace VoidCat.Controllers
             var uid = HttpContext.GetUserId();
             var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
 
-            return isOwner ? Json(await _fileInfo.GetPrivate(fid)) : Json(await _fileInfo.Get(fid));
+            var info = await _fileInfo.Get(fid, isOwner);
+            if (info == default) return StatusCode(404);
+
+            return Json(info);
         }
 
         /// <summary>
@@ -232,10 +237,10 @@ namespace VoidCat.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{id}/payment")]
-        public async ValueTask<PaymentOrder?> CreateOrder([FromRoute] string id)
+        public async ValueTask<PaywallOrder?> CreateOrder([FromRoute] string id)
         {
             var gid = id.FromBase58Guid();
-            var file = await _fileInfo.Get(gid);
+            var file = await _fileInfo.Get(gid, false);
             var config = await _paymentStore.Get(gid);
 
             var provider = await _paymentFactory.CreateProvider(config!.Service);
@@ -250,7 +255,7 @@ namespace VoidCat.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{id}/payment/{order:guid}")]
-        public async ValueTask<PaymentOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
+        public async ValueTask<PaywallOrder?> GetOrderStatus([FromRoute] string id, [FromRoute] Guid order)
         {
             var gid = id.FromBase58Guid();
             var config = await _paymentStore.Get(gid);
@@ -270,17 +275,23 @@ namespace VoidCat.Controllers
         public async Task<IActionResult> SetPaymentConfig([FromRoute] string id, [FromBody] SetPaymentConfigRequest req)
         {
             var gid = id.FromBase58Guid();
-            var meta = await _metadata.Get<SecretFileMeta>(gid);
+            var meta = await _metadata.Get(gid);
             if (meta == default) return NotFound();
             if (!meta.CanEdit(req.EditSecret)) return Unauthorized();
 
-            if (req.Strike != default)
+            if (req.StrikeHandle != default)
             {
-                await _paymentStore.Add(gid, new StrikePaymentConfig()
+                await _paymentStore.Delete(gid);
+                await _paymentStore.Add(gid, new Paywall
                 {
-                    Service = PaymentServices.Strike,
-                    Handle = req.Strike.Handle,
-                    Cost = req.Strike.Cost,
+                    File = meta,
+                    Service = PaywallService.Strike,
+                    PaywallStrike = new()
+                    {
+                        Handle = req.StrikeHandle
+                    },
+                    Amount = req.Amount,
+                    Currency = Enum.Parse<PaywallCurrency>(req.Currency),
                     Required = req.Required
                 });
 
@@ -303,14 +314,21 @@ namespace VoidCat.Controllers
         /// </remarks>
         [HttpPost]
         [Route("{id}/meta")]
-        public async Task<IActionResult> UpdateFileMeta([FromRoute] string id, [FromBody] SecretFileMeta fileMeta)
+        public async Task<IActionResult> UpdateFileMeta([FromRoute] string id, [FromBody] VoidFileMeta fileMeta)
         {
             var gid = id.FromBase58Guid();
-            var meta = await _metadata.Get<SecretFileMeta>(gid);
+            var meta = await _metadata.Get(gid);
             if (meta == default) return NotFound();
             if (!meta.CanEdit(fileMeta.EditSecret)) return Unauthorized();
 
-            await _metadata.Update(gid, fileMeta);
+            await _metadata.Update(gid, new()
+            {
+                Name = fileMeta.Name,
+                Description = fileMeta.Description,
+                Expires = fileMeta.Expires,
+                MimeType = fileMeta.MimeType
+            });
+
             return Ok();
         }
 
@@ -349,9 +367,9 @@ namespace VoidCat.Controllers
         }
     }
 
-    public record UploadResult(bool Ok, PrivateVoidFile? File, string? ErrorMessage)
+    public record UploadResult(bool Ok, VoidFileResponse? File, string? ErrorMessage)
     {
-        public static UploadResult Success(PrivateVoidFile vf)
+        public static UploadResult Success(VoidFileResponse vf)
             => new(true, vf, null);
 
         public static UploadResult Error(string message)
@@ -363,7 +381,11 @@ namespace VoidCat.Controllers
         [JsonConverter(typeof(Base58GuidConverter))]
         public Guid EditSecret { get; init; }
 
-        public StrikePaymentConfig? Strike { get; init; }
+        public decimal Amount { get; init; }
+
+        public string Currency { get; init; } = null!;
+
+        public string? StrikeHandle { get; init; }
 
         public bool Required { get; init; }
     }

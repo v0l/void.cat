@@ -1,48 +1,35 @@
 ﻿using Newtonsoft.Json;
-using VoidCat.Model.Payments;
-using VoidCat.Model.User;
+using VoidCat.Database;
 
-namespace VoidCat.Model
+namespace VoidCat.Model;
+
+/// <summary>
+/// Primary response type for file information
+/// </summary>
+public class VoidFileResponse
 {
-    public abstract record VoidFile<TMeta> where TMeta : FileMeta
-    {
-        /// <summary>
-        /// Id of the file
-        /// </summary>
-        [JsonConverter(typeof(Base58GuidConverter))]
-        public Guid Id { get; init; }
+    [JsonConverter(typeof(Base58GuidConverter))]
+    public Guid Id { get; init; }
+    public VoidFileMeta Metadata { get; init; } = null!;
+    public Paywall? Payment { get; init; }
+    public ApiUser? Uploader { get; init; }
+    public Bandwidth? Bandwidth { get; init; }
+    public VirusStatus? VirusScan { get; init; }
+}
 
-        /// <summary>
-        /// Metadta related to the file
-        /// </summary>
-        public TMeta? Metadata { get; init; }
-        
-        /// <summary>
-        /// Optional payment config
-        /// </summary>
-        public PaymentConfig? Payment { get; init; }
-        
-        /// <summary>
-        /// User profile that uploaded the file
-        /// </summary>
-        public PublicUser? Uploader { get; init; }
-        
-        /// <summary>
-        /// Traffic stats for this file
-        /// </summary>
-        public Bandwidth? Bandwidth { get; init; }
-        
-        /// <summary>
-        /// Virus scanner results
-        /// </summary>
-        public VirusScanResult? VirusScan { get; init; }
-    }
-
-    public sealed record PublicVoidFile : VoidFile<FileMeta>
-    {
-    }
-
-    public sealed record PrivateVoidFile : VoidFile<SecretFileMeta>
-    {
-    }
+public class VoidFileMeta
+{
+    public string? Name { get; init; }
+    public ulong Size { get; init; }
+    public DateTime Uploaded { get; init; }
+    public string? Description { get; init; }
+    public string MimeType { get; init; }
+    public string? Digest { get; init; }
+    
+    [JsonConverter(typeof(Base58GuidConverter))]
+    public Guid? EditSecret { get; init; }
+    public DateTime? Expires { get; init; }
+    public string Storage { get; init; } = "local-disk";
+    public string? EncryptionParams { get; init; }
+    public string? MagnetLink { get; init; }
 }

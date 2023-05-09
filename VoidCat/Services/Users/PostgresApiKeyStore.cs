@@ -1,5 +1,5 @@
-using Dapper;
-using VoidCat.Model.User;
+using Microsoft.EntityFrameworkCore;
+using VoidCat.Database;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -7,53 +7,42 @@ namespace VoidCat.Services.Users;
 /// <inheritdoc />
 public class PostgresApiKeyStore : IApiKeyStore
 {
-    private readonly PostgresConnectionFactory _factory;
+    private readonly VoidContext _db;
 
-    public PostgresApiKeyStore(PostgresConnectionFactory factory)
+    public PostgresApiKeyStore(VoidContext db)
     {
-        _factory = factory;
+        _db = db;
     }
 
     /// <inheritdoc />
     public async ValueTask<ApiKey?> Get(Guid id)
     {
-        await using var conn = await _factory.Get();
-        return await conn.QuerySingleOrDefaultAsync<ApiKey>(@"select * from ""ApiKey"" where ""Id"" = :id", new {id});
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<ApiKey>> Get(Guid[] ids)
-    {
-        await using var conn = await _factory.Get();
-        return (await conn.QueryAsync<ApiKey>(@"select * from ""ApiKey"" where ""Id"" in :ids", new {ids})).ToList();
+        return await _db.ApiKeys
+            .AsNoTracking()
+            .SingleOrDefaultAsync(a => a.Id == id);
     }
 
     /// <inheritdoc />
     public async ValueTask Add(Guid id, ApiKey obj)
     {
-        await using var conn = await _factory.Get();
-        await conn.ExecuteAsync(@"insert into ""ApiKey""(""Id"", ""UserId"", ""Token"", ""Expiry"") 
-values(:id, :userId, :token, :expiry)", new
-        {
-            id = obj.Id,
-            userId = obj.UserId,
-            token = obj.Token,
-            expiry = obj.Expiry.ToUniversalTime()
-        });
+        _db.ApiKeys.Add(obj);
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await using var conn = await _factory.Get();
-        await conn.ExecuteAsync(@"delete from ""ApiKey"" where ""Id"" = :id", new {id});
+        await _db.ApiKeys
+            .Where(a => a.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<ApiKey>> ListKeys(Guid id)
     {
-        await using var conn = await _factory.Get();
-        return (await conn.QueryAsync<ApiKey>(@"select ""Id"", ""UserId"", ""Expiry"", ""Created"" from ""ApiKey"" where ""UserId"" = :id", new {id}))
-            .ToList();
+        return await _db.ApiKeys
+            .AsNoTracking()
+            .Where(a => a.UserId == id)
+            .ToArrayAsync();
     }
 }

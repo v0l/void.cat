@@ -1,4 +1,5 @@
 ﻿using nClam;
+using VoidCat.Database;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
@@ -37,7 +38,7 @@ public class ClamAvScanner : IVirusScanner
         return new()
         {
             Id = Guid.NewGuid(),
-            File = id,
+            FileId = id,
             Score = result.Result == ClamScanResults.VirusDetected ? 1m : 0m,
             Names = string.Join(",", result.InfectedFiles?.Select(a => a.VirusName.Trim()) ?? Array.Empty<string>()),
             Scanner = "ClamAV"

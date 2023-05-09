@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
+using UserFlags = VoidCat.Database.UserFlags;
 
 namespace VoidCat.Controllers;
 
@@ -41,18 +42,11 @@ public class UserController : Controller
         if (isMe && !loggedUser.HasValue) return Unauthorized();
 
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
-        if (loggedUser == requestedId)
-        {
-            var pUser = await _store.Get<PrivateUser>(requestedId);
-            if (pUser == default) return NotFound();
+        var user = await _store.Get(requestedId);
+        if (loggedUser != requestedId && !(user?.Flags.HasFlag(UserFlags.PublicProfile) ?? false))
+            return NotFound();
 
-            return Json(pUser);
-        }
-
-        var user = await _store.Get<PublicUser>(requestedId);
-        if (!(user?.Flags.HasFlag(UserFlags.PublicProfile) ?? false)) return NotFound();
-
-        return Json(user);
+        return Json(user!.ToApiUser(isMe));
     }
 
     /// <summary>
@@ -63,14 +57,20 @@ public class UserController : Controller
     /// <param name="user"></param>
     /// <returns></returns>
     [HttpPost]
-    public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] PublicUser user)
+    public async Task<IActionResult> UpdateUser([FromRoute] string id, [FromBody] ApiUser user)
     {
         var loggedUser = await GetAuthorizedUser(id);
         if (loggedUser == default) return Unauthorized();
 
         if (!loggedUser.Flags.HasFlag(UserFlags.EmailVerified)) return Forbid();
 
-        await _store.UpdateProfile(user);
+        loggedUser.Avatar = user.Avatar;
+        loggedUser.DisplayName = user.Name ?? "void user";
+        loggedUser.Flags = UserFlags.EmailVerified | (user.PublicProfile ? UserFlags.PublicProfile : 0) |
+                           (user.PublicUploads ? UserFlags.PublicUploads : 0);
+
+        await _store.UpdateProfile(loggedUser);
+
         return Ok();
     }
 
@@ -102,13 +102,13 @@ public class UserController : Controller
 
         var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
         var files = await results.Results.ToListAsync();
-        var fileInfo = await Task.WhenAll(files.Select(a => _fileInfoManager.Get(a).AsTask()));
-        return Json(new RenderedResults<PublicVoidFile>()
+        var fileInfo = await _fileInfoManager.Get(files.ToArray(), false);
+        return Json(new RenderedResults<VoidFileResponse>()
         {
             PageSize = results.PageSize,
             Page = results.Page,
             TotalResults = results.TotalResults,
-            Results = fileInfo.Where(a => a != null).ToList()!
+            Results = fileInfo.ToList()
         });
     }
 
@@ -148,21 +148,21 @@ public class UserController : Controller
         if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
 
         user.Flags |= UserFlags.EmailVerified;
-        await _store.UpdateProfile(user.ToPublic());
+        await _store.UpdateProfile(user);
         return Accepted();
     }
 
-    private async Task<InternalUser?> GetAuthorizedUser(string id)
+    private async Task<User?> GetAuthorizedUser(string id)
     {
         var loggedUser = HttpContext.GetUserId();
         var gid = id.FromBase58Guid();
-        var user = await _store.Get<InternalUser>(gid);
+        var user = await _store.Get(gid);
         return user?.Id != loggedUser ? default : user;
     }
 
-    private async Task<InternalUser?> GetRequestedUser(string id)
+    private async Task<User?> GetRequestedUser(string id)
     {
         var gid = id.FromBase58Guid();
-        return await _store.Get<InternalUser>(gid);
+        return await _store.Get(gid);
     }
 }

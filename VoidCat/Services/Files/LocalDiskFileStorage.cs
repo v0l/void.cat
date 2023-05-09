@@ -42,7 +42,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
     public string Key => "local-disk";
 
     /// <inheritdoc />
-    public async ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
+    public async ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var finalPath = MapPath(payload.Id);
         await using var fsTemp = new FileStream(finalPath,
@@ -53,7 +53,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         if (payload.ShouldStripMetadata && payload.Segment == payload.TotalSegments)
         {
             fsTemp.Close();
-            var ext = Path.GetExtension(vf.Metadata!.Name);
+            var ext = Path.GetExtension(vf.Name);
             var srcPath = $"{finalPath}_orig{ext}";
             File.Move(finalPath, srcPath);
 
@@ -69,12 +69,9 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
                 var hash = await SHA256.Create().ComputeHashAsync(fInfo.OpenRead(), cts);
                 vf = vf with
                 {
-                    Metadata = vf.Metadata! with
-                    {
-                        Size = (ulong)fInfo.Length,
-                        Digest = hash.ToHex(),
-                        MimeType = res.MimeType ?? vf.Metadata.MimeType
-                    }
+                    Size = (ulong)fInfo.Length,
+                    Digest = hash.ToHex(),
+                    MimeType = res.MimeType ?? vf.MimeType
                 };
             }
             else
@@ -86,7 +83,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
         if (payload.Segment == payload.TotalSegments)
         {
-            var t = await vf.Metadata!.MakeTorrent(
+            var t = await vf.ToMeta(false).MakeTorrent(vf.Id,
                 new FileStream(finalPath, FileMode.Open),
                 _settings.SiteUrl,
                 _settings.TorrentTrackers);
@@ -94,7 +91,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             var ub = new UriBuilder(_settings.SiteUrl);
             ub.Path = $"/d/{vf.Id.ToBase58()}.torrent";
 
-            vf.Metadata!.MagnetLink = $"{t.GetMagnetLink()}&xs={Uri.EscapeDataString(ub.ToString())}";
+            vf.MagnetLink = $"{t.GetMagnetLink()}&xs={Uri.EscapeDataString(ub.ToString())}";
         }
 
         return vf;

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -34,16 +34,16 @@ public class AdminController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("file")]
-    public async Task<RenderedResults<PublicVoidFile>> ListFiles([FromBody] PagedRequest request)
+    public async Task<RenderedResults<VoidFileResponse>> ListFiles([FromBody] PagedRequest request)
     {
-        var files = await _fileMetadata.ListFiles<FileMeta>(request);
+        var files = await _fileMetadata.ListFiles(request);
 
         return new()
         {
             Page = files.Page,
             PageSize = files.PageSize,
             TotalResults = files.TotalResults,
-            Results = (await files.Results.SelectAwait(a => _fileInfo.Get(a.Id)).ToListAsync())!
+            Results = (await files.Results.SelectAwait(a => _fileInfo.Get(a.Id, false)).ToListAsync())!
         };
     }
 
@@ -74,7 +74,7 @@ public class AdminController : Controller
         var ret = await result.Results.SelectAwait(async a =>
         {
             var uploads = await _userUploads.ListFiles(a.Id, new(0, int.MaxValue));
-            return new AdminListedUser(a, uploads.TotalResults);
+            return new AdminListedUser(a.ToAdminApiUser(true), uploads.TotalResults);
         }).ToListAsync();
 
         return new()
@@ -93,14 +93,27 @@ public class AdminController : Controller
     /// <returns></returns>
     [HttpPost]
     [Route("update-user")]
-    public async Task<IActionResult> UpdateUser([FromBody] PrivateUser user)
+    public async Task<IActionResult> UpdateUser([FromBody] AdminUpdateUser user)
     {
         var oldUser = await _userStore.Get(user.Id);
         if (oldUser == default) return BadRequest();
 
-        await _userStore.AdminUpdateUser(user);
+        oldUser.Storage = user.Storage;
+        oldUser.Email = user.Email;
+        
+        await _userStore.AdminUpdateUser(oldUser);
         return Ok();
     }
 
-    public record AdminListedUser(PrivateUser User, int Uploads);
+    public record AdminListedUser(AdminApiUser User, int Uploads);
+
+    public class AdminUpdateUser
+    {
+        [JsonConverter(typeof(Base58GuidConverter))]
+        public Guid Id { get; init; }
+
+        public string Email { get; init; } = null!;
+
+        public string Storage { get; init; } = null!;
+    }
 }

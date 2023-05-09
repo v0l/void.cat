@@ -127,6 +127,11 @@ namespace VoidCat.Model
             "udp://tracker.openbittorrent.com:6969/announce",
             "http://tracker.openbittorrent.com:80/announce"
         };
+        
+        /// <summary>
+        /// Lightning node configuration for LNProxy services
+        /// </summary>
+        public LndConfig? LndConfig { get; init; }
     }
 
     public sealed class TorSettings
@@ -206,5 +211,13 @@ namespace VoidCat.Model
     {
         public string? ClientId { get; init; }
         public string? ClientSecret { get; init; }
+    }
+
+    public sealed class LndConfig
+    {
+        public string Network { get; init; } = "regtest";
+        public Uri Endpoint { get; init; }
+        public string CertPath { get; init; } = null!;
+        public string MacaroonPath { get; init; } = null!;
     }
 }

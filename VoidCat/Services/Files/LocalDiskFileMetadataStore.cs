@@ -22,18 +22,18 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     }
 
     /// <inheritdoc />
-    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta
+    public ValueTask<Database.File?> Get(Guid id)
     {
-        return GetMeta<TMeta>(id);
+        return GetMeta<Database.File>(id);
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta
+    public async ValueTask<IReadOnlyList<Database.File>> Get(Guid[] ids)
     {
-        var ret = new List<TMeta>();
+        var ret = new List<Database.File>();
         foreach (var id in ids)
         {
-            var r = await GetMeta<TMeta>(id);
+            var r = await GetMeta<Database.File>(id);
             if (r != null)
             {
                 ret.Add(r);
@@ -42,11 +42,16 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
 
         return ret;
     }
+    
+    public ValueTask Add(Database.File f)
+    {
+        return Set(f.Id, f);
+    }
 
     /// <inheritdoc />
-    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta
+    public async ValueTask Update(Guid id, Database.File meta)
     {
-        var oldMeta = await Get<SecretFileMeta>(id);
+        var oldMeta = await Get(id);
         if (oldMeta == default) return;
 
         oldMeta.Patch(meta);
@@ -54,22 +59,18 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     }
 
     /// <inheritdoc />
-    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta
+    public ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
     {
-        async IAsyncEnumerable<TMeta> EnumerateFiles()
+        async IAsyncEnumerable<Database.File> EnumerateFiles()
         {
             foreach (var metaFile in
                      Directory.EnumerateFiles(Path.Join(_settings.DataDirectory, MetadataDir), "*.json"))
             {
                 var json = await File.ReadAllTextAsync(metaFile);
-                var meta = JsonConvert.DeserializeObject<TMeta>(json);
+                var meta = JsonConvert.DeserializeObject<Database.File>(json);
                 if (meta != null)
                 {
-                    yield return meta with
-                    {
-                        // TODO: remove after migration decay
-                        Id = Guid.Parse(Path.GetFileNameWithoutExtension(metaFile))
-                    };
+                    yield return meta;
                 }
             }
         }
@@ -86,7 +87,7 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
             _ => results
         };
 
-        return ValueTask.FromResult(new PagedResult<TMeta>
+        return ValueTask.FromResult(new PagedResult<Database.File>
         {
             Page = request.Page,
             PageSize = request.PageSize,
@@ -97,26 +98,14 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
-        var files = await ListFiles<FileMeta>(new(0, Int32.MaxValue));
+        var files = await ListFiles(new(0, Int32.MaxValue));
         var count = await files.Results.CountAsync();
         var size = await files.Results.SumAsync(a => (long) a.Size);
         return new(count, (ulong) size);
     }
 
     /// <inheritdoc />
-    public ValueTask<FileMeta?> Get(Guid id)
-    {
-        return GetMeta<FileMeta>(id);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<SecretFileMeta?> GetPrivate(Guid id)
-    {
-        return GetMeta<SecretFileMeta>(id);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Set(Guid id, SecretFileMeta meta)
+    public async ValueTask Set(Guid id, Database.File meta)
     {
         var path = MapMeta(id);
         var json = JsonConvert.SerializeObject(meta);

@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Microsoft.EntityFrameworkCore;
+using VoidCat.Database;
 using VoidCat.Model;
 
 namespace VoidCat.Services.Users;
@@ -6,43 +7,34 @@ namespace VoidCat.Services.Users;
 /// <inheritdoc />
 public class PostgresEmailVerification : BaseEmailVerification
 {
-    private readonly PostgresConnectionFactory _connection;
+    private readonly VoidContext _db;
 
     public PostgresEmailVerification(ILogger<BaseEmailVerification> logger, VoidSettings settings,
-        RazorPartialToStringRenderer renderer, PostgresConnectionFactory connection) : base(logger, settings, renderer)
+        RazorPartialToStringRenderer renderer, VoidContext db) : base(logger, settings, renderer)
     {
-        _connection = connection;
+        _db = db;
     }
 
     /// <inheritdoc />
-    protected override async ValueTask SaveToken(EmailVerificationCode code)
+    protected override async ValueTask SaveToken(EmailVerification code)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"insert into ""EmailVerification""(""User"", ""Code"", ""Expires"") values(:user, :code, :expires)",
-            new
-            {
-                user = code.User,
-                code = code.Code,
-                expires = code.Expires.ToUniversalTime()
-            });
+        _db.EmailVerifications.Add(code);
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    protected override async ValueTask<EmailVerificationCode?> GetToken(Guid user, Guid code)
+    protected override async ValueTask<EmailVerification?> GetToken(Guid user, Guid code)
     {
-        await using var conn = await _connection.Get();
-        return await conn.QuerySingleOrDefaultAsync<EmailVerificationCode>(
-            @"select * from ""EmailVerification"" where ""User"" = :user and ""Code"" = :code",
-            new {user, code});
+        return await _db.EmailVerifications
+            .AsNoTracking()
+            .SingleOrDefaultAsync(a => a.UserId == user && a.Code == code);
     }
 
     /// <inheritdoc />
     protected override async ValueTask DeleteToken(Guid user, Guid code)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"delete from ""EmailVerification"" where ""User"" = :user and ""Code"" = :code",
-            new {user, code});
+        await _db.EmailVerifications
+            .Where(a => a.UserId == user && a.Code == code)
+            .ExecuteDeleteAsync();
     }
 }

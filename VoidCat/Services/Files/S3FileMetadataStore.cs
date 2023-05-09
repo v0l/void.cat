@@ -19,22 +19,35 @@ public class S3FileMetadataStore : IFileMetadataStore
         _client = _config.CreateClient();
     }
 
-    /// <inheritdoc />
     public string? Key => _config.Name;
     
     /// <inheritdoc />
-    public ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta
+    public async ValueTask<Database.File?> Get(Guid id)
     {
-        return GetMeta<TMeta>(id);
+        try
+        {
+            var obj = await _client.GetObjectAsync(_config.BucketName, ToKey(id));
+
+            using var sr = new StreamReader(obj.ResponseStream);
+            var json = await sr.ReadToEndAsync();
+            var ret = JsonConvert.DeserializeObject<Database.File>(json);
+            return ret;
+        }
+        catch (AmazonS3Exception aex)
+        {
+            _logger.LogError(aex, "Failed to get metadata for {Id}, {Error}", id, aex.Message);
+        }
+
+        return default;
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta
+    public async ValueTask<IReadOnlyList<Database.File>> Get(Guid[] ids)
     {
-        var ret = new List<TMeta>();
+        var ret = new List<Database.File>();
         foreach (var id in ids)
         {
-            var r = await GetMeta<TMeta>(id);
+            var r = await Get(id);
             if (r != null)
             {
                 ret.Add(r);
@@ -43,11 +56,15 @@ public class S3FileMetadataStore : IFileMetadataStore
 
         return ret;
     }
+    public ValueTask Add(Database.File f)
+    {
+        return Set(f.Id, f);
+    }
 
     /// <inheritdoc />
-    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta
+    public async ValueTask Update(Guid id, Database.File meta)
     {
-        var oldMeta = await Get<SecretFileMeta>(id);
+        var oldMeta = await Get(id);
         if (oldMeta == default) return;
 
         oldMeta.Patch(meta);
@@ -55,9 +72,9 @@ public class S3FileMetadataStore : IFileMetadataStore
     }
 
     /// <inheritdoc />
-    public ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta
+    public ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
     {
-        async IAsyncEnumerable<TMeta> Enumerate()
+        async IAsyncEnumerable<Database.File> Enumerate()
         {
             var obj = await _client.ListObjectsV2Async(new()
             {
@@ -70,7 +87,7 @@ public class S3FileMetadataStore : IFileMetadataStore
             {
                 if (Guid.TryParse(file.Key.Split("metadata_")[1], out var id))
                 {
-                    var meta = await GetMeta<TMeta>(id);
+                    var meta = await Get(id);
                     if (meta != default)
                     {
                         yield return meta;
@@ -79,7 +96,7 @@ public class S3FileMetadataStore : IFileMetadataStore
             }
         }
 
-        return ValueTask.FromResult(new PagedResult<TMeta>
+        return ValueTask.FromResult(new PagedResult<Database.File>
         {
             Page = request.Page,
             PageSize = request.PageSize,
@@ -90,34 +107,10 @@ public class S3FileMetadataStore : IFileMetadataStore
     /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
-        var files = await ListFiles<FileMeta>(new(0, Int32.MaxValue));
+        var files = await ListFiles(new(0, Int32.MaxValue));
         var count = await files.Results.CountAsync();
         var size = await files.Results.SumAsync(a => (long) a.Size);
         return new(count, (ulong) size);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<FileMeta?> Get(Guid id)
-    {
-        return GetMeta<FileMeta>(id);
-    }
-
-    /// <inheritdoc />
-    public ValueTask<SecretFileMeta?> GetPrivate(Guid id)
-    {
-        return GetMeta<SecretFileMeta>(id);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Set(Guid id, SecretFileMeta meta)
-    {
-        await _client.PutObjectAsync(new()
-        {
-            BucketName = _config.BucketName,
-            Key = ToKey(id),
-            ContentBody = JsonConvert.SerializeObject(meta),
-            ContentType = "application/json"
-        });
     }
 
     /// <inheritdoc />
@@ -126,28 +119,15 @@ public class S3FileMetadataStore : IFileMetadataStore
         await _client.DeleteObjectAsync(_config.BucketName, ToKey(id));
     }
 
-    private async ValueTask<TMeta?> GetMeta<TMeta>(Guid id) where TMeta : FileMeta
+    private async ValueTask Set(Guid id, Database.File meta)
     {
-        try
+        await _client.PutObjectAsync(new()
         {
-            var obj = await _client.GetObjectAsync(_config.BucketName, ToKey(id));
-
-            using var sr = new StreamReader(obj.ResponseStream);
-            var json = await sr.ReadToEndAsync();
-            var ret = JsonConvert.DeserializeObject<TMeta>(json);
-            if (ret != default)
-            {
-                ret.Id = id;
-            }
-
-            return ret;
-        }
-        catch (AmazonS3Exception aex)
-        {
-            _logger.LogError(aex, "Failed to get metadata for {Id}, {Error}", id, aex.Message);
-        }
-
-        return default;
+            BucketName = _config.BucketName,
+            Key = ToKey(id),
+            ContentBody = JsonConvert.SerializeObject(meta),
+            ContentType = "application/json"
+        });
     }
 
     private static string ToKey(Guid id) => $"metadata_{id}";

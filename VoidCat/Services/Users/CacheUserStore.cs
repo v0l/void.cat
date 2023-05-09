@@ -1,5 +1,5 @@
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -16,31 +16,25 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
+    public ValueTask Add(User u)
+    {
+        return Set(u.Id, u);
+    }
+
+    /// <inheritdoc />
     public async ValueTask<Guid?> LookupUser(string email)
     {
         return await _cache.Get<Guid>(MapKey(email));
     }
 
     /// <inheritdoc />
-    public ValueTask<T?> Get<T>(Guid id) where T : User
-    {
-        return _cache.Get<T>(MapKey(id));
-    }
-
-    /// <inheritdoc />
     public ValueTask<User?> Get(Guid id)
     {
-        return Get<User>(id);
+        return _cache.Get<User>(MapKey(id));
     }
 
     /// <inheritdoc />
-    public ValueTask<InternalUser?> GetPrivate(Guid id)
-    {
-        return Get<InternalUser>(id);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Set(Guid id, InternalUser user)
+    public async ValueTask Set(Guid id, User user)
     {
         if (id != user.Id) throw new InvalidOperationException();
 
@@ -50,11 +44,12 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask<PagedResult<PrivateUser>> ListUsers(PagedRequest request)
+    public async ValueTask<PagedResult<User>> ListUsers(PagedRequest request)
     {
         var users = (await _cache.GetList(UserList))
             .Select<string, Guid?>(a => Guid.TryParse(a, out var g) ? g : null)
             .Where(a => a.HasValue).Select(a => a.Value);
+
         users = (request.SortBy, request.SortOrder) switch
         {
             (PagedSortBy.Id, PageSortOrder.Asc) => users?.OrderBy(a => a),
@@ -62,9 +57,9 @@ public class CacheUserStore : IUserStore
             _ => users
         };
 
-        async IAsyncEnumerable<PrivateUser> EnumerateUsers(IEnumerable<Guid> ids)
+        async IAsyncEnumerable<User> EnumerateUsers(IEnumerable<Guid> ids)
         {
-            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get<PrivateUser>(a)));
+            var usersLoaded = await Task.WhenAll(ids.Select(async a => await Get(a)));
             foreach (var user in usersLoaded)
             {
                 if (user != default)
@@ -84,9 +79,9 @@ public class CacheUserStore : IUserStore
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateProfile(PublicUser newUser)
+    public async ValueTask UpdateProfile(User newUser)
     {
-        var oldUser = await Get<InternalUser>(newUser.Id);
+        var oldUser = await Get(newUser.Id);
         if (oldUser == null) return;
 
         //retain flags
@@ -103,18 +98,18 @@ public class CacheUserStore : IUserStore
     /// <inheritdoc />
     public async ValueTask UpdateLastLogin(Guid id, DateTime timestamp)
     {
-        var user = await Get<InternalUser>(id);
+        var user = await Get(id);
         if (user != default)
         {
             user.LastLogin = timestamp;
             await Set(user.Id, user);
         }
     }
-    
+
     /// <inheritdoc />
-    public async ValueTask AdminUpdateUser(PrivateUser user)
+    public async ValueTask AdminUpdateUser(User user)
     {
-        var oldUser = await Get<InternalUser>(user.Id);
+        var oldUser = await Get(user.Id);
         if (oldUser == null) return;
 
         oldUser.Email = user.Email;
@@ -126,12 +121,13 @@ public class CacheUserStore : IUserStore
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        var user = await Get<InternalUser>(id);
+        var user = await Get(id);
         if (user == default) throw new InvalidOperationException();
+
         await Delete(user);
     }
 
-    private async ValueTask Delete(PrivateUser user)
+    private async ValueTask Delete(User user)
     {
         await _cache.Delete(MapKey(user.Id));
         await _cache.RemoveFromList(UserList, user.Id.ToString());

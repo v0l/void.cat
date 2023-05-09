@@ -1,4 +1,5 @@
-﻿using VoidCat.Model;
+﻿using VoidCat.Database;
+using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -15,15 +16,15 @@ public class CacheEmailVerification : BaseEmailVerification
     }
 
     /// <inheritdoc />
-    protected override ValueTask SaveToken(EmailVerificationCode code)
+    protected override ValueTask SaveToken(EmailVerification code)
     {
         return _cache.Set(MapToken(code.Code), code, code.Expires - DateTime.UtcNow);
     }
 
     /// <inheritdoc />
-    protected override ValueTask<EmailVerificationCode?> GetToken(Guid user, Guid code)
+    protected override ValueTask<EmailVerification?> GetToken(Guid user, Guid code)
     {
-        return _cache.Get<EmailVerificationCode>(MapToken(code));
+        return _cache.Get<EmailVerification>(MapToken(code));
     }
 
     /// <inheritdoc />

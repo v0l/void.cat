@@ -17,12 +17,12 @@
         <meta property="og:site_name" content="void.cat"/>
         <meta property="og:title" content="@Model.Meta.Name"/>
         <meta property="og:description" content="@Model.Meta.Description"/>
-        <meta property="og:url" content="@($"https://{Context.Request.Host}/{Model.Meta.Id.ToBase58()}")"/>
+        <meta property="og:url" content="@($"https://{Context.Request.Host}/{Model.Id.ToBase58()}")"/>
                  
         var mime = Model.Meta.MimeType;
         if (mime != default)
         {
-            var link = $"https://{Context.Request.Host}/d/{Model.Meta.Id.ToBase58()}";
+            var link = $"https://{Context.Request.Host}/d/{Model.Id.ToBase58()}";
             if (mime.StartsWith("image/"))
             {
                 <meta property="og:image" content="@link"/>

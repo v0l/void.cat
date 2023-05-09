@@ -1,6 +1,6 @@
 namespace VoidCat.Model;
 
-public sealed record IngressPayload(Stream InStream, SecretFileMeta Meta, int Segment, int TotalSegments, bool ShouldStripMetadata)
+public sealed record IngressPayload(Stream InStream, Database.File Meta, int Segment, int TotalSegments, bool ShouldStripMetadata)
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid? EditSecret { get; init; }

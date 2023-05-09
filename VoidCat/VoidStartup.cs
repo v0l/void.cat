@@ -1,13 +1,10 @@
-﻿using System.Data;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
-using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
-using Npgsql;
 using StackExchange.Redis;
 using VoidCat.Model;
 using VoidCat.Services;
@@ -35,24 +32,6 @@ public static class VoidStartup
             var cx = ConnectionMultiplexer.Connect(voidSettings.Redis!);
             services.AddSingleton(cx);
             services.AddSingleton(cx.GetDatabase());
-        }
-
-        if (voidSettings.HasPostgres())
-        {
-            services.AddSingleton<PostgresConnectionFactory>();
-            services.AddTransient<IDbConnection>(_ => new NpgsqlConnection(voidSettings.Postgres));
-
-            // fluent migrations
-            services.AddTransient<IMigration, FluentMigrationRunner>();
-            services.AddFluentMigratorCore()
-                .ConfigureRunner(r =>
-                    r.AddPostgres()
-                        .WithGlobalConnectionString(voidSettings.Postgres)
-                        .ScanIn(typeof(Program).Assembly).For.Migrations());
-        }
-
-        if (voidSettings.HasRedis())
-        {
             services.AddTransient<ICache, RedisCache>();
         }
         else
@@ -187,13 +166,10 @@ public static class VoidStartup
 
     public static void AddMigrations(this IServiceCollection services, VoidSettings voidSettings)
     {
-        services.AddTransient<IMigration, PopulateMetadataId>();
-        services.AddTransient<IMigration, MigrateToPostgres>();
-        services.AddTransient<IMigration, FixSize>();
-
-        if (voidSettings.HasRedis())
+        if (voidSettings.HasPostgres())
         {
-            services.AddTransient<IMigration, UserLookupKeyHashMigration>();
+            services.AddTransient<IMigration, EFMigrationSetup>();
+            services.AddTransient<IMigration, EFMigration>();
         }
     }
 
@@ -202,6 +178,8 @@ public static class VoidStartup
         s.NullValueHandling = NullValueHandling.Ignore;
         s.ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor;
         s.MissingMemberHandling = MissingMemberHandling.Ignore;
+        s.Converters = new List<JsonConverter> {new Base58GuidConverter()};
+        s.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
         return s;
     }
 }

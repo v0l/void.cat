@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.Payments;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Strike;
 
@@ -21,16 +21,20 @@ public class StrikePaymentProvider : IPaymentProvider
     }
 
     /// <inheritdoc />
-    public async ValueTask<PaymentOrder?> CreateOrder(PaymentConfig config)
+    public async ValueTask<PaywallOrder?> CreateOrder(Paywall config)
     {
-        IsStrikePayment(config, out var strikeConfig);
-        _logger.LogInformation("Generating invoice for {Currency} {Amount}", config.Cost.Currency, config.Cost.Amount);
+        if (config.Service != PaywallService.Strike || config.PaywallStrike == default)
+        {
+            throw new InvalidOperationException("Paywall config is not Strike");
+        }
+        
+        _logger.LogInformation("Generating invoice for {Currency} {Amount}", config.Currency, config.Amount);
 
-        var currency = MapCurrency(strikeConfig.Cost.Currency);
+        var currency = MapCurrency(config.Currency);
         if (currency == Currencies.USD)
         {
             // map USD to USDT if USD is not available and USDT is
-            var profile = await _strike.GetProfile(strikeConfig.Handle);
+            var profile = await _strike.GetProfile(config.PaywallStrike!.Handle);
             if (profile != default)
             {
                 var usd = profile.Currencies.FirstOrDefault(a => a.Currency == Currencies.USD);
@@ -44,28 +48,32 @@ public class StrikePaymentProvider : IPaymentProvider
 
         var invoice = await _strike.GenerateInvoice(new()
         {
-            Handle = strikeConfig.Handle,
+            Handle = config.PaywallStrike.Handle,
             Amount = new()
             {
-                Amount = strikeConfig.Cost.Amount.ToString(CultureInfo.InvariantCulture),
+                Amount = config.Amount.ToString(CultureInfo.InvariantCulture),
                 Currency = currency
             },
-            Description = config.File.ToBase58()
+            Description = config.File.Id.ToBase58()
         });
         if (invoice != default)
         {
             var quote = await _strike.GetInvoiceQuote(invoice.InvoiceId);
             if (quote != default)
             {
-                var order = new LightningPaymentOrder
+                var order = new PaywallOrder
                 {
                     Id = invoice.InvoiceId,
-                    File = config.File,
-                    Service = PaymentServices.Strike,
-                    Price = config.Cost,
-                    Status = PaymentOrderStatus.Unpaid,
-                    Invoice = quote.LnInvoice!,
-                    Expire = DateTime.SpecifyKind(quote.Expiration.DateTime, DateTimeKind.Utc)
+                    FileId = config.File.Id,
+                    Service = PaywallService.Strike,
+                    Amount = config.Amount,
+                    Status = PaywallOrderStatus.Unpaid,
+                    OrderLightning = new()
+                    {
+                        OrderId = invoice.InvoiceId,
+                        Invoice = quote.LnInvoice!,
+                        Expire = DateTime.SpecifyKind(quote.Expiration.DateTime, DateTimeKind.Utc)
+                    }
                 };
                 await _orderStore.Add(order.Id, order);
                 return order;
@@ -80,10 +88,10 @@ public class StrikePaymentProvider : IPaymentProvider
     }
 
     /// <inheritdoc />
-    public async ValueTask<PaymentOrder?> GetOrderStatus(Guid id)
+    public async ValueTask<PaywallOrder?> GetOrderStatus(Guid id)
     {
         var order = await _orderStore.Get(id);
-        if (order is {Status: PaymentOrderStatus.Paid or PaymentOrderStatus.Expired}) return order;
+        if (order is {Status: PaywallOrderStatus.Paid or PaywallOrderStatus.Expired}) return order;
 
         var providerOrder = await _strike.GetInvoice(id);
         if (providerOrder != default)
@@ -94,9 +102,9 @@ public class StrikePaymentProvider : IPaymentProvider
             return new()
             {
                 Id = id,
-                Price = new(decimal.Parse(providerOrder!.Amount!.Amount!),
-                    MapCurrency(providerOrder.Amount!.Currency!.Value)),
-                Service = PaymentServices.Strike,
+                Amount = decimal.Parse(providerOrder.Amount!.Amount!),
+                Currency = MapCurrency(providerOrder.Amount!.Currency!.Value),
+                Service = PaywallService.Strike,
                 Status = status
             };
         }
@@ -104,44 +112,34 @@ public class StrikePaymentProvider : IPaymentProvider
         return default;
     }
 
-    private PaymentOrderStatus MapStatus(InvoiceState providerOrderState)
+    private PaywallOrderStatus MapStatus(InvoiceState providerOrderState)
         => providerOrderState switch
         {
-            InvoiceState.UNPAID => PaymentOrderStatus.Unpaid,
-            InvoiceState.PENDING => PaymentOrderStatus.Unpaid,
-            InvoiceState.PAID => PaymentOrderStatus.Paid,
-            InvoiceState.CANCELLED => PaymentOrderStatus.Expired,
+            InvoiceState.UNPAID => PaywallOrderStatus.Unpaid,
+            InvoiceState.PENDING => PaywallOrderStatus.Unpaid,
+            InvoiceState.PAID => PaywallOrderStatus.Paid,
+            InvoiceState.CANCELLED => PaywallOrderStatus.Expired,
             _ => throw new ArgumentOutOfRangeException(nameof(providerOrderState), providerOrderState, null)
         };
 
-    private static Currencies MapCurrency(PaymentCurrencies c)
+    private static Currencies MapCurrency(PaywallCurrency c)
         => c switch
         {
-            PaymentCurrencies.BTC => Currencies.BTC,
-            PaymentCurrencies.USD => Currencies.USD,
-            PaymentCurrencies.EUR => Currencies.EUR,
-            PaymentCurrencies.GBP => Currencies.GBP,
+            PaywallCurrency.BTC => Currencies.BTC,
+            PaywallCurrency.USD => Currencies.USD,
+            PaywallCurrency.EUR => Currencies.EUR,
+            PaywallCurrency.GBP => Currencies.GBP,
             _ => throw new ArgumentOutOfRangeException(nameof(c), c, null)
         };
 
-    private static PaymentCurrencies MapCurrency(Currencies c)
+    private static PaywallCurrency MapCurrency(Currencies c)
         => c switch
         {
-            Currencies.BTC => PaymentCurrencies.BTC,
-            Currencies.USD => PaymentCurrencies.USD,
-            Currencies.USDT => PaymentCurrencies.USD,
-            Currencies.EUR => PaymentCurrencies.EUR,
-            Currencies.GBP => PaymentCurrencies.GBP,
+            Currencies.BTC => PaywallCurrency.BTC,
+            Currencies.USD => PaywallCurrency.USD,
+            Currencies.USDT => PaywallCurrency.USD,
+            Currencies.EUR => PaywallCurrency.EUR,
+            Currencies.GBP => PaywallCurrency.GBP,
             _ => throw new ArgumentOutOfRangeException(nameof(c), c, null)
         };
-
-    private static void IsStrikePayment(PaymentConfig? cfg, out StrikePaymentConfig strikeConfig)
-    {
-        if (cfg?.Service != PaymentServices.Strike)
-        {
-            throw new ArgumentException("Must be strike Payment");
-        }
-
-        strikeConfig = (cfg as StrikePaymentConfig)!;
-    }
 }

@@ -1,11 +1,21 @@
-﻿using VoidCat.Model;
-using VoidCat.Model.User;
+﻿using VoidCat.Database;
 
 namespace VoidCat.Services.Abstractions;
 
 public interface IEmailVerification
 {
-    ValueTask<EmailVerificationCode> SendNewCode(PrivateUser user);
+    /// <summary>
+    /// Send email verification code
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    ValueTask<EmailVerification> SendNewCode(User user);
 
-    ValueTask<bool> VerifyCode(PrivateUser user, Guid code);
+    /// <summary>
+    /// Perform account verification
+    /// </summary>
+    /// <param name="user"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    ValueTask<bool> VerifyCode(User user, Guid code);
 }

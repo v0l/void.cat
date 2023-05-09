@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users;
@@ -23,9 +23,13 @@ public abstract class BaseEmailVerification : IEmailVerification
     }
 
     /// <inheritdoc />
-    public async ValueTask<EmailVerificationCode> SendNewCode(PrivateUser user)
+    public async ValueTask<EmailVerification> SendNewCode(User user)
     {
-        var token = new EmailVerificationCode(user.Id, Guid.NewGuid(), DateTime.UtcNow.AddHours(HoursExpire));
+        var token = new EmailVerification{
+            UserId = user.Id, 
+            Code = Guid.NewGuid(), 
+            Expires = DateTime.UtcNow.AddHours(HoursExpire)
+        };
         await SaveToken(token);
         _logger.LogInformation("Saved email verification token for User={Id} Token={Token}", user.Id, token.Code);
 
@@ -60,12 +64,12 @@ public abstract class BaseEmailVerification : IEmailVerification
     }
 
     /// <inheritdoc />
-    public async ValueTask<bool> VerifyCode(PrivateUser user, Guid code)
+    public async ValueTask<bool> VerifyCode(User user, Guid code)
     {
         var token = await GetToken(user.Id, code);
         if (token == default) return false;
 
-        var isValid = user.Id == token.User &&
+        var isValid = user.Id == token.UserId &&
                       DateTime.SpecifyKind(token.Expires, DateTimeKind.Utc) > DateTimeOffset.UtcNow;
         if (isValid)
         {
@@ -75,7 +79,7 @@ public abstract class BaseEmailVerification : IEmailVerification
         return isValid;
     }
 
-    protected abstract ValueTask SaveToken(EmailVerificationCode code);
-    protected abstract ValueTask<EmailVerificationCode?> GetToken(Guid user, Guid code);
+    protected abstract ValueTask SaveToken(EmailVerification code);
+    protected abstract ValueTask<EmailVerification?> GetToken(Guid user, Guid code);
     protected abstract ValueTask DeleteToken(Guid user, Guid code);
 }

@@ -1,10 +1,10 @@
-using VoidCat.Model.Payments;
+using VoidCat.Database;
 
 namespace VoidCat.Services.Abstractions;
 
 /// <summary>
 /// Store for payment configs
 /// </summary>
-public interface IPaymentStore : IBasicStore<PaymentConfig>
+public interface IPaymentStore : IBasicStore<Paywall>
 {
 }

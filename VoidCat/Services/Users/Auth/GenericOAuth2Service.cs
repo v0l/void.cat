@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users.Auth;
@@ -49,7 +49,7 @@ public abstract class GenericOAuth2Service : IOAuthProvider
     }
 
     /// <inheritdoc />
-    public abstract ValueTask<InternalUser?> GetUserDetails(UserAuthToken token);
+    public abstract ValueTask<User?> GetUserDetails(UserAuthToken token);
 
     /// <summary>
     /// Build query args for authorize

@@ -1,5 +1,5 @@
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Users.Auth;
 
@@ -9,17 +9,14 @@ public class UserManager
 {
     private readonly IUserStore _store;
     private readonly IEmailVerification _emailVerification;
-    private readonly IUserAuthTokenStore _tokenStore;
     private readonly OAuthFactory _oAuthFactory;
     private static bool _checkFirstRegister;
 
-    public UserManager(IUserStore store, IEmailVerification emailVerification, OAuthFactory oAuthFactory,
-        IUserAuthTokenStore tokenStore)
+    public UserManager(IUserStore store, IEmailVerification emailVerification, OAuthFactory oAuthFactory)
     {
         _store = store;
         _emailVerification = emailVerification;
         _oAuthFactory = oAuthFactory;
-        _tokenStore = tokenStore;
     }
 
     /// <summary>
@@ -29,12 +26,12 @@ public class UserManager
     /// <param name="password"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public async ValueTask<InternalUser> Login(string email, string password)
+    public async ValueTask<User> Login(string email, string password)
     {
         var userId = await _store.LookupUser(email);
         if (!userId.HasValue) throw new InvalidOperationException("User does not exist");
 
-        var user = await _store.GetPrivate(userId.Value);
+        var user = await _store.Get(userId.Value);
         if (!(user?.CheckPassword(password) ?? false)) throw new InvalidOperationException("User does not exist");
 
         await HandleLogin(user);
@@ -48,19 +45,19 @@ public class UserManager
     /// <param name="password"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public async ValueTask<InternalUser> Register(string email, string password)
+    public async ValueTask<User> Register(string email, string password)
     {
         var existingUser = await _store.LookupUser(email);
         if (existingUser != Guid.Empty && existingUser != null)
             throw new InvalidOperationException("User already exists");
 
-        var newUser = new InternalUser
+        var newUser = new User
         {
             Id = Guid.NewGuid(),
             Email = email,
             Password = password.HashPassword(),
-            Created = DateTimeOffset.UtcNow,
-            LastLogin = DateTimeOffset.UtcNow
+            Created = DateTime.UtcNow,
+            LastLogin = DateTime.UtcNow
         };
 
         await SetupNewUser(newUser);
@@ -84,7 +81,7 @@ public class UserManager
     /// <param name="code"></param>
     /// <param name="provider"></param>
     /// <returns></returns>
-    public async ValueTask<InternalUser> LoginOrRegister(string code, string provider)
+    public async ValueTask<User> LoginOrRegister(string code, string provider)
     {
         var px = _oAuthFactory.GetProvider(provider);
         var token = await px.GetToken(code);
@@ -98,8 +95,8 @@ public class UserManager
         var uid = await _store.LookupUser(user.Email);
         if (uid.HasValue)
         {
-            var existingUser = await _store.GetPrivate(uid.Value);
-            if (existingUser?.AuthType == AuthType.OAuth2)
+            var existingUser = await _store.Get(uid.Value);
+            if (existingUser?.AuthType == UserAuthType.OAuth2)
             {
                 return existingUser;
             }
@@ -111,7 +108,7 @@ public class UserManager
         return user;
     }
 
-    private async Task SetupNewUser(InternalUser newUser)
+    private async Task SetupNewUser(User newUser)
     {
         // automatically set first user to admin
         if (!_checkFirstRegister)
@@ -120,17 +117,21 @@ public class UserManager
             var users = await _store.ListUsers(new(0, 1));
             if (users.TotalResults == 0)
             {
-                newUser.Roles.Add(Roles.Admin);
+                newUser.Roles.Add(new()
+                {
+                    UserId = newUser.Id,
+                    Role = Roles.Admin
+                });
             }
         }
 
-        await _store.Set(newUser.Id, newUser);
+        await _store.Add(newUser);
         await _emailVerification.SendNewCode(newUser);
     }
 
-    private async Task HandleLogin(InternalUser user)
+    private async Task HandleLogin(User user)
     {
-        user.LastLogin = DateTimeOffset.UtcNow;
+        user.LastLogin = DateTime.UtcNow;
         await _store.UpdateLastLogin(user.Id, DateTime.UtcNow);
     }
 }

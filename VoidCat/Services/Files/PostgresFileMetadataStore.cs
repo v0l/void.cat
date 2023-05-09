@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿using Microsoft.EntityFrameworkCore;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
@@ -7,119 +7,103 @@ namespace VoidCat.Services.Files;
 /// <inheritdoc />
 public class PostgresFileMetadataStore : IFileMetadataStore
 {
-    private readonly PostgresConnectionFactory _connection;
+    private readonly VoidContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public PostgresFileMetadataStore(PostgresConnectionFactory connection)
+    public PostgresFileMetadataStore(VoidContext db, IServiceScopeFactory scopeFactory)
     {
-        _connection = connection;
+        _db = db;
+        _scopeFactory = scopeFactory;
     }
-    
-    /// <inheritdoc />
+
     public string? Key => "postgres";
-    
-    /// <inheritdoc />
-    public ValueTask<FileMeta?> Get(Guid id)
-    {
-        return Get<FileMeta>(id);
-    }
 
     /// <inheritdoc />
-    public ValueTask<SecretFileMeta?> GetPrivate(Guid id)
+    public async ValueTask<Database.File?> Get(Guid id)
     {
-        return Get<SecretFileMeta>(id);
+        return await _db.Files
+            .AsNoTracking()
+            .Include(a => a.Paywall)
+            .SingleOrDefaultAsync(a => a.Id == id);
     }
 
-    /// <inheritdoc />
-    public async ValueTask Set(Guid id, SecretFileMeta obj)
+    public async ValueTask Add(Database.File f)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(
-            @"insert into 
-""Files""(""Id"", ""Name"", ""Size"", ""Uploaded"", ""Description"", ""MimeType"", ""Digest"", ""EditSecret"", ""Expires"", ""Storage"", ""EncryptionParams"", ""MagnetLink"")
-values(:id, :name, :size, :uploaded, :description, :mimeType, :digest, :editSecret, :expires, :store, :encryptionParams, :magnetLink)
-on conflict (""Id"") do update set 
-""Name"" = :name, 
-""Size"" = :size, 
-""Description"" = :description, 
-""MimeType"" = :mimeType, 
-""Expires"" = :expires,
-""Storage"" = :store,
-""EncryptionParams"" = :encryptionParams,
-""MagnetLink"" = :magnetLink",
-            new
-            {
-                id,
-                name = obj.Name,
-                size = (long) obj.Size,
-                uploaded = obj.Uploaded.ToUniversalTime(),
-                description = obj.Description,
-                mimeType = obj.MimeType,
-                digest = obj.Digest,
-                editSecret = obj.EditSecret,
-                expires = obj.Expires?.ToUniversalTime(),
-                store = obj.Storage,
-                encryptionParams = obj.EncryptionParams,
-                magnetLink = obj.MagnetLink,
-            });
+        _db.Files.Add(f);
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync("delete from \"Files\" where \"Id\" = :id", new {id});
+        await _db.Files
+            .Where(a => a.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     /// <inheritdoc />
-    public async ValueTask<TMeta?> Get<TMeta>(Guid id) where TMeta : FileMeta
+    public async ValueTask<IReadOnlyList<Database.File>> Get(Guid[] ids)
     {
-        await using var conn = await _connection.Get();
-        return await conn.QuerySingleOrDefaultAsync<TMeta?>(@"select * from ""Files"" where ""Id"" = :id",
-            new {id});
+        return await _db.Files
+            .Include(a => a.Paywall)
+            .Where(a => ids.Contains(a.Id))
+            .ToArrayAsync();
     }
 
     /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<TMeta>> Get<TMeta>(Guid[] ids) where TMeta : FileMeta
+    public async ValueTask Update(Guid id, Database.File obj)
     {
-        await using var conn = await _connection.Get();
-        var ret = await conn.QueryAsync<TMeta>("select * from \"Files\" where \"Id\" in :ids", new {ids});
-        return ret.ToList();
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Update<TMeta>(Guid id, TMeta meta) where TMeta : FileMeta
-    {
-        var oldMeta = await Get<SecretFileMeta>(id);
-        if (oldMeta == default) return;
-
-        oldMeta.Patch(meta);
-        await Set(id, oldMeta);
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<PagedResult<TMeta>> ListFiles<TMeta>(PagedRequest request) where TMeta : FileMeta
-    {
-        await using var conn = await _connection.Get();
-        var count = await conn.ExecuteScalarAsync<int>(@"select count(*) from ""Files""");
-
-        async IAsyncEnumerable<TMeta> Enumerate()
+        var existing = await _db.Files.FindAsync(id);
+        if (existing == default)
         {
-            var orderBy = request.SortBy switch
-            {
-                PagedSortBy.Date => "Uploaded",
-                PagedSortBy.Name => "Name",
-                PagedSortBy.Size => "Size",
-                _ => "Id"
-            };
-            await using var iconn = await _connection.Get();
-            var orderDirection = request.SortOrder == PageSortOrder.Asc ? "asc" : "desc";
-            var results = await iconn.QueryAsync<TMeta>(
-                $"select * from \"Files\" order by \"{orderBy}\" {orderDirection} offset @offset limit @limit",
-                new {offset = request.PageSize * request.Page, limit = request.PageSize});
+            return;
+        }
 
-            foreach (var meta in results)
+        existing.Patch(obj);
+        await _db.SaveChangesAsync();
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
+    {
+        var count = await _db.Files.CountAsync();
+
+        async IAsyncEnumerable<Database.File> Enumerate()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
+            var q = db.Files.AsNoTracking().AsQueryable();
+            switch (request.SortBy, request.SortOrder)
             {
-                yield return meta;
+                case (PagedSortBy.Id, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Id);
+                    break;
+                case (PagedSortBy.Id, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Id);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Name);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Name);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Uploaded);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Uploaded);
+                    break;
+                case (PagedSortBy.Size, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.Size);
+                    break;
+                case (PagedSortBy.Size, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.Size);
+                    break;
+            }
+
+            await foreach (var r in q.Skip(request.Page * request.PageSize).Take(request.PageSize).AsAsyncEnumerable())
+            {
+                yield return r;
             }
         }
 
@@ -135,9 +119,11 @@ on conflict (""Id"") do update set
     /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
-        await using var conn = await _connection.Get();
-        var v = await conn.QuerySingleAsync<(long Files, long Size)>(
-            @"select count(1) ""Files"", cast(sum(""Size"") as bigint) ""Size"" from ""Files""");
-        return new(v.Files, (ulong) v.Size);
+        var size = await _db.Files
+            .AsNoTracking()
+            .SumAsync(a => (long)a.Size);
+
+        var count = await _db.Files.CountAsync();
+        return new(count, (ulong)size);
     }
 }

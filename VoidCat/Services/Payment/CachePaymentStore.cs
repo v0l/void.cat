@@ -1,10 +1,10 @@
-using VoidCat.Model.Payments;
+using VoidCat.Database;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Payment;
 
 /// <inheritdoc cref="IPaymentStore"/>
-public class CachePaymentStore : BasicCacheStore<PaymentConfig>, IPaymentStore
+public class CachePaymentStore : BasicCacheStore<Paywall>, IPaymentStore
 {
     public CachePaymentStore(ICache database)
         : base(database)
@@ -12,15 +12,10 @@ public class CachePaymentStore : BasicCacheStore<PaymentConfig>, IPaymentStore
     }
 
     /// <inheritdoc />
-    public override async ValueTask<PaymentConfig?> Get(Guid id)
+    public override async ValueTask<Paywall?> Get(Guid id)
     {
-        var cfg = await _cache.Get<NoPaymentConfig>(MapKey(id));
-        return cfg?.Service switch
-        {
-            PaymentServices.None => cfg,
-            PaymentServices.Strike => await _cache.Get<StrikePaymentConfig>(MapKey(id)),
-            _ => default
-        };
+        var cfg = await Cache.Get<Paywall>(MapKey(id));
+        return cfg;
     }
 
     /// <inheritdoc />

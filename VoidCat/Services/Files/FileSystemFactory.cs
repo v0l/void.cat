@@ -36,7 +36,7 @@ public class FileStoreFactory : IFileStore
     public string? Key => null;
 
     /// <inheritdoc />
-    public ValueTask<PrivateVoidFile> Ingress(IngressPayload payload, CancellationToken cts)
+    public ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
         var store = GetFileStore(payload.Meta.Storage!);
         if (store == default)

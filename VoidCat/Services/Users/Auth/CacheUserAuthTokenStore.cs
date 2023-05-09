@@ -1,4 +1,4 @@
-﻿using VoidCat.Model.User;
+﻿using VoidCat.Database;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Users.Auth;

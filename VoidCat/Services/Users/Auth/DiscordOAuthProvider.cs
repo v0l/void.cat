@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.User;
 
 namespace VoidCat.Services.Users.Auth;
 
@@ -19,7 +19,7 @@ public class DiscordOAuthProvider : GenericOAuth2Service
     public override string Id => "discord";
 
     /// <inheritdoc />
-    public override async ValueTask<InternalUser?> GetUserDetails(UserAuthToken token)
+    public override async ValueTask<User?> GetUserDetails(UserAuthToken token)
     {
         var req = new HttpRequestMessage(HttpMethod.Get, "https://discord.com/api/users/@me");
         req.Headers.Authorization = new("Bearer", token.AccessToken);
@@ -31,14 +31,14 @@ public class DiscordOAuthProvider : GenericOAuth2Service
             return new()
             {
                 Id = Guid.NewGuid(),
-                AuthType = AuthType.OAuth2,
+                AuthType = UserAuthType.OAuth2,
                 DisplayName = $"{user!.Username}",
                 Avatar = !string.IsNullOrEmpty(user.Avatar)
                     ? $"https://cdn.discordapp.com/avatars/{user.Id}/{user.Avatar}.png"
                     : null,
                 Email = user.Email!,
-                Created = DateTimeOffset.UtcNow,
-                LastLogin = DateTimeOffset.UtcNow
+                Created = DateTime.UtcNow,
+                LastLogin = DateTime.UtcNow
             };
         }
 

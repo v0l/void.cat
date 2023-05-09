@@ -1,4 +1,4 @@
-﻿using Dapper;
+﻿using Microsoft.EntityFrameworkCore;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 
@@ -7,46 +7,63 @@ namespace VoidCat.Services.Users;
 /// <inheritdoc />
 public class PostgresUserUploadStore : IUserUploadsStore
 {
-    private readonly PostgresConnectionFactory _connection;
+    private readonly VoidContext _db;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public PostgresUserUploadStore(PostgresConnectionFactory connection)
+    public PostgresUserUploadStore(VoidContext db, IServiceScopeFactory scopeFactory)
     {
-        _connection = connection;
+        _db = db;
+        _scopeFactory = scopeFactory;
     }
 
     public async ValueTask<PagedResult<Guid>> ListFiles(Guid user, PagedRequest request)
     {
-        var query = @"select {0} 
-from ""UserFiles"" uf, ""Files"" f
-where uf.""User"" = :user
-and uf.""File"" = f.""Id""";
-        var queryOrder = @"order by f.""{1}"" {2} limit :limit offset :offset";
-
-        await using var conn = await _connection.Get();
-        var count = await conn.ExecuteScalarAsync<int>(string.Format(query, "count(*)"), new {user});
+        var count = await _db.UserFiles.Where(a => a.UserId == user).CountAsync();
 
         async IAsyncEnumerable<Guid> EnumerateFiles()
         {
-            var orderBy = request.SortBy switch
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
+            var q = db.UserFiles
+                .AsNoTracking()
+                .Include(a => a.File)
+                .Where(a => a.UserId == user)
+                .AsQueryable();
+
+            switch (request.SortBy, request.SortOrder)
             {
-                PagedSortBy.Name => "Name",
-                PagedSortBy.Date => "Uploaded",
-                PagedSortBy.Size => "Size",
-                _ => "Id"
-            };
-            var sortOrder = request.SortOrder switch
+                case (PagedSortBy.Id, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.FileId);
+                    break;
+                case (PagedSortBy.Id, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.FileId);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.File.Name);
+                    break;
+                case (PagedSortBy.Name, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.File.Name);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.File.Uploaded);
+                    break;
+                case (PagedSortBy.Date, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.File.Uploaded);
+                    break;
+                case (PagedSortBy.Size, PageSortOrder.Asc):
+                    q = q.OrderBy(a => a.File.Size);
+                    break;
+                case (PagedSortBy.Size, PageSortOrder.Dsc):
+                    q = q.OrderByDescending(a => a.File.Size);
+                    break;
+            }
+
+            await foreach (var r in q.Skip(request.Page * request.PageSize)
+                               .Take(request.PageSize)
+                               .Select(a => a.FileId)
+                               .AsAsyncEnumerable())
             {
-                PageSortOrder.Dsc => "desc",
-                _ => "asc"
-            };
-            await using var connInner = await _connection.Get();
-            var files = await connInner.ExecuteReaderAsync(
-                string.Format(query + queryOrder, "uf.\"File\"", orderBy, sortOrder),
-                new {user, offset = request.Page * request.PageSize, limit = request.PageSize});
-            var rowParser = files.GetRowParser<Guid>();
-            while (await files.ReadAsync())
-            {
-                yield return rowParser(files);
+                yield return r;
             }
         }
 
@@ -62,19 +79,21 @@ and uf.""File"" = f.""Id""";
     /// <inheritdoc />
     public async ValueTask AddFile(Guid user, Guid file)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"insert into ""UserFiles""(""File"", ""User"") values(:file, :user)", new
+        _db.UserFiles.Add(new()
         {
-            file,
-            user
+            UserId = user,
+            FileId = file
         });
+
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask<Guid?> Uploader(Guid file)
     {
-        await using var conn = await _connection.Get();
-        return await conn.ExecuteScalarAsync<Guid?>(
-            @"select ""User"" from ""UserFiles"" where ""File"" = :file", new {file});
+        return await _db.UserFiles
+            .Where(a => a.FileId == file)
+            .Select(a => a.UserId)
+            .SingleOrDefaultAsync();
     }
 }

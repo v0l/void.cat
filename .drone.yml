@@ -1,0 +1,19 @@
+---
+kind: pipeline
+type: kubernetes
+name: default
+
+metadata:
+  namespace: git
+
+steps:
+  - name: build
+    image: r.j3ss.co/img
+    privileged: true
+    environment: 
+      TOKEN:
+        from_secret: token
+    commands:
+      - img login -u kieran -p $TOKEN git.v0l.io
+      - img build -t git.v0l.io/kieran/void-cat:latest .
+      - img push git.v0l.io/kieran/void-cat:latest

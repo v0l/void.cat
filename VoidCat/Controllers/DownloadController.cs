@@ -1,8 +1,8 @@
 using System.Net;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using VoidCat.Database;
 using VoidCat.Model;
-using VoidCat.Model.Payments;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
 
@@ -52,7 +52,7 @@ public class DownloadController : Controller
 
         if (id.EndsWith(".torrent"))
         {
-            var t = await voidFile.Metadata!.MakeTorrent(
+            var t = await voidFile.Metadata.MakeTorrent(voidFile.Id,
                 await _storage.Open(new(gid, Enumerable.Empty<RangeRequest>()), CancellationToken.None),
                 _settings.SiteUrl, _settings.TorrentTrackers);
 
@@ -107,9 +107,9 @@ public class DownloadController : Controller
         await Response.CompleteAsync();
     }
 
-    private async Task<PublicVoidFile?> SetupDownload(Guid id)
+    private async Task<VoidFileResponse?> SetupDownload(Guid id)
     {
-        var meta = await _fileInfo.Get(id);
+        var meta = await _fileInfo.Get(id, false);
         if (meta == null)
         {
             Response.StatusCode = 404;
@@ -117,10 +117,10 @@ public class DownloadController : Controller
         }
 
         // check payment order
-        if (meta.Payment != default && meta.Payment.Service != PaymentServices.None && meta.Payment.Required)
+        if (meta.Payment != default && meta.Payment.Service != PaywallService.None && meta.Payment.Required)
         {
             var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
-            if (!await IsOrderPaid(orderId))
+            if (!await IsOrderPaid(orderId!))
             {
                 Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
                 return default;
@@ -128,7 +128,7 @@ public class DownloadController : Controller
         }
 
         // prevent hot-linking viruses
-        var referer = Request.Headers.Referer.Count > 0 ? new Uri(Request.Headers.Referer.First()) : null;
+        var referer = Request.Headers.Referer.Count > 0 ? new Uri(Request.Headers.Referer.First()!) : null;
         var hasCorrectReferer = referer?.Host.Equals(_settings.SiteUrl.Host, StringComparison.InvariantCultureIgnoreCase) ??
                                 false;
 
@@ -151,7 +151,7 @@ public class DownloadController : Controller
         if (Guid.TryParse(orderId, out var oid))
         {
             var order = await _paymentOrders.Get(oid);
-            if (order?.Status == PaymentOrderStatus.Paid)
+            if (order?.Status == PaywallOrderStatus.Paid)
             {
                 return true;
             }

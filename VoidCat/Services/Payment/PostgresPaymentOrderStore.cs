@@ -1,5 +1,5 @@
-﻿using Dapper;
-using VoidCat.Model.Payments;
+﻿using Microsoft.EntityFrameworkCore;
+using VoidCat.Database;
 using VoidCat.Services.Abstractions;
 
 namespace VoidCat.Services.Payment;
@@ -7,98 +7,42 @@ namespace VoidCat.Services.Payment;
 /// <inheritdoc />
 public class PostgresPaymentOrderStore : IPaymentOrderStore
 {
-    private readonly PostgresConnectionFactory _connection;
+    private readonly VoidContext _db;
 
-    public PostgresPaymentOrderStore(PostgresConnectionFactory connection)
+    public PostgresPaymentOrderStore(VoidContext db)
     {
-        _connection = connection;
+        _db = db;
     }
 
     /// <inheritdoc />
-    public async ValueTask<PaymentOrder?> Get(Guid id)
+    public async ValueTask<PaywallOrder?> Get(Guid id)
     {
-        await using var conn = await _connection.Get();
-        var order = await conn.QuerySingleOrDefaultAsync<DtoPaymentOrder>(
-            @"select * from ""PaymentOrder"" where ""Id"" = :id", new {id});
-        if (order.Service is PaymentServices.Strike)
-        {
-            var lnDetails = await conn.QuerySingleAsync<LightningPaymentOrder>(
-                @"select * from ""PaymentOrderLightning"" where ""Order"" = :id", new
-                {
-                    id = order.Id
-                });
-            return new LightningPaymentOrder
-            {
-                Id = order.Id,
-                File = order.File,
-                Price = new(order.Amount, order.Currency),
-                Service = order.Service,
-                Status = order.Status,
-                Invoice = lnDetails.Invoice,
-                Expire = lnDetails.Expire
-            };
-        }
-
-        return order;
+        return await _db.PaywallOrders
+            .AsNoTracking()
+            .Include(a => a.OrderLightning)
+            .SingleOrDefaultAsync(a => a.Id == id);
     }
 
     /// <inheritdoc />
-    public ValueTask<IReadOnlyList<PaymentOrder>> Get(Guid[] ids)
+    public async ValueTask Add(Guid id, PaywallOrder obj)
     {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public async ValueTask Add(Guid id, PaymentOrder obj)
-    {
-        await using var conn = await _connection.Get();
-        await using var txn = await conn.BeginTransactionAsync();
-        await conn.ExecuteAsync(
-            @"insert into ""PaymentOrder""(""Id"", ""File"", ""Service"", ""Currency"", ""Amount"", ""Status"") 
-values(:id, :file, :service, :currency, :amt, :status)",
-            new
-            {
-                id,
-                file = obj.File,
-                service = (int) obj.Service,
-                currency = (int) obj.Price.Currency,
-                amt = obj.Price.Amount, // :amount wasn't working?
-                status = (int) obj.Status
-            });
-
-        if (obj is LightningPaymentOrder ln)
-        {
-            await conn.ExecuteAsync(
-                @"insert into ""PaymentOrderLightning""(""Order"", ""Invoice"", ""Expire"") values(:order, :invoice, :expire)",
-                new
-                {
-                    order = id,
-                    invoice = ln.Invoice,
-                    expire = ln.Expire.ToUniversalTime()
-                });
-        }
-
-        await txn.CommitAsync();
+        _db.PaywallOrders.Add(obj);
+        await _db.SaveChangesAsync();
     }
 
     /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"delete from ""PaymentOrder"" where ""Id"" = :id", new {id});
+        await _db.PaywallOrders
+            .Where(a => a.Id == id)
+            .ExecuteDeleteAsync();
     }
 
     /// <inheritdoc />
-    public async ValueTask UpdateStatus(Guid order, PaymentOrderStatus status)
+    public async ValueTask UpdateStatus(Guid order, PaywallOrderStatus status)
     {
-        await using var conn = await _connection.Get();
-        await conn.ExecuteAsync(@"update ""PaymentOrder"" set ""Status"" = :status where ""Id"" = :id",
-            new {id = order, status = (int) status});
-    }
-
-    private sealed class DtoPaymentOrder : PaymentOrder
-    {
-        public PaymentCurrencies Currency { get; init; }
-        public decimal Amount { get; init; }
+        await _db.PaywallOrders
+            .Where(a => a.Id == order)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Status, status));
     }
 }
