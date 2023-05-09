@@ -60,9 +60,6 @@
 		<Content Include="..\Dockerfile">
 		  <Link>Dockerfile</Link>
 		</Content>
-		<Content Include="..\nospa.dockerfile">
-		  <Link>nospa.dockerfile</Link>
-		</Content>
 		<Content Include="..\README.md">
 		  <Link>README.md</Link>
 		</Content>

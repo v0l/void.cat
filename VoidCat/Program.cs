@@ -110,9 +110,7 @@ static class Program
                 ep.MapControllers();
                 ep.MapMetrics();
                 ep.MapRazorPages();
-#if HostSPA
                 ep.MapFallbackToFile("index.html");
-#endif
             });
 
             await app.RunAsync();
