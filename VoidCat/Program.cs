@@ -93,10 +93,7 @@ static class Program
                 await RunMigrations(app.Services);
             }
 
-#if HostSPA
             app.UseStaticFiles();
-#endif
-
             app.UseHttpLogging();
             app.UseRouting();
             app.UseCors();
