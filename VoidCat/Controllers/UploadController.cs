@@ -120,9 +120,10 @@ namespace VoidCat.Controllers
 
                 if (cli)
                 {
-                    var urlBuilder = new UriBuilder(Request.IsHttps ? "https" : "http", Request.Host.Host,
-                        Request.Host.Port ?? 80,
-                        $"/d/{vf.Id.ToBase58()}");
+                    var urlBuilder = new UriBuilder(_settings.SiteUrl)
+                    {
+                        Path = $"/d/{vf.Id.ToBase58()}"
+                    };
 
                     return Content(urlBuilder.Uri.ToString(), "text/plain");
                 }
