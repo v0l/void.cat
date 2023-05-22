@@ -1,5 +1,6 @@
 ﻿@using VoidCat.Model
 @model VoidCat.Controllers.IndexController.IndexModel
+@inject VoidSettings settings
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,9 +21,14 @@
         <meta property="og:url" content="@($"https://{Context.Request.Host}/{Model.Id.ToBase58()}")"/>
                  
         var mime = Model.Meta.MimeType;
-        if (mime != default)
+        if (!string.IsNullOrEmpty(mime))
         {
-            var link = $"https://{Context.Request.Host}/d/{Model.Id.ToBase58()}";
+            var ub = new UriBuilder(settings.SiteUrl)
+            {
+                Path = $"/d/{Model.Id.ToBase58()}"
+            };
+            
+            var link = ub.ToString();
             if (mime.StartsWith("image/"))
             {
                 <meta property="og:image" content="@link"/>

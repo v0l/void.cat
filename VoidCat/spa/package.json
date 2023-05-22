@@ -4,6 +4,7 @@
     "src/*"
   ],
   "scripts": {
-    "build": "yarn workspace @void-cat/api build && yarn workspace @void-cat/app build"
+    "build": "yarn workspace @void-cat/api build && yarn workspace @void-cat/app build",
+    "start": "yarn workspace @void-cat/api build && yarn workspace @void-cat/app start"
   }
 }
