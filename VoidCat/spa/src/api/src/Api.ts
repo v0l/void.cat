@@ -52,9 +52,9 @@ export class VoidApi {
      */
     getUploader(
         file: File | Blob,
-        stateChange: StateChangeHandler,
-        progress: ProgressHandler,
-        proxyChallenge: ProxyChallengeHandler,
+        stateChange?: StateChangeHandler,
+        progress?: ProgressHandler,
+        proxyChallenge?: ProxyChallengeHandler,
         chunkSize?: number
     ): VoidUploader {
         if (StreamUploader.canUse()) {

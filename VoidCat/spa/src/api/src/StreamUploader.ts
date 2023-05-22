@@ -27,15 +27,15 @@ export class StreamUploader extends VoidUploader {
         return this.#encrypt?.getKey()
     }
 
-    async upload(): Promise<VoidUploadResult> {
-        this.onStateChange(UploadState.Hashing);
+    async upload(headers?: HeadersInit): Promise<VoidUploadResult> {
+        this.onStateChange?.(UploadState.Hashing);
         const hash = await this.digest(this.file);
         let offset = 0;
 
         const DefaultChunkSize = 1024 * 1024;
         const rsBase = new ReadableStream({
             start: async () => {
-                this.onStateChange(UploadState.Uploading);
+                this.onStateChange?.(UploadState.Uploading);
             },
             pull: async (controller) => {
                 const chunk = await this.readChunk(offset, controller.desiredSize ?? DefaultChunkSize);
@@ -43,7 +43,7 @@ export class StreamUploader extends VoidUploader {
                     controller.close();
                     return;
                 }
-                this.onProgress(offset + chunk.byteLength);
+                this.onProgress?.(offset + chunk.byteLength);
                 offset += chunk.byteLength
                 controller.enqueue(chunk);
             },
@@ -55,23 +55,26 @@ export class StreamUploader extends VoidUploader {
             highWaterMark: DefaultChunkSize
         });
 
-        const headers = {
+        const reqHeaders = {
             "Content-Type": "application/octet-stream",
             "V-Content-Type": !this.file.type ? "application/octet-stream" : this.file.type,
             "V-Filename": "name" in this.file ? this.file.name : "",
-            "V-Full-Digest": hash
+            "V-Full-Digest": hash,
         } as Record<string, string>;
         if (this.#encrypt) {
-            headers["V-EncryptionParams"] = JSON.stringify(this.#encrypt!.getParams());
+            reqHeaders["V-EncryptionParams"] = JSON.stringify(this.#encrypt!.getParams());
         }
         if (this.auth) {
-            headers["Authorization"] = `Bearer ${this.auth}`;
+            reqHeaders["Authorization"] = `Bearer ${this.auth}`;
         }
         const req = await fetch(`${this.uri}/upload`, {
             method: "POST",
             mode: "cors",
             body: this.#encrypt ? rsBase.pipeThrough(this.#encrypt!.getEncryptionTransform()) : rsBase,
-            headers,
+            headers: {
+                ...reqHeaders,
+                ...headers
+            },
             // @ts-ignore New stream spec
             duplex: 'half'
         });

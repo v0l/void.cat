@@ -1,8 +1,8 @@
 {
   "name": "@void-cat/api",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "void.cat API package",
-  "main": "dist/index.js",
+  "main": "dist/lib.js",
   "types": "dist/index.d.ts",
   "repository": "https://git.v0l.io/Kieran/void.cat",
   "author": "Kieran",

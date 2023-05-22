@@ -3,7 +3,9 @@
 const path = require('path');
 const isProduction = process.env.NODE_ENV == 'production';
 const config = {
-    entry: './src/index.ts',
+    entry: {
+        lib: './src/index.ts',
+    },
     devtool: isProduction ? "source-map" : "eval",
     output: {
         path: path.resolve(__dirname, 'dist'),

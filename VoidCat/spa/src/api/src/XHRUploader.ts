@@ -14,23 +14,23 @@ export class XHRUploader extends VoidUploader {
         return undefined;
     }
 
-    async upload(): Promise<VoidUploadResult> {
-        this.onStateChange(UploadState.Hashing);
+    async upload(headers?: HeadersInit): Promise<VoidUploadResult> {
+        this.onStateChange?.(UploadState.Hashing);
         const hash = await this.digest(this.file);
         if (this.file.size > this.maxChunkSize) {
-            return await this.#doSplitXHRUpload(hash, this.maxChunkSize);
+            return await this.#doSplitXHRUpload(hash, this.maxChunkSize, headers);
         } else {
-            return await this.#xhrSegment(this.file, hash);
+            return await this.#xhrSegment(this.file, hash, undefined, undefined, 1, 1, headers);
         }
     }
 
-    async #doSplitXHRUpload(hash: string, splitSize: number) {
+    async #doSplitXHRUpload(hash: string, splitSize: number, headers?: HeadersInit) {
         let xhr: VoidUploadResult | null = null;
         const segments = Math.ceil(this.file.size / splitSize);
         for (let s = 0; s < segments; s++) {
             const offset = s * splitSize;
             const slice = this.file.slice(offset, offset + splitSize, this.file.type);
-            xhr = await this.#xhrSegment(slice, hash, xhr?.file?.id, xhr?.file?.metadata?.editSecret, s + 1, segments);
+            xhr = await this.#xhrSegment(slice, hash, xhr?.file?.id, xhr?.file?.metadata?.editSecret, s + 1, segments, headers);
             if (!xhr.ok) {
                 break;
             }
@@ -46,9 +46,11 @@ export class XHRUploader extends VoidUploader {
      * @param editSecret
      * @param part Segment number
      * @param partOf Total number of segments
+     * @param headers
      */
-    async #xhrSegment(segment: ArrayBuffer | Blob, fullDigest: string, id?: string, editSecret?: string, part?: number, partOf?: number) {
-        this.onStateChange(UploadState.Uploading);
+    async #xhrSegment(segment: ArrayBuffer | Blob, fullDigest: string,
+                      id?: string, editSecret?: string, part?: number, partOf?: number, headers?: HeadersInit) {
+        this.onStateChange?.(UploadState.Uploading);
 
         return await new Promise<VoidUploadResult>((resolve, reject) => {
             try {
@@ -60,15 +62,15 @@ export class XHRUploader extends VoidUploader {
                     } else if (req.readyState === XMLHttpRequest.DONE && req.status === 403) {
                         const contentType = req.getResponseHeader("content-type");
                         if (contentType?.toLowerCase().trim().indexOf("text/html") === 0) {
-                            this.onProxyChallenge(req.response);
-                            this.onStateChange(UploadState.Challenge);
+                            this.onProxyChallenge?.(req.response);
+                            this.onStateChange?.(UploadState.Challenge);
                             reject(new Error("CF Challenge"));
                         }
                     }
                 };
                 req.upload.onprogress = (e) => {
                     if (e instanceof ProgressEvent) {
-                        this.onProgress(e.loaded);
+                        this.onProgress?.(e.loaded);
                     }
                 };
                 req.open("POST", id ? `${this.uri}/upload/${id}` : `${this.uri}/upload`);
@@ -83,6 +85,11 @@ export class XHRUploader extends VoidUploader {
                 }
                 if (editSecret) {
                     req.setRequestHeader("V-EditSecret", editSecret);
+                }
+                if (headers) {
+                    for (const [k, v] of Object.entries(headers)) {
+                        req.setRequestHeader(k, v);
+                    }
                 }
                 req.send(segment);
             } catch (e) {

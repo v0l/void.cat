@@ -27,16 +27,16 @@ export abstract class VoidUploader {
     protected file: File | Blob;
     protected auth?: string;
     protected maxChunkSize: number;
-    protected onStateChange: StateChangeHandler;
-    protected onProgress: ProgressHandler;
-    protected onProxyChallenge: ProxyChallengeHandler;
+    protected onStateChange?: StateChangeHandler;
+    protected onProgress?: ProgressHandler;
+    protected onProxyChallenge?: ProxyChallengeHandler;
 
     constructor(
         uri: string,
         file: File | Blob,
-        stateChange: StateChangeHandler,
-        progress: ProgressHandler,
-        proxyChallenge: ProxyChallengeHandler,
+        stateChange?: StateChangeHandler,
+        progress?: ProgressHandler,
+        proxyChallenge?: ProxyChallengeHandler,
         auth?: string,
         chunkSize?: number
     ) {
@@ -65,12 +65,16 @@ export abstract class VoidUploader {
             const slice = file.slice(offset, offset + ChunkSize);
             const chunk = await slice.arrayBuffer();
             sha.update(sjclcodec.toBits(new Uint8Array(chunk)));
-            this.onProgress(progress += chunk.byteLength);
+            this.onProgress?.(progress += chunk.byteLength);
         }
         return buf2hex(sjclcodec.fromBits(sha.finalize()));
     }
 
-    abstract upload(): Promise<VoidUploadResult>;
+    /**
+     * Upload a file to the API
+     * @param headers any additional headers to send with the request
+     */
+    abstract upload(headers?: HeadersInit): Promise<VoidUploadResult>;
 
     /**
      * Can we use local encryption
