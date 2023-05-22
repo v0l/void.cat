@@ -72,7 +72,7 @@
 
 	<Target Name="IncludeBuildFiles" AfterTargets="ComputeFilesToPublish">
 		<ItemGroup>
-			<_CopyItems Include="$(SpaRoot)build\**\*.*" />
+			<_CopyItems Include="$(SpaRoot)src\app\build\**\*.*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(_CopyItems)" DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)" />
 	</Target>
