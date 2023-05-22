@@ -31,16 +31,19 @@
             var link = ub.ToString();
             if (mime.StartsWith("image/"))
             {
+                <meta property="og:type" content="image"/>
                 <meta property="og:image" content="@link"/>
                 <meta property="og:image:type" content="@mime"/>
             }
             else if (mime.StartsWith("video/"))
             {
+                <meta property="og:type" content="video"/>
                 <meta property="og:video" content="@link"/>
                 <meta property="og:video:type" content="@mime"/>
             }
             else if (mime.StartsWith("audio/"))
             {
+                <meta property="og:type" content="audio"/>
                 <meta property="og:audio" content="@link"/>
                 <meta property="og:audio:type" content="@mime"/>
             }
