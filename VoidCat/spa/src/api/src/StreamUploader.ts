@@ -58,7 +58,7 @@ export class StreamUploader extends VoidUploader {
         const headers = {
             "Content-Type": "application/octet-stream",
             "V-Content-Type": !this.file.type ? "application/octet-stream" : this.file.type,
-            "V-Filename": this.file.name,
+            "V-Filename": "name" in this.file ? this.file.name : "",
             "V-Full-Digest": hash
         } as Record<string, string>;
         if (this.#encrypt) {

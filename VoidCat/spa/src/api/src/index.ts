@@ -97,11 +97,13 @@ export interface VoidFileMeta {
     size: number
     uploaded: string
     mimeType: string
+    digest?: string
     expires?: string
     url?: string
     editSecret?: string
     encryptionParams?: string
     magnetLink?: string
+    storage: string
 }
 
 export interface VirusScanStatus {

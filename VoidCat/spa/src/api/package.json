@@ -1,0 +1,28 @@
+{
+  "name": "@void-cat/api",
+  "version": "1.0.1",
+  "description": "void.cat API package",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "https://git.v0l.io/Kieran/void.cat",
+  "author": "Kieran",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "webpack --mode=production --node-env=production",
+    "build:dev": "webpack --mode=development",
+    "build:prod": "webpack --mode=production --node-env=production",
+    "watch": "webpack --watch"
+  },
+  "devDependencies": {
+    "@types/sjcl": "^1.0.30",
+    "@webpack-cli/generators": "^3.0.4",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.83.1",
+    "webpack-cli": "^5.1.1"
+  },
+  "dependencies": {
+    "sjcl": "^1.0.8"
+  }
+}

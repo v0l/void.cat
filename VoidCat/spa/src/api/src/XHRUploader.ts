@@ -25,7 +25,7 @@ export class XHRUploader extends VoidUploader {
     }
 
     async #doSplitXHRUpload(hash: string, splitSize: number) {
-        let xhr = null;
+        let xhr: VoidUploadResult | null = null;
         const segments = Math.ceil(this.file.size / splitSize);
         for (let s = 0; s < segments; s++) {
             const offset = s * splitSize;
@@ -74,7 +74,7 @@ export class XHRUploader extends VoidUploader {
                 req.open("POST", id ? `${this.uri}/upload/${id}` : `${this.uri}/upload`);
                 req.setRequestHeader("Content-Type", "application/octet-stream");
                 req.setRequestHeader("V-Content-Type", !this.file.type ? "application/octet-stream" : this.file.type);
-                req.setRequestHeader("V-Filename", this.file.name);
+                req.setRequestHeader("V-Filename", "name" in this.file ? this.file.name : "");
                 req.setRequestHeader("V-Full-Digest", fullDigest);
                 req.setRequestHeader("V-Segment", `${part}/${partOf}`)
                 if (this.auth) {
