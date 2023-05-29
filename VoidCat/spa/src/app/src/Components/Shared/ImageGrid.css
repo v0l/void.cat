@@ -5,14 +5,16 @@
 }
 
 .image-grid > div {
-    width: 100px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    width: 150px;
+    height: 150px;
 }
 
 .image-grid img, .image-grid video, .image-grid audio {
-    width: stretch;
+    max-width: stretch;
+    max-height: stretch;
 }

@@ -19,7 +19,7 @@ export default function ImageGrid(props: ImageGridProps) {
     const dispatch = useDispatch();
     const [files, setFiles] = useState<PagedResponse<VoidFileResponse>>();
     const [page, setPage] = useState(0);
-    const pageSize = 20;
+    const pageSize = 100;
     const [accessDenied, setAccessDenied] = useState<boolean>();
 
     async function loadFileList() {
