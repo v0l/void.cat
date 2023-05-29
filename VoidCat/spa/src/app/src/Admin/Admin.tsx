@@ -4,7 +4,6 @@ import {useSelector} from "react-redux";
 import {Navigate} from "react-router-dom";
 import {AdminProfile} from "@void-cat/api";
 
-import {FileList} from "../Components/Shared/FileList";
 import {UserList} from "./UserList";
 import {VoidButton} from "../Components/Shared/VoidButton";
 import VoidModal from "../Components/Shared/VoidModal";
@@ -12,6 +11,7 @@ import EditUser from "./EditUser";
 
 import useApi from "Hooks/UseApi";
 import {RootState} from "Store";
+import ImageGrid from "../Components/Shared/ImageGrid";
 
 export function Admin() {
     const auth = useSelector((state: RootState) => state.login.jwt);
@@ -41,7 +41,7 @@ export function Admin() {
                 ]}/>
 
                 <h2>Files</h2>
-                <FileList loadPage={r => AdminApi.adminListFiles(r)} actions={(i) => {
+                <ImageGrid loadPage={r => AdminApi.adminListFiles(r)} actions={(i) => {
                     return <td>
                         <VoidButton onClick={() => deleteFile(i.id)}>Delete</VoidButton>
                     </td>

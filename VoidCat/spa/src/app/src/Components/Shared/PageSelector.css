@@ -3,6 +3,7 @@
     grid-auto-flow: column;
     width: min-content;
     margin-top: 10px;
+    white-space: nowrap;
 }
 
 .page-buttons > div {

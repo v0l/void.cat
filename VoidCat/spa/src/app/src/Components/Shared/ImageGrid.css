@@ -1,0 +1,18 @@
+.image-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.image-grid > div {
+    width: 100px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.image-grid img, .image-grid video, .image-grid audio {
+    width: stretch;
+}

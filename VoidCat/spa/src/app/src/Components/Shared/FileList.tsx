@@ -65,7 +65,7 @@ export function FileList(props: FileListProps) {
         loadFileList().catch(console.error)
     }, [page]);
 
-    if (accessDenied === true) {
+    if (accessDenied) {
         return <h3>Access Denied</h3>;
     }
 
