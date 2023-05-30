@@ -23,7 +23,7 @@ public class StrikePaymentProvider : IPaymentProvider
     /// <inheritdoc />
     public async ValueTask<PaywallOrder?> CreateOrder(Paywall config)
     {
-        if (config.Service != PaywallService.Strike || config.PaywallStrike == default)
+        if (config.Service != PaywallService.Strike || config.Upstream == default)
         {
             throw new InvalidOperationException("Paywall config is not Strike");
         }
@@ -34,7 +34,7 @@ public class StrikePaymentProvider : IPaymentProvider
         if (currency == Currencies.USD)
         {
             // map USD to USDT if USD is not available and USDT is
-            var profile = await _strike.GetProfile(config.PaywallStrike!.Handle);
+            var profile = await _strike.GetProfile(config.Upstream);
             if (profile != default)
             {
                 var usd = profile.Currencies.FirstOrDefault(a => a.Currency == Currencies.USD);
@@ -48,7 +48,7 @@ public class StrikePaymentProvider : IPaymentProvider
 
         var invoice = await _strike.GenerateInvoice(new()
         {
-            Handle = config.PaywallStrike.Handle,
+            Handle = config.Upstream,
             Amount = new()
             {
                 Amount = config.Amount.ToString(CultureInfo.InvariantCulture),

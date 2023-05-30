@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VoidCat.Services;
@@ -11,9 +12,11 @@ using VoidCat.Services;
 namespace VoidCat.Migrations
 {
     [DbContext(typeof(VoidContext))]
-    partial class VoidContextModelSnapshot : ModelSnapshot
+    [Migration("20230529211008_SimplifyPaymentOrder")]
+    partial class SimplifyPaymentOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,7 +128,6 @@ namespace VoidCat.Migrations
             modelBuilder.Entity("VoidCat.Database.Paywall", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
@@ -133,9 +135,6 @@ namespace VoidCat.Migrations
 
                     b.Property<byte>("Currency")
                         .HasColumnType("smallint");
-
-                    b.Property<Guid>("FileId")
-                        .HasColumnType("uuid");
 
                     b.Property<bool>("Required")
                         .HasColumnType("boolean");
@@ -147,9 +146,6 @@ namespace VoidCat.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("FileId")
-                        .IsUnique();
 
                     b.ToTable("Payment", (string)null);
                 });
@@ -375,7 +371,7 @@ namespace VoidCat.Migrations
                 {
                     b.HasOne("VoidCat.Database.File", "File")
                         .WithOne("Paywall")
-                        .HasForeignKey("VoidCat.Database.Paywall", "FileId")
+                        .HasForeignKey("VoidCat.Database.Paywall", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

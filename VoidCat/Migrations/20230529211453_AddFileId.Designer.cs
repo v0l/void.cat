@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VoidCat.Services;
@@ -11,9 +12,11 @@ using VoidCat.Services;
 namespace VoidCat.Migrations
 {
     [DbContext(typeof(VoidContext))]
-    partial class VoidContextModelSnapshot : ModelSnapshot
+    [Migration("20230529211453_AddFileId")]
+    partial class AddFileId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

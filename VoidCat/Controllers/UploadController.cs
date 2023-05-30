@@ -282,15 +282,15 @@ namespace VoidCat.Controllers
 
             if (req.StrikeHandle != default)
             {
-                await _paymentStore.Delete(gid);
+                if (meta.Paywall?.Id != default)
+                {
+                    await _paymentStore.Delete(meta.Paywall.Id);
+                }
                 await _paymentStore.Add(gid, new Paywall
                 {
-                    File = meta,
+                    FileId = meta.Id,
                     Service = PaywallService.Strike,
-                    PaywallStrike = new()
-                    {
-                        Handle = req.StrikeHandle
-                    },
+                    Upstream = req.StrikeHandle,
                     Amount = req.Amount,
                     Currency = Enum.Parse<PaywallCurrency>(req.Currency),
                     Required = req.Required
@@ -299,8 +299,11 @@ namespace VoidCat.Controllers
                 return Ok();
             }
 
-            // if none set, delete config
-            await _paymentStore.Delete(gid);
+            // if none set, delete existing config
+            if (meta.Paywall?.Id != default)
+            {
+                await _paymentStore.Delete(meta.Paywall.Id);
+            }
             return Ok();
         }
 

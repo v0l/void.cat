@@ -1,21 +1,19 @@
 import "./ImageGrid.css";
 
 import {ApiError, PagedRequest, PagedResponse, PagedSortBy, PageSortOrder, VoidFileResponse} from "@void-cat/api";
-import {ReactNode, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {useDispatch} from "react-redux";
 import {logout} from "../../LoginState";
 import {PageSelector} from "./PageSelector";
 import {useNavigate} from "react-router-dom";
 
 interface ImageGridProps {
-    actions?: (f: VoidFileResponse) => ReactNode
     loadPage: (req: PagedRequest) => Promise<PagedResponse<any>>
 }
 
 export default function ImageGrid(props: ImageGridProps) {
     const navigate = useNavigate();
     const loadPage = props.loadPage;
-    const actions = props.actions;
     const dispatch = useDispatch();
     const [files, setFiles] = useState<PagedResponse<VoidFileResponse>>();
     const [page, setPage] = useState(0);
@@ -50,7 +48,7 @@ export default function ImageGrid(props: ImageGridProps) {
 
     function renderPreview(info: VoidFileResponse) {
         const link = `/d/${info.id}`;
-        
+
         if (info.metadata) {
             switch (info.metadata.mimeType) {
                 case "image/avif":
@@ -90,7 +88,11 @@ export default function ImageGrid(props: ImageGridProps) {
             }
         }
     }
-    
+
+    if (accessDenied) {
+        return <h3>Access Denied</h3>
+    }
+
     return <>
         <div className="image-grid">
             {files?.results.map(v => <div key={v.id} onClick={() => navigate(`/${v.id}`)}>

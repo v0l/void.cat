@@ -15,16 +15,18 @@ public class DownloadController : Controller
     private readonly FileStoreFactory _storage;
     private readonly FileInfoManager _fileInfo;
     private readonly IPaymentOrderStore _paymentOrders;
+    private readonly IPaymentFactory _paymentFactory;
     private readonly ILogger<DownloadController> _logger;
 
     public DownloadController(FileStoreFactory storage, ILogger<DownloadController> logger, FileInfoManager fileInfo,
-        IPaymentOrderStore paymentOrderStore, VoidSettings settings)
+        IPaymentOrderStore paymentOrderStore, VoidSettings settings, IPaymentFactory paymentFactory)
     {
         _storage = storage;
         _logger = logger;
         _fileInfo = fileInfo;
         _paymentOrders = paymentOrderStore;
         _settings = settings;
+        _paymentFactory = paymentFactory;
     }
 
     [HttpOptions]
@@ -119,10 +121,30 @@ public class DownloadController : Controller
         // check payment order
         if (meta.Payment != default && meta.Payment.Service != PaywallService.None && meta.Payment.Required)
         {
-            var orderId = Request.Headers.GetHeader("V-OrderId") ?? Request.Query["orderId"];
+            var h402 = Request.Headers.FirstOrDefault(a => a.Key.Equals("Authorization", StringComparison.InvariantCultureIgnoreCase))
+                .Value.FirstOrDefault(a => a?.StartsWith("L402") ?? false);
+
+            var orderId = Request.Headers.GetHeader("V-OrderId") ?? h402 ?? Request.Query["orderId"];
             if (!await IsOrderPaid(orderId!))
             {
+                Response.Headers.CacheControl = "no-cache";
                 Response.StatusCode = (int)HttpStatusCode.PaymentRequired;
+                if (meta.Payment.Service is PaywallService.Strike or PaywallService.LnProxy)
+                {
+                    var accept = Request.Headers.GetHeader("accept");
+                    if (accept == "L402")
+                    {
+                        var provider = await _paymentFactory.CreateProvider(meta.Payment.Service);
+                        var order = await provider.CreateOrder(meta.Payment!);
+                        if (order != default)
+                        {
+                            Response.Headers.Add("access-control-expose-headers", "www-authenticate");
+                            Response.Headers.Add("www-authenticate",
+                                $"L402 macaroon=\"{Convert.ToBase64String(order.Id.ToByteArray())}\", invoice=\"{order!.OrderLightning!.Invoice}\"");
+                        }
+                    }
+                }
+
                 return default;
             }
         }
@@ -146,8 +168,13 @@ public class DownloadController : Controller
         return meta;
     }
 
-    private async ValueTask<bool> IsOrderPaid(string orderId)
+    private async ValueTask<bool> IsOrderPaid(string? orderId)
     {
+        if (orderId?.StartsWith("L402") ?? false)
+        {
+            orderId = new Guid(Convert.FromBase64String(orderId.Substring(5).Split(":")[0])).ToString();
+        }
+
         if (Guid.TryParse(orderId, out var oid))
         {
             var order = await _paymentOrders.Get(oid);

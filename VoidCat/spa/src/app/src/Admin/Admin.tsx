@@ -41,11 +41,7 @@ export function Admin() {
                 ]}/>
 
                 <h2>Files</h2>
-                <ImageGrid loadPage={r => AdminApi.adminListFiles(r)} actions={(i) => {
-                    return <td>
-                        <VoidButton onClick={() => deleteFile(i.id)}>Delete</VoidButton>
-                    </td>
-                }}/>
+                <ImageGrid loadPage={r => AdminApi.adminListFiles(r)}/>
 
                 {editUser &&
                     <VoidModal title="Edit user">

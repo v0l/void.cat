@@ -23,6 +23,8 @@ public class PaywallConfiguration : IEntityTypeConfiguration<Paywall>
 
         builder.HasOne(a => a.File)
             .WithOne(a => a.Paywall)
-            .HasForeignKey<Paywall>();
+            .HasForeignKey<Paywall>(a => a.FileId);
+
+        builder.Property(a => a.Upstream);
     }
 }

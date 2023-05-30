@@ -19,7 +19,6 @@ public sealed class PostgresPaymentStore : IPaymentStore
     {
         return await _db.Paywalls
             .AsNoTracking()
-            .Include(a => a.PaywallStrike)
             .SingleOrDefaultAsync(a => a.Id == id);
     }
 

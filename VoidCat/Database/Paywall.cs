@@ -29,6 +29,7 @@ public enum PaywallService
 public class Paywall
 {
     public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid FileId { get; init; }
     public File File { get; init; } = null!;
     public PaywallService Service { get; init; }
     public PaywallCurrency Currency { get; init; }
@@ -36,12 +37,8 @@ public class Paywall
 
     public bool Required { get; init; } = true;
     
-    public PaywallStrike? PaywallStrike { get; init; }
-}
-
-public class PaywallStrike
-{
-    public Guid Id { get; init; } = Guid.NewGuid();
-    public Paywall Paywall { get; init; } = null!;
-    public string Handle { get; init; } = null!;
+    /// <summary>
+    /// Upstream identifier, handle or lnurl
+    /// </summary>
+    public string? Upstream { get; init; }
 }

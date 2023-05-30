@@ -40,7 +40,6 @@ public sealed class FileInfoManager
         var meta = await _metadataStore.Get(id);
         if (meta == default) return default;
 
-        var payment = await _paymentStore.Get(id);
         var bandwidth = await _statsReporter.GetBandwidth(id);
         var virusScan = await _virusScanStore.GetByFile(id);
         var uploader = await _userUploadsStore.Uploader(id);
@@ -51,7 +50,7 @@ public sealed class FileInfoManager
         {
             Id = id,
             Metadata = meta.ToMeta(withEditSecret),
-            Payment = payment,
+            Payment = meta.Paywall,
             Bandwidth = bandwidth,
             Uploader = user?.Flags.HasFlag(UserFlags.PublicProfile) == true || withEditSecret ? user?.ToApiUser(false) : null,
             VirusScan = virusScan?.ToVirusStatus()
