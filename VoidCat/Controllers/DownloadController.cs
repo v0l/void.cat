@@ -181,6 +181,20 @@ public class DownloadController : Controller
             if (order?.Status == PaywallOrderStatus.Paid)
             {
                 return true;
+            } 
+            if (order?.Status is PaywallOrderStatus.Unpaid)
+            {
+                // check status
+                var svc = await _paymentFactory.CreateProvider(order.Service);
+                var status = await svc.GetOrderStatus(order.Id);
+                if (status != default && status.Status != order.Status)
+                {
+                    await _paymentOrders.UpdateStatus(order.Id, status.Status);
+                }
+                if (status?.Status == PaywallOrderStatus.Paid)
+                {
+                    return true;
+                } 
             }
         }
 
