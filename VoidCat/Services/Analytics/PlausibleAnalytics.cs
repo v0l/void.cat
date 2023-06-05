@@ -9,12 +9,15 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
 {
     private readonly HttpClient _client;
     private readonly string _domain;
+    private readonly Uri _siteUrl;
 
     public PlausibleAnalytics(HttpClient client, VoidSettings settings)
     {
         _client = client;
         _client.BaseAddress = settings.PlausibleAnalytics!.Endpoint!;
+        _client.Timeout = TimeSpan.FromSeconds(1);
         _domain = settings.PlausibleAnalytics!.Domain!;
+        _siteUrl = settings.SiteUrl;
     }
 
     public async Task TrackPageView(HttpContext context)
@@ -24,9 +27,9 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
         request.Headers.Add("x-forwarded-for",
             context.Request.Headers.TryGetValue("x-forwarded-for", out var xff) ? xff.First() : null);
 
-        var ub = new UriBuilder("http:", context.Request.Host.Host, context.Request.Host.Port ?? 80,
-            context.Request.Path)
+        var ub = new UriBuilder(_siteUrl)
         {
+            Path = context.Request.Path,
             Query = context.Request.QueryString.Value
         };
 
@@ -37,6 +40,7 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
                     ? new Uri(context.Request.Headers.Referer.FirstOrDefault()!)
                     : null
         };
+
         request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ev)));
         request.Content.Headers.ContentType = new("application/json");
 
@@ -56,16 +60,22 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
             Url = url;
         }
 
-        [JsonProperty("name")] public string Name { get; init; } = "pageview";
+        [JsonProperty("name")]
+        public string Name { get; init; } = "pageview";
 
-        [JsonProperty("domain")] public string Domain { get; init; }
+        [JsonProperty("domain")]
+        public string Domain { get; init; }
 
-        [JsonProperty("url")] public Uri Url { get; init; }
+        [JsonProperty("url")]
+        public Uri Url { get; init; }
 
-        [JsonProperty("screen_width")] public int? ScreenWidth { get; init; }
+        [JsonProperty("screen_width")]
+        public int? ScreenWidth { get; init; }
 
-        [JsonProperty("referrer")] public Uri? Referrer { get; init; }
+        [JsonProperty("referrer")]
+        public Uri? Referrer { get; init; }
 
-        [JsonProperty("props")] public object? Props { get; init; }
+        [JsonProperty("props")]
+        public object? Props { get; init; }
     }
 }
