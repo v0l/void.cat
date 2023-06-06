@@ -25,7 +25,7 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
     public async Task TrackPageView(HttpContext context)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/event");
-        request.Headers.Add("user-agent", context.Request.Headers.UserAgent.First());
+        request.Headers.UserAgent.ParseAdd(context.Request.Headers.UserAgent);
         if (context.Request.Headers.TryGetValue("x-forwarded-for", out var xff))
         {
             foreach (var xf in xff)
@@ -37,21 +37,24 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
         var ub = new UriBuilder(_siteUrl)
         {
             Path = context.Request.Path,
-            Query = context.Request.QueryString.Value
+            Query = context.Request.QueryString.ToUriComponent()
         };
 
         var ev = new EventObj(_domain, ub.Uri)
         {
             Referrer =
                 context.Request.Headers.Referer.Any()
-                    ? new Uri(context.Request.Headers.Referer.FirstOrDefault()!)
+                    ? new Uri(context.Request.Headers.Referer.ToString())
                     : null
         };
 
-        request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ev)));
-        request.Content.Headers.ContentType = new("application/json");
+        var json = JsonConvert.SerializeObject(ev, new JsonSerializerSettings()
+        {
+            NullValueHandling = NullValueHandling.Ignore
+        });
 
-        _logger.LogDebug("Sending pageview {request}", request.ToString());
+        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        _logger.LogDebug("Sending pageview {request} {json}", request.ToString(), json);
         var rsp = await _client.SendAsync(request);
         if (!rsp.IsSuccessStatusCode)
         {
