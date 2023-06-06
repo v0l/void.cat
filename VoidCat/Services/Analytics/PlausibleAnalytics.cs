@@ -8,12 +8,14 @@ namespace VoidCat.Services.Analytics;
 public class PlausibleAnalytics : IWebAnalyticsCollector
 {
     private readonly HttpClient _client;
+    private readonly ILogger<PlausibleAnalytics> _logger;
     private readonly string _domain;
     private readonly Uri _siteUrl;
 
-    public PlausibleAnalytics(HttpClient client, VoidSettings settings)
+    public PlausibleAnalytics(HttpClient client, VoidSettings settings, ILogger<PlausibleAnalytics> logger)
     {
         _client = client;
+        _logger = logger;
         _client.BaseAddress = settings.PlausibleAnalytics!.Endpoint!;
         _client.Timeout = TimeSpan.FromSeconds(1);
         _domain = settings.PlausibleAnalytics!.Domain!;
@@ -24,8 +26,13 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/event");
         request.Headers.Add("user-agent", context.Request.Headers.UserAgent.First());
-        request.Headers.Add("x-forwarded-for",
-            context.Request.Headers.TryGetValue("x-forwarded-for", out var xff) ? xff.First() : null);
+        if (context.Request.Headers.TryGetValue("x-forwarded-for", out var xff))
+        {
+            foreach (var xf in xff)
+            {
+                request.Headers.Add("x-forwarded-for", xf);
+            }
+        }
 
         var ub = new UriBuilder(_siteUrl)
         {
@@ -44,6 +51,7 @@ public class PlausibleAnalytics : IWebAnalyticsCollector
         request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(ev)));
         request.Content.Headers.ContentType = new("application/json");
 
+        _logger.LogDebug("Sending pageview {request}", request.ToString());
         var rsp = await _client.SendAsync(request);
         if (!rsp.IsSuccessStatusCode)
         {
