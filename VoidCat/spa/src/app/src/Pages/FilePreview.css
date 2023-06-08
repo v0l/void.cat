@@ -2,11 +2,9 @@
     margin-top: 2vh;
 }
 
-.preview img, .preview video, .preview object {
+.preview img, .preview video, .preview object, .preview audio {
     width: 100%;
-}
-.preview object {
-    height: 1018px;
+    max-height: 100vh;
 }
 
 .preview .file-stats {

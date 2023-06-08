@@ -2,17 +2,17 @@ import "./ImageGrid.css";
 
 import {ApiError, PagedRequest, PagedResponse, PagedSortBy, PageSortOrder, VoidFileResponse} from "@void-cat/api";
 import {useEffect, useState} from "react";
+import {Link} from "react-router-dom";
 import {useDispatch} from "react-redux";
+
 import {logout} from "../../LoginState";
 import {PageSelector} from "./PageSelector";
-import {useNavigate} from "react-router-dom";
 
 interface ImageGridProps {
     loadPage: (req: PagedRequest) => Promise<PagedResponse<any>>
 }
 
 export default function ImageGrid(props: ImageGridProps) {
-    const navigate = useNavigate();
     const loadPage = props.loadPage;
     const dispatch = useDispatch();
     const [files, setFiles] = useState<PagedResponse<VoidFileResponse>>();
@@ -69,7 +69,7 @@ export default function ImageGrid(props: ImageGridProps) {
                 case "audio/midi":
                 case "audio/mpeg":
                 case "audio/ogg": {
-                    return <audio src={link} controls/>;
+                    return <audio src={link}/>;
                 }
                 case "video/x-msvideo":
                 case "video/mpeg":
@@ -95,9 +95,9 @@ export default function ImageGrid(props: ImageGridProps) {
 
     return <>
         <div className="image-grid">
-            {files?.results.map(v => <div key={v.id} onClick={() => navigate(`/${v.id}`)}>
+            {files?.results.map(v => <Link key={v.id} to={`/${v.id}`}>
                 {renderPreview(v)}
-            </div>)}
+            </Link>)}
         </div>
         <PageSelector onSelectPage={(x) => setPage(x)} page={page} total={files?.totalResults ?? 0}
                       pageSize={pageSize}/>
