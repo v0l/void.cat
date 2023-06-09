@@ -1,6 +1,6 @@
 import './App.css';
 
-import {createBrowserRouter, Outlet, RouterProvider} from "react-router-dom";
+import {createBrowserRouter, LoaderFunctionArgs, Outlet, RouterProvider} from "react-router-dom";
 import {Provider} from "react-redux";
 
 import store from "./Store";
@@ -11,6 +11,8 @@ import {UserLogin} from "./Pages/UserLogin";
 import {ProfilePage} from "./Pages/Profile";
 import {Header} from "./Components/Shared/Header";
 import {Donate} from "./Pages/Donate";
+import {VoidApi} from "@void-cat/api";
+import {ApiHost} from "./Const";
 
 
 const router = createBrowserRouter([
@@ -27,6 +29,13 @@ const router = createBrowserRouter([
             },
             {
                 path: "/u/:id",
+                loader: async ({params}: LoaderFunctionArgs) => {
+                    const api = new VoidApi(ApiHost, store.getState().login.jwt);
+                    if(params.id) {
+                        return await api.getUser(params.id);
+                    }
+                    return null;
+                },
                 element: <ProfilePage/>
             },
             {

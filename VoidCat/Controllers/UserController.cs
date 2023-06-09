@@ -43,10 +43,12 @@ public class UserController : Controller
 
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         var user = await _store.Get(requestedId);
-        if (loggedUser != requestedId && !(user?.Flags.HasFlag(UserFlags.PublicProfile) ?? false))
+        if (user == default) return NotFound();
+        if (loggedUser != requestedId && !user.Flags.HasFlag(UserFlags.PublicProfile))
             return NotFound();
 
-        return Json(user!.ToApiUser(isMe));
+        var isMyProfile = requestedId == user.Id;
+        return Json(user!.ToApiUser(isMyProfile));
     }
 
     /// <summary>

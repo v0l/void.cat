@@ -1,8 +1,8 @@
 import "./Profile.css";
-import {Fragment, useEffect, useState} from "react";
+import {Fragment, useState} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {default as moment} from "moment";
-import {useParams} from "react-router-dom";
+import {useLoaderData} from "react-router-dom";
 import {Profile} from "@void-cat/api";
 
 import useApi from "Hooks/UseApi";
@@ -16,11 +16,10 @@ import ApiKeyList from "../Components/Profile/ApiKeyList";
 
 export function ProfilePage() {
     const dispatch = useDispatch();
-    const params = useParams();
+    const loader = useLoaderData();
     const Api = useApi();
 
-    const [profile, setProfile] = useState<Profile>();
-    const [noProfile, setNoProfile] = useState<boolean>();
+    const [profile, setProfile] = useState(loader as Profile | null);
     const [emailCode, setEmailCode] = useState("");
     const [emailCodeError, setEmailCodeError] = useState("");
     const [newCodeSent, setNewCodeSent] = useState(false);
@@ -30,17 +29,6 @@ export function ProfilePage() {
     const canEdit = localProfile?.id === profile?.id;
     const needsEmailVerify = canEdit && profile?.needsVerification === true;
     const cantEditProfile = canEdit && !needsEmailVerify;
-
-
-    async function loadProfile(id: string) {
-        try {
-            let p = await Api.getUser(id);
-            setProfile(p);
-        } catch (e) {
-            console.error(e);
-            setNoProfile(true);
-        }
-    }
 
     async function changeAvatar() {
         const res = await new Promise<Array<File>>((resolve) => {
@@ -54,9 +42,7 @@ export function ProfilePage() {
         });
 
         const file = res[0];
-        const noop = (_: any) => {
-        };
-        const uploader = Api.getUploader(file, noop, noop, noop);
+        const uploader = Api.getUploader(file);
         const rsp = await uploader.upload();
         if (rsp.ok) {
             setProfile({
@@ -79,7 +65,6 @@ export function ProfilePage() {
     async function submitCode(id: string, code: string) {
         try {
             await Api.submitVerifyCode(id, code);
-            await loadProfile(id);
         } catch (e) {
             console.error(e);
             setEmailCodeError("Invalid or expired code.");
@@ -157,12 +142,6 @@ export function ProfilePage() {
         );
     }
 
-    useEffect(() => {
-        if (params.id) {
-            loadProfile(params.id).catch(console.error);
-        }
-    }, [params]);
-
     if (profile) {
         let avatarUrl = profile.avatar ?? DefaultAvatar;
         if (!avatarUrl.startsWith("http")) {
@@ -207,12 +186,6 @@ export function ProfilePage() {
                     <FileList loadPage={(req) => Api.listUserFiles(profile.id, req)}/>
                     {cantEditProfile ? <ApiKeyList/> : null}
                 </div>
-            </div>
-        );
-    } else if (noProfile) {
-        return (
-            <div className="page">
-                <h1>No profile found :(</h1>
             </div>
         );
     } else {

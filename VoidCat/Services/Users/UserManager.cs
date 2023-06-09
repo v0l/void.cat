@@ -117,6 +117,7 @@ public class UserManager
             var users = await _store.ListUsers(new(0, 1));
             if (users.TotalResults == 0)
             {
+                newUser.Flags |= UserFlags.EmailVerified; // force email as verified for admin user
                 newUser.Roles.Add(new()
                 {
                     UserId = newUser.Id,
