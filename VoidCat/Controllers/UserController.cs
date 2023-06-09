@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using VoidCat.Database;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
@@ -137,17 +138,16 @@ public class UserController : Controller
     /// Confirm email verification code
     /// </summary>
     /// <param name="id">User id to verify</param>
-    /// <param name="code">Verification code to check</param>
+    /// <param name="req">Verification code to check</param>
     /// <returns></returns>
     [HttpPost]
     [Route("verify")]
-    public async Task<IActionResult> VerifyCode([FromRoute] string id, [FromBody] string code)
+    public async Task<IActionResult> VerifyCode([FromRoute] string id, [FromBody] VerifyCodeRequest req)
     {
         var user = await GetAuthorizedUser(id);
         if (user == default) return Unauthorized();
 
-        var token = code.FromBase58Guid();
-        if (!await _emailVerification.VerifyCode(user, token)) return BadRequest();
+        if (!await _emailVerification.VerifyCode(user, req.Code)) return BadRequest();
 
         user.Flags |= UserFlags.EmailVerified;
         await _store.UpdateProfile(user);
@@ -166,5 +166,12 @@ public class UserController : Controller
     {
         var gid = id.FromBase58Guid();
         return await _store.Get(gid);
+    }
+
+    public class VerifyCodeRequest
+    {
+        [JsonProperty("code")]
+        [JsonConverter(typeof(Base58GuidConverter))]
+        public Guid Code { get; init; }
     }
 }
