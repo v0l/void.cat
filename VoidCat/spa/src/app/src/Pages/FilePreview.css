@@ -3,7 +3,7 @@
 }
 
 .preview img, .preview video, .preview object, .preview audio {
-    width: 100%;
+    max-width: 100%;
     max-height: 100vh;
 }
 
