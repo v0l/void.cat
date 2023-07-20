@@ -1,5 +1,0 @@
-src/
-nodes_modules/
-yarn*
-tsconfig.json
-webpack.config.js
