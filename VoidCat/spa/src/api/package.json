@@ -1,6 +1,6 @@
 {
   "name": "@void-cat/api",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "void.cat API package",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

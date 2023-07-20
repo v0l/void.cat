@@ -1,5 +1,5 @@
-import {UploadState, VoidUploader} from "./Upload";
-import {VoidUploadResult} from "./index";
+import { UploadState, VoidUploader } from "./upload";
+import { VoidUploadResult } from "./index";
 
 export class XHRUploader extends VoidUploader {
     canEncrypt(): boolean {
@@ -49,7 +49,7 @@ export class XHRUploader extends VoidUploader {
      * @param headers
      */
     async #xhrSegment(segment: ArrayBuffer | Blob, fullDigest: string,
-                      id?: string, editSecret?: string, part?: number, partOf?: number, headers?: HeadersInit) {
+        id?: string, editSecret?: string, part?: number, partOf?: number, headers?: HeadersInit) {
         this.onStateChange?.(UploadState.Uploading);
 
         return await new Promise<VoidUploadResult>((resolve, reject) => {

@@ -1,6 +1,6 @@
-import {UploadState, VoidUploader} from "./Upload";
-import {VoidUploadResult} from "./index";
-import {StreamEncryption} from "./StreamEncryption";
+import { UploadState, VoidUploader } from "./upload";
+import { VoidUploadResult } from "./index";
+import { StreamEncryption } from "./stream-encryption";
 
 export class StreamUploader extends VoidUploader {
     #encrypt?: StreamEncryption;

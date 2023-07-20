@@ -9,9 +9,9 @@ import {
     SiteInfoResponse,
     VoidFileResponse
 } from "./index";
-import {ProgressHandler, ProxyChallengeHandler, StateChangeHandler, VoidUploader} from "./Upload";
-import {StreamUploader} from "./StreamUploader";
-import {XHRUploader} from "./XHRUploader";
+import { ProgressHandler, ProxyChallengeHandler, StateChangeHandler, VoidUploader } from "./upload";
+import { StreamUploader } from "./stream-uploader";
+import { XHRUploader } from "./xhr-uploader";
 
 export class VoidApi {
     readonly #uri: string
@@ -88,11 +88,11 @@ export class VoidApi {
     }
 
     login(username: string, password: string, captcha?: string) {
-        return this.#req<LoginSession>("POST", `/auth/login`, {username, password, captcha});
+        return this.#req<LoginSession>("POST", `/auth/login`, { username, password, captcha });
     }
 
     register(username: string, password: string, captcha?: string) {
-        return this.#req<LoginSession>("POST", `/auth/register`, {username, password, captcha});
+        return this.#req<LoginSession>("POST", `/auth/register`, { username, password, captcha });
     }
 
     getUser(id: string) {
@@ -108,7 +108,7 @@ export class VoidApi {
     }
 
     submitVerifyCode(uid: string, code: string) {
-        return this.#req<void>("POST", `/user/${uid}/verify`, {code});
+        return this.#req<void>("POST", `/user/${uid}/verify`, { code });
     }
 
     sendNewCode(uid: string) {

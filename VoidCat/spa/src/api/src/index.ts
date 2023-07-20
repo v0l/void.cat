@@ -1,6 +1,6 @@
-export {VoidApi} from "./Api"
-export {UploadState} from "./Upload";
-export {StreamEncryption} from "./StreamEncryption";
+export { VoidApi } from "./api"
+export { UploadState } from "./upload";
+export { StreamEncryption } from "./stream-encryption";
 
 export class ApiError extends Error {
     readonly statusCode: number

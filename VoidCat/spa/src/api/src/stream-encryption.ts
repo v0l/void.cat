@@ -1,7 +1,7 @@
-﻿import {sjclcodec} from "./codecBytes";
-import sjcl, {SjclCipher} from "sjcl";
+﻿import { sjclcodec } from "./codecBytes";
+import sjcl, { SjclCipher } from "sjcl";
 
-import {buf2hex} from "Util";
+import { buf2hex } from "./utils";
 
 interface EncryptionParams {
     ts: number,

@@ -1,7 +1,7 @@
-import {VoidUploadResult} from "./index";
+import { VoidUploadResult } from "./index";
 import sjcl from "sjcl";
-import {sjclcodec} from "./codecBytes";
-import {buf2hex} from "./Util";
+import { sjclcodec } from "./codecBytes";
+import { buf2hex } from "./utils";
 /**
  * Generic upload state
  */
