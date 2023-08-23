@@ -59,7 +59,10 @@ namespace VoidCat.Controllers
         {
             try
             {
-                if (_settings.MaintenanceMode)
+                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
+                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
+
+                if (_settings.MaintenanceMode && !stripMetadata)
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
                 }
@@ -67,8 +70,6 @@ namespace VoidCat.Controllers
                 var uid = HttpContext.GetUserId();
                 var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
-                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
-                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
 
                 if (string.IsNullOrEmpty(mime) && !string.IsNullOrEmpty(filename))
                 {
@@ -156,7 +157,10 @@ namespace VoidCat.Controllers
         {
             try
             {
-                if (_settings.MaintenanceMode)
+                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
+                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
+
+                if (_settings.MaintenanceMode && !stripMetadata)
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
                 }
@@ -175,9 +179,6 @@ namespace VoidCat.Controllers
                 }
 
                 var editSecret = Request.Headers.GetHeader("V-EditSecret");
-                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
-                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
-
                 var vf = await _storage.Ingress(new(Request.Body, meta, segment, totalSegments, stripMetadata)
                 {
                     EditSecret = editSecret?.FromBase58Guid() ?? Guid.Empty,
@@ -286,6 +287,7 @@ namespace VoidCat.Controllers
                 {
                     await _paymentStore.Delete(meta.Paywall.Id);
                 }
+
                 await _paymentStore.Add(gid, new Paywall
                 {
                     FileId = meta.Id,
@@ -304,6 +306,7 @@ namespace VoidCat.Controllers
             {
                 await _paymentStore.Delete(meta.Paywall.Id);
             }
+
             return Ok();
         }
 
