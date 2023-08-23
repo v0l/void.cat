@@ -12,7 +12,7 @@ steps:
     privileged: true
     environment: 
       TOKEN:
-        from_secret: token
+        from_secret: gitea
     commands:
       - img login -u kieran -p $TOKEN git.v0l.io
       - img build -t git.v0l.io/kieran/void-cat:latest .
