@@ -6,5 +6,6 @@
   "scripts": {
     "build": "yarn workspace @void-cat/api build && yarn workspace @void-cat/app build",
     "start": "yarn workspace @void-cat/api build && yarn workspace @void-cat/app start"
-  }
+  },
+  "packageManager": "yarn@3.6.2"
 }

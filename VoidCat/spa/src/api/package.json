@@ -7,7 +7,6 @@
   "repository": "https://git.v0l.io/Kieran/void.cat",
   "author": "Kieran",
   "license": "MIT",
-  "private": false,
   "scripts": {
     "build": "rm -rf dist && tsc"
   },
