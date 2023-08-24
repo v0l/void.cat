@@ -171,6 +171,9 @@ public static class VoidStartup
             services.AddTransient<IMigration, EFMigrationSetup>();
             services.AddTransient<IMigration, EFMigration>();
         }
+
+        services.AddTransient<IMigration, FileStoreV2>();
+        services.AddTransient<IMigration, CleanupLocalDiskStore>();
     }
 
     public static JsonSerializerSettings ConfigJsonSettings(JsonSerializerSettings s)

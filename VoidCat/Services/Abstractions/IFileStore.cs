@@ -12,6 +12,13 @@ public interface IFileStore
     /// Return key for named instance
     /// </summary>
     string? Key { get; }
+
+    /// <summary>
+    /// Check if a file exists in the store
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    ValueTask<bool> Exists(Guid id);
     
     /// <summary>
     /// Ingress a file into the system (Upload)

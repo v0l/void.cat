@@ -66,12 +66,8 @@ public class PostgresFileMetadataStore : IFileMetadataStore
     /// <inheritdoc />
     public async ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
     {
-        var count = await _db.Files.CountAsync();
-
-        async IAsyncEnumerable<Database.File> Enumerate()
+        IQueryable<Database.File> MakeQuery(VoidContext db)
         {
-            using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
             var q = db.Files.AsNoTracking().AsQueryable();
             switch (request.SortBy, request.SortOrder)
             {
@@ -101,7 +97,15 @@ public class PostgresFileMetadataStore : IFileMetadataStore
                     break;
             }
 
-            await foreach (var r in q.Skip(request.Page * request.PageSize).Take(request.PageSize).AsAsyncEnumerable())
+            return q.Skip(request.Page * request.PageSize).Take(request.PageSize);
+        }
+        
+        async IAsyncEnumerable<Database.File> Enumerate()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
+            
+            await foreach (var r in MakeQuery(db).AsAsyncEnumerable())
             {
                 yield return r;
             }
@@ -109,7 +113,7 @@ public class PostgresFileMetadataStore : IFileMetadataStore
 
         return new()
         {
-            TotalResults = count,
+            TotalResults = await MakeQuery(_db).CountAsync(),
             PageSize = request.PageSize,
             Page = request.Page,
             Results = Enumerate()

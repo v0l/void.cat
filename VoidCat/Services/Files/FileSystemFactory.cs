@@ -35,6 +35,12 @@ public class FileStoreFactory : IFileStore
     /// <inheritdoc />
     public string? Key => null;
 
+    public async ValueTask<bool> Exists(Guid id)
+    {
+        var store = await GetStore(id);
+        return await store.Exists(id);
+    }
+
     /// <inheritdoc />
     public ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
@@ -43,7 +49,7 @@ public class FileStoreFactory : IFileStore
         {
             throw new InvalidOperationException($"Cannot find store '{payload.Meta.Storage}'");
         }
-        
+
         return store.Ingress(payload, cts);
     }
 
@@ -53,7 +59,7 @@ public class FileStoreFactory : IFileStore
         var store = await GetStore(request.Id);
         await store.Egress(request, outStream, cts);
     }
-    
+
     /// <inheritdoc />
     public async ValueTask<EgressResult> StartEgress(EgressRequest request)
     {

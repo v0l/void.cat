@@ -24,10 +24,26 @@ public class S3FileStore : StreamFileStore, IFileStore
         _client = _config.CreateClient();
     }
 
-    /// <inheritdoc />
     public string Key => _config.Name;
 
-    /// <inheritdoc />
+    public async ValueTask<bool> Exists(Guid id)
+    {
+        try
+        {
+            await _client.GetObjectMetadataAsync(new GetObjectMetadataRequest()
+            {
+                BucketName = _config.BucketName,
+                Key = id.ToString()
+            });
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
         if (payload.IsMultipart) return await IngressMultipart(payload, cts);
@@ -206,7 +222,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 InputStream = fsTmp,
                 DisablePayloadSigning = _config.DisablePayloadSigning
             };
-            
+
             var bodyResponse = await _client.UploadPartAsync(mBody, cts);
             if (bodyResponse.HttpStatusCode != HttpStatusCode.OK)
             {
@@ -241,7 +257,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                     throw new Exception("Upload failed");
                 }
             }
-            
+
 
             return HandleCompletedUpload(payload, segmentLength);
         }

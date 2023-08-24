@@ -8,7 +8,6 @@ namespace VoidCat.Services.Files;
 /// <inheritdoc cref="IFileStore"/>
 public class LocalDiskFileStore : StreamFileStore, IFileStore
 {
-    private const string FilesDir = "files-v1";
     private readonly VoidSettings _settings;
     private readonly CompressContent _stripMetadata;
 
@@ -17,12 +16,6 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
     {
         _settings = settings;
         _stripMetadata = stripMetadata;
-
-        var dir = Path.Combine(_settings.DataDirectory, FilesDir);
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
     }
 
     /// <inheritdoc />
@@ -41,10 +34,15 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
     /// <inheritdoc />
     public string Key => "local-disk";
 
-    /// <inheritdoc />
+    public ValueTask<bool> Exists(Guid id)
+    {
+        var path = MapPath(id);
+        return ValueTask.FromResult(File.Exists(path));
+    }
+
     public async ValueTask<Database.File> Ingress(IngressPayload payload, CancellationToken cts)
     {
-        var finalPath = MapPath(payload.Id);
+        var finalPath = MapCreatePath(payload.Id);
         await using var fsTemp = new FileStream(finalPath,
             payload.IsAppend ? FileMode.Append : FileMode.Create, FileAccess.ReadWrite);
 
@@ -97,7 +95,6 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         return vf;
     }
 
-    /// <inheritdoc />
     public ValueTask DeleteFile(Guid id)
     {
         var fp = MapPath(id);
@@ -109,7 +106,6 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc />
     public ValueTask<Stream> Open(EgressRequest request, CancellationToken cts)
     {
         var path = MapPath(request.Id);
@@ -118,6 +114,18 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
         return ValueTask.FromResult<Stream>(new FileStream(path, FileMode.Open, FileAccess.Read));
     }
 
+    private string MapCreatePath(Guid id)
+    {
+        var path = MapPath(id);
+        var dir = Path.GetDirectoryName(path);
+        if (!Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir!);
+        }
+
+        return path;
+    }
+    
     private string MapPath(Guid id) =>
-        Path.Join(_settings.DataDirectory, FilesDir, id.ToString());
+        Path.Join(_settings.DataDirectory, "files-v2", id.ToString()[..2], id.ToString()[2..4], id.ToString());
 }
