@@ -43,7 +43,7 @@ public class AdminController : Controller
             Page = files.Page,
             PageSize = files.PageSize,
             TotalResults = files.TotalResults,
-            Results = (await files.Results.SelectAwait(a => _fileInfo.Get(a.Id, false)).ToListAsync())!
+            Results = (await files.Data.SelectAwait(a => _fileInfo.Get(a.Id, false)).ToListAsync())!
         };
     }
 
@@ -71,7 +71,7 @@ public class AdminController : Controller
     {
         var result = await _userStore.ListUsers(request);
 
-        var ret = await result.Results.SelectAwait(async a =>
+        var ret = await result.Data.SelectAwait(async a =>
         {
             var uploads = await _userUploads.ListFiles(a.Id, new(0, int.MaxValue));
             return new AdminListedUser(a.ToAdminApiUser(true), uploads.TotalResults);

@@ -74,7 +74,7 @@ public class CacheUserStore : IUserStore
             Page = request.Page,
             PageSize = request.PageSize,
             TotalResults = users?.Count() ?? 0,
-            Results = EnumerateUsers(users?.Skip(request.PageSize * request.Page).Take(request.PageSize))
+            Data = EnumerateUsers(users?.Skip(request.PageSize * request.Page).Take(request.PageSize))
         };
     }
 

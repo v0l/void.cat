@@ -6,11 +6,13 @@ public abstract class PagedResult
     public int PageSize { get; init; }
     public int Pages => TotalResults / PageSize;
     public int TotalResults { get; init; }
+    
+    public int Results { get; init; }
 }
 
 public sealed class PagedResult<T> : PagedResult
 {
-    public IAsyncEnumerable<T> Results { get; init; }
+    public IAsyncEnumerable<T> Data { get; init; } = null!;
 
     public async Task<RenderedResults<T>> GetResults()
     {
@@ -19,7 +21,7 @@ public sealed class PagedResult<T> : PagedResult
             Page = Page,
             PageSize = PageSize,
             TotalResults = TotalResults,
-            Results = await Results.ToListAsync()
+            Results = await Data.ToListAsync()
         };
     }
 }

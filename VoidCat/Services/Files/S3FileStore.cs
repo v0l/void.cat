@@ -138,7 +138,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 Page = request.Page,
                 PageSize = request.PageSize,
                 TotalResults = files.Count(),
-                Results = EnumerateFiles(files.Skip(request.PageSize * request.Page).Take(request.PageSize))
+                Data = EnumerateFiles(files.Skip(request.PageSize * request.Page).Take(request.PageSize))
             };
         }
         catch (AmazonS3Exception aex)
@@ -149,7 +149,7 @@ public class S3FileStore : StreamFileStore, IFileStore
                 Page = request.Page,
                 PageSize = request.PageSize,
                 TotalResults = 0,
-                Results = AsyncEnumerable.Empty<Database.File>()
+                Data = AsyncEnumerable.Empty<Database.File>()
             };
         }
     }

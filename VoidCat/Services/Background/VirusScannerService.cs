@@ -29,12 +29,10 @@ public class VirusScannerService : BackgroundService
             var page = 0;
             while (true)
             {
-                var files = await _fileStore.ListFiles(new(page, 1_000));
-                if (files.Pages < page) break;
+                var files = await _fileStore.ListFiles(new(page++, 1_000));
+                if (files.Results == 0) break;
 
-                page++;
-
-                await foreach (var file in files.Results.WithCancellation(stoppingToken))
+                await foreach (var file in files.Data.WithCancellation(stoppingToken))
                 {
                     // file is too large, cant scan
                     if (file.Size > 4_000_000) continue;

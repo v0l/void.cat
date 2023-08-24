@@ -100,7 +100,7 @@ public class S3FileMetadataStore : IFileMetadataStore
         {
             Page = request.Page,
             PageSize = request.PageSize,
-            Results = Enumerate().Skip(request.PageSize * request.Page).Take(request.PageSize)
+            Data = Enumerate().Skip(request.PageSize * request.Page).Take(request.PageSize)
         });
     }
 
@@ -108,8 +108,8 @@ public class S3FileMetadataStore : IFileMetadataStore
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
         var files = await ListFiles(new(0, Int32.MaxValue));
-        var count = await files.Results.CountAsync();
-        var size = await files.Results.SumAsync(a => (long) a.Size);
+        var count = await files.Data.CountAsync();
+        var size = await files.Data.SumAsync(a => (long) a.Size);
         return new(count, (ulong) size);
     }
 

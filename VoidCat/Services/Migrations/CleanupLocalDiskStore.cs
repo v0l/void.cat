@@ -60,9 +60,9 @@ public class CleanupLocalDiskStore : IMigration
         {
             var deleting = new List<Guid>();
             var fileList = await _metadataStore.ListFiles(new(page++, 1000));
-            if (fileList.TotalResults == 0) break;
+            if (fileList.Results == 0) break;
 
-            await foreach (var md in fileList.Results)
+            await foreach (var md in fileList.Data)
             {
                 if (!await _fileStore.Exists(md.Id))
                 {

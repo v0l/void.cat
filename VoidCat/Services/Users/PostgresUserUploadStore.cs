@@ -72,7 +72,7 @@ public class PostgresUserUploadStore : IUserUploadsStore
             Page = request.Page,
             PageSize = request.PageSize,
             TotalResults = count,
-            Results = EnumerateFiles()
+            Data = EnumerateFiles()
         };
     }
 

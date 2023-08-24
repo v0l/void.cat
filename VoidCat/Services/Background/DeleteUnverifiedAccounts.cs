@@ -30,7 +30,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
 
                 var accounts = await userStore.ListUsers(new(0, Int32.MaxValue));
 
-                await foreach (var account in accounts.Results.WithCancellation(stoppingToken))
+                await foreach (var account in accounts.Data.WithCancellation(stoppingToken))
                 {
                     if (!account.Flags.HasFlag(UserFlags.EmailVerified) &&
                         account.Created.AddDays(7) < DateTimeOffset.UtcNow)
@@ -40,7 +40,7 @@ public class DeleteUnverifiedAccounts : BackgroundService
 
                         var files = await userUploads.ListFiles(account.Id, new(0, Int32.MinValue));
                         // ReSharper disable once UseCancellationTokenForIAsyncEnumerable
-                        await foreach (var file in files.Results)
+                        await foreach (var file in files.Data)
                         {
                             await fileStore.DeleteFile(file);
                             await fileInfoManager.Delete(file);

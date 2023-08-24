@@ -104,7 +104,7 @@ public class UserController : Controller
             !user.Flags.HasFlag(UserFlags.PublicUploads)) return Forbid();
 
         var results = await _userUploads.ListFiles(id.FromBase58Guid(), request);
-        var files = await results.Results.ToListAsync();
+        var files = await results.Data.ToListAsync();
         var fileInfo = await _fileInfoManager.Get(files.ToArray(), false);
         return Json(new RenderedResults<VoidFileResponse>()
         {

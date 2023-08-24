@@ -38,7 +38,7 @@ public class CacheUserUploadStore : IUserUploadsStore
             Page = request.Page,
             PageSize = request.PageSize,
             TotalResults = idsRendered.Count,
-            Results = EnumerateResults(idsRendered.Skip(request.Page * request.PageSize).Take(request.PageSize))
+            Data = EnumerateResults(idsRendered.Skip(request.Page * request.PageSize).Take(request.PageSize))
         };
     }
 

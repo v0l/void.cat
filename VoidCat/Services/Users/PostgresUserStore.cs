@@ -94,7 +94,7 @@ public class PostgresUserStore : IUserStore
             Page = request.Page,
             PageSize = request.PageSize,
             TotalResults = totalUsers,
-            Results = Enumerate()
+            Data = Enumerate()
         };
     }
 

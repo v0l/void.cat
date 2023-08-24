@@ -113,10 +113,11 @@ public class PostgresFileMetadataStore : IFileMetadataStore
 
         return new()
         {
-            TotalResults = await MakeQuery(_db).CountAsync(),
+            TotalResults = await _db.Files.CountAsync(),
+            Results = await MakeQuery(_db).CountAsync(),
             PageSize = request.PageSize,
             Page = request.Page,
-            Results = Enumerate()
+            Data = Enumerate()
         };
     }
 
