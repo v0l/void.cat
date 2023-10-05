@@ -96,6 +96,7 @@ static class Program
             app.UseStaticFiles();
             app.UseHttpLogging();
             app.UseRouting();
+            app.UseHttpMetrics();
             app.UseCors();
             app.UseSwagger();
             app.UseSwaggerUI();
