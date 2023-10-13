@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.StaticFiles;
@@ -58,6 +59,8 @@ namespace VoidCat.Controllers
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
+        [Authorize(AuthenticationSchemes = "Bearer,Nostr")]
+        [AllowAnonymous]
         public async Task<IActionResult> UploadFile([FromQuery] bool cli = false)
         {
             try

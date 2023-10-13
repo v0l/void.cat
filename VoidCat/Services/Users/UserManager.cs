@@ -95,7 +95,7 @@ public class UserManager
         }
 
         var uid = await _store.LookupUser(user.Email);
-        if (uid.HasValue)
+        if (uid.HasValue && uid.Value != Guid.Empty)
         {
             var existingUser = await _store.Get(uid.Value);
             if (existingUser?.AuthType == UserAuthType.OAuth2)
@@ -119,7 +119,7 @@ public class UserManager
     public async ValueTask<User> LoginOrRegister(string pubkey)
     {
         var uid = await _store.LookupUser(pubkey);
-        if (uid.HasValue)
+        if (uid.HasValue && uid.Value != Guid.Empty)
         {
             var existingUser = await _store.Get(uid.Value);
             if (existingUser?.AuthType == UserAuthType.Nostr)

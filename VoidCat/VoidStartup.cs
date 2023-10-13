@@ -140,7 +140,7 @@ public static class VoidStartup
         services.AddAuthentication(o =>
             {
                 o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                o.AddScheme<NostrAuthHandler>(NostrAuth.Scheme, "Nostr");
+                o.AddScheme<NostrAuthHandler>(NostrAuth.Scheme, null);
             })
             .AddJwtBearer(options =>
             {

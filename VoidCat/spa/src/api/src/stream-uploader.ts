@@ -55,6 +55,7 @@ export class StreamUploader extends VoidUploader {
             highWaterMark: DefaultChunkSize
         });
 
+        const absoluteUrl = `${this.uri}/upload`;
         const reqHeaders = {
             "Content-Type": "application/octet-stream",
             "V-Content-Type": !this.file.type ? "application/octet-stream" : this.file.type,
@@ -65,9 +66,9 @@ export class StreamUploader extends VoidUploader {
             reqHeaders["V-EncryptionParams"] = JSON.stringify(this.#encrypt!.getParams());
         }
         if (this.auth) {
-            reqHeaders["Authorization"] = `Bearer ${this.auth}`;
+            reqHeaders["Authorization"] = await this.auth(absoluteUrl, "POST");
         }
-        const req = await fetch(`${this.uri}/upload`, {
+        const req = await fetch(absoluteUrl, {
             method: "POST",
             mode: "cors",
             body: this.#encrypt ? rsBase.pipeThrough(this.#encrypt!.getEncryptionTransform()) : rsBase,
