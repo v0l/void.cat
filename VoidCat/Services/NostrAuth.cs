@@ -30,12 +30,12 @@ public class NostrAuthHandler : AuthenticationHandler<NostrAuthOptions>
         var auth = Request.Headers.Authorization.FirstOrDefault()?.Trim();
         if (string.IsNullOrEmpty(auth))
         {
-            return AuthenticateResult.Fail("Missing Authorization header");
+            return AuthenticateResult.NoResult();
         }
 
         if (!auth.StartsWith(NostrAuth.Scheme))
         {
-            return AuthenticateResult.Fail("Invalid auth scheme");
+            return AuthenticateResult.NoResult();
         }
 
         var token = auth[6..];
