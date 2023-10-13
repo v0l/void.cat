@@ -9,4 +9,5 @@ public static class Roles
 public static class Policies
 {
     public const string RequireAdmin = "RequireAdmin";
+    public const string RequireNostr = "RequireNostr";
 }

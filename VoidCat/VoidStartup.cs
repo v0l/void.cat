@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -133,7 +136,12 @@ public static class VoidStartup
 
         services.AddHealthChecks();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        services.AddTransient<NostrAuthHandler>();
+        services.AddAuthentication(o =>
+            {
+                o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                o.AddScheme<NostrAuthHandler>(NostrAuth.Scheme, "Nostr");
+            })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new()
@@ -147,7 +155,15 @@ public static class VoidStartup
                 };
             });
 
-        services.AddAuthorization((opt) => { opt.AddPolicy(Policies.RequireAdmin, (auth) => { auth.RequireRole(Roles.Admin); }); });
+        services.AddAuthorization((opt) =>
+        {
+            opt.AddPolicy(Policies.RequireNostr, new AuthorizationPolicy(new[]
+            {
+                new ClaimsAuthorizationRequirement(ClaimTypes.Name, null)
+            }, new[] {NostrAuth.Scheme}));
+
+            opt.AddPolicy(Policies.RequireAdmin, auth => { auth.RequireRole(Roles.Admin); });
+        });
 
         services.AddTransient<RazorPartialToStringRenderer>();
         services.AddAnalytics(voidSettings);

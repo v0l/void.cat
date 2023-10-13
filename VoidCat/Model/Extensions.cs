@@ -29,10 +29,16 @@ public static class Extensions
 
     public static Guid? GetUserId(this HttpContext context)
     {
-        var claimSub = context?.User?.Claims?.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
+        var claimSub = context.User.Claims.FirstOrDefault(a => a.Type == ClaimTypes.NameIdentifier)?.Value;
         return Guid.TryParse(claimSub, out var g) ? g : null;
     }
 
+    public static string? GetPubKey(this HttpContext context)
+    {
+        var claim = context.User.Claims.FirstOrDefault(a => a.Type == ClaimTypes.Name);
+        return claim?.Value;
+    }
+    
     public static IEnumerable<string>? GetUserRoles(this HttpContext context)
     {
         return context?.User?.Claims?.Where(a => a.Type == ClaimTypes.Role)

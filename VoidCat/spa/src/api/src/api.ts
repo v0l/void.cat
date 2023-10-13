@@ -16,10 +16,12 @@ import { XHRUploader } from "./xhr-uploader";
 export class VoidApi {
     readonly #uri: string
     readonly #auth?: string
+    readonly #scheme?: string
 
-    constructor(uri: string, auth?: string) {
+    constructor(uri: string, auth?: string, scheme?: string) {
         this.#uri = uri;
         this.#auth = auth;
+        this.#scheme = scheme;
     }
 
     async #req<T>(method: string, url: string, body?: object): Promise<T> {
@@ -27,7 +29,7 @@ export class VoidApi {
             "Accept": "application/json"
         };
         if (this.#auth) {
-            headers["Authorization"] = `Bearer ${this.#auth}`;
+            headers["Authorization"] = `${this.#scheme ?? "Bearer"} ${this.#auth}`;
         }
         if (body) {
             headers["Content-Type"] = "application/json";

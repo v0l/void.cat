@@ -10,13 +10,15 @@ public class UserManager
     private readonly IUserStore _store;
     private readonly IEmailVerification _emailVerification;
     private readonly OAuthFactory _oAuthFactory;
+    private readonly NostrProfileService _nostrProfile;
     private static bool _checkFirstRegister;
 
-    public UserManager(IUserStore store, IEmailVerification emailVerification, OAuthFactory oAuthFactory)
+    public UserManager(IUserStore store, IEmailVerification emailVerification, OAuthFactory oAuthFactory, NostrProfileService nostrProfile)
     {
         _store = store;
         _emailVerification = emailVerification;
         _oAuthFactory = oAuthFactory;
+        _nostrProfile = nostrProfile;
     }
 
     /// <summary>
@@ -108,6 +110,42 @@ public class UserManager
         return user;
     }
 
+    /// <summary>
+    /// Login or Register with nostr pubkey
+    /// </summary>
+    /// <param name="pubkey">Hex public key</param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public async ValueTask<User> LoginOrRegister(string pubkey)
+    {
+        var uid = await _store.LookupUser(pubkey);
+        if (uid.HasValue)
+        {
+            var existingUser = await _store.Get(uid.Value);
+            if (existingUser?.AuthType == UserAuthType.Nostr)
+            {
+                return existingUser;
+            }
+
+            throw new InvalidOperationException("Auth failure, user type does not match!");
+        }
+
+        var profile = await _nostrProfile.FetchProfile(pubkey);
+        var newUser = new User
+        {
+            Id = Guid.NewGuid(),
+            AuthType = UserAuthType.Nostr,
+            Created = DateTime.UtcNow,
+            Avatar = profile?.Picture,
+            DisplayName = profile?.Name ?? "Nostrich",
+            Email = pubkey,
+            Flags = UserFlags.EmailVerified // always mark as email verififed
+        };
+
+        await SetupNewUser(newUser);
+        return newUser;
+    }
+
     private async Task SetupNewUser(User newUser)
     {
         // automatically set first user to admin
@@ -127,7 +165,10 @@ public class UserManager
         }
 
         await _store.Add(newUser);
-        await _emailVerification.SendNewCode(newUser);
+        if (!newUser.Flags.HasFlag(UserFlags.EmailVerified))
+        {
+            await _emailVerification.SendNewCode(newUser);
+        }
     }
 
     private async Task HandleLogin(User user)

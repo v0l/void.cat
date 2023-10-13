@@ -10,6 +10,7 @@ public static class UsersStartup
     {
         services.AddTransient<UserManager>();
         services.AddTransient<OAuthFactory>();
+        services.AddTransient<NostrProfileService>();
         
         if (settings.HasDiscord())
         {

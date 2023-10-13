@@ -7,6 +7,7 @@ using VoidCat.Database;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
 using VoidCat.Services.Files;
+using VoidCat.Services.Users;
 using File = VoidCat.Database.File;
 
 namespace VoidCat.Controllers
@@ -21,12 +22,13 @@ namespace VoidCat.Controllers
         private readonly FileInfoManager _fileInfo;
         private readonly IUserUploadsStore _userUploads;
         private readonly IUserStore _userStore;
+        private readonly UserManager _userManager;
         private readonly ITimeSeriesStatsReporter _timeSeriesStats;
         private readonly VoidSettings _settings;
 
         public UploadController(FileStoreFactory storage, IFileMetadataStore metadata, IPaymentStore payment,
             IPaymentFactory paymentFactory, FileInfoManager fileInfo, IUserUploadsStore userUploads,
-            ITimeSeriesStatsReporter timeSeriesStats, IUserStore userStore, VoidSettings settings)
+            ITimeSeriesStatsReporter timeSeriesStats, IUserStore userStore, VoidSettings settings, UserManager userManager)
         {
             _storage = storage;
             _metadata = metadata;
@@ -37,6 +39,7 @@ namespace VoidCat.Controllers
             _timeSeriesStats = timeSeriesStats;
             _userStore = userStore;
             _settings = settings;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -68,6 +71,13 @@ namespace VoidCat.Controllers
                 }
 
                 var uid = HttpContext.GetUserId();
+                var pubkey = HttpContext.GetPubKey();
+                if (uid == default && !string.IsNullOrEmpty(pubkey))
+                {
+                    var nostrUser = await _userManager.LoginOrRegister(pubkey);
+                    uid = nostrUser.Id;
+                }
+
                 var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
 

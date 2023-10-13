@@ -110,5 +110,10 @@ public enum UserAuthType
     /// <summary>
     /// Lightning node challenge
     /// </summary>
-    Lightning = 3
+    Lightning = 3,
+    
+    /// <summary>
+    /// Nostr login
+    /// </summary>
+    Nostr = 4,
 }
