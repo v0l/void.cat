@@ -45,7 +45,7 @@ public class UserController : Controller
         var requestedId = isMe ? loggedUser!.Value : id.FromBase58Guid();
         var user = await _store.Get(requestedId);
         if (user == default) return NotFound();
-        if (loggedUser != requestedId && !user.Flags.HasFlag(UserFlags.PublicProfile))
+        if (loggedUser != requestedId && !user.Flags.HasFlag(UserFlags.PublicProfile) && !HttpContext.IsRole(Roles.Admin))
             return NotFound();
 
         var isMyProfile = requestedId == user.Id;

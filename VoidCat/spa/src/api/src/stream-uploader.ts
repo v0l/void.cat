@@ -3,97 +3,115 @@ import { VoidUploadResult } from "./index";
 import { StreamEncryption } from "./stream-encryption";
 
 export class StreamUploader extends VoidUploader {
-    #encrypt?: StreamEncryption;
+  #encrypt?: StreamEncryption;
 
-    static canUse() {
-        const rawUA = globalThis.navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
-        const majorVersion = rawUA ? parseInt(rawUA[2], 10) : 0;
-        return majorVersion >= 105 && "getRandomValues" in globalThis.crypto && globalThis.location.protocol === "https:";
+  static canUse() {
+    const rawUA = globalThis.navigator.userAgent.match(
+      /Chrom(e|ium)\/([0-9]+)\./,
+    );
+    const majorVersion = rawUA ? parseInt(rawUA[2], 10) : 0;
+    return (
+      majorVersion >= 105 &&
+      "getRandomValues" in globalThis.crypto &&
+      globalThis.location.protocol === "https:"
+    );
+  }
+
+  canEncrypt(): boolean {
+    return true;
+  }
+
+  setEncryption(s: boolean) {
+    if (s) {
+      this.#encrypt = new StreamEncryption(undefined, undefined, undefined);
+    } else {
+      this.#encrypt = undefined;
     }
+  }
 
-    canEncrypt(): boolean {
-        return true;
+  getEncryptionKey() {
+    return this.#encrypt?.getKey();
+  }
+
+  async upload(headers?: HeadersInit): Promise<VoidUploadResult> {
+    this.onStateChange?.(UploadState.Hashing);
+    const hash = await this.digest(this.file);
+    let offset = 0;
+
+    const DefaultChunkSize = 1024 * 1024;
+    const rsBase = new ReadableStream(
+      {
+        start: async () => {
+          this.onStateChange?.(UploadState.Uploading);
+        },
+        pull: async (controller) => {
+          const chunk = await this.readChunk(
+            offset,
+            controller.desiredSize ?? DefaultChunkSize,
+          );
+          if (chunk.byteLength === 0) {
+            controller.close();
+            return;
+          }
+          this.onProgress?.(offset + chunk.byteLength);
+          offset += chunk.byteLength;
+          controller.enqueue(chunk);
+        },
+        cancel: (reason) => {
+          console.log(reason);
+        },
+        type: "bytes",
+      },
+      {
+        highWaterMark: DefaultChunkSize,
+      },
+    );
+
+    const absoluteUrl = `${this.uri}/upload`;
+    const reqHeaders = {
+      "Content-Type": "application/octet-stream",
+      "V-Content-Type": !this.file.type
+        ? "application/octet-stream"
+        : this.file.type,
+      "V-Filename": "name" in this.file ? this.file.name : "",
+      "V-Full-Digest": hash,
+    } as Record<string, string>;
+    if (this.#encrypt) {
+      reqHeaders["V-EncryptionParams"] = JSON.stringify(
+        this.#encrypt!.getParams(),
+      );
     }
-
-    setEncryption(s: boolean) {
-        if (s) {
-            this.#encrypt = new StreamEncryption(undefined, undefined, undefined);
-        } else {
-            this.#encrypt = undefined;
-        }
+    if (this.auth) {
+      reqHeaders["Authorization"] = await this.auth(absoluteUrl, "POST");
     }
+    const req = await fetch(absoluteUrl, {
+      method: "POST",
+      mode: "cors",
+      body: this.#encrypt
+        ? rsBase.pipeThrough(this.#encrypt!.getEncryptionTransform())
+        : rsBase,
+      headers: {
+        ...reqHeaders,
+        ...headers,
+      },
+      // @ts-ignore New stream spec
+      duplex: "half",
+    });
 
-    getEncryptionKey() {
-        return this.#encrypt?.getKey()
+    if (req.ok) {
+      return (await req.json()) as VoidUploadResult;
+    } else {
+      throw new Error("Unknown error");
     }
+  }
 
-    async upload(headers?: HeadersInit): Promise<VoidUploadResult> {
-        this.onStateChange?.(UploadState.Hashing);
-        const hash = await this.digest(this.file);
-        let offset = 0;
-
-        const DefaultChunkSize = 1024 * 1024;
-        const rsBase = new ReadableStream({
-            start: async () => {
-                this.onStateChange?.(UploadState.Uploading);
-            },
-            pull: async (controller) => {
-                const chunk = await this.readChunk(offset, controller.desiredSize ?? DefaultChunkSize);
-                if (chunk.byteLength === 0) {
-                    controller.close();
-                    return;
-                }
-                this.onProgress?.(offset + chunk.byteLength);
-                offset += chunk.byteLength
-                controller.enqueue(chunk);
-            },
-            cancel: (reason) => {
-                console.log(reason);
-            },
-            type: "bytes"
-        }, {
-            highWaterMark: DefaultChunkSize
-        });
-
-        const absoluteUrl = `${this.uri}/upload`;
-        const reqHeaders = {
-            "Content-Type": "application/octet-stream",
-            "V-Content-Type": !this.file.type ? "application/octet-stream" : this.file.type,
-            "V-Filename": "name" in this.file ? this.file.name : "",
-            "V-Full-Digest": hash,
-        } as Record<string, string>;
-        if (this.#encrypt) {
-            reqHeaders["V-EncryptionParams"] = JSON.stringify(this.#encrypt!.getParams());
-        }
-        if (this.auth) {
-            reqHeaders["Authorization"] = await this.auth(absoluteUrl, "POST");
-        }
-        const req = await fetch(absoluteUrl, {
-            method: "POST",
-            mode: "cors",
-            body: this.#encrypt ? rsBase.pipeThrough(this.#encrypt!.getEncryptionTransform()) : rsBase,
-            headers: {
-                ...reqHeaders,
-                ...headers
-            },
-            // @ts-ignore New stream spec
-            duplex: 'half'
-        });
-
-        if (req.ok) {
-            return await req.json() as VoidUploadResult;
-        } else {
-            throw new Error("Unknown error");
-        }
+  async readChunk(offset: number, size: number) {
+    if (offset > this.file.size) {
+      return new Uint8Array(0);
     }
-
-    async readChunk(offset: number, size: number) {
-        if (offset > this.file.size) {
-            return new Uint8Array(0);
-        }
-        const end = Math.min(offset + size, this.file.size);
-        const blob = this.file.slice(offset, end, this.file.type);
-        const data = await blob.arrayBuffer();
-        return new Uint8Array(data);
-    }
+    const end = Math.min(offset + size, this.file.size);
+    const blob = this.file.slice(offset, end, this.file.type);
+    const data = await blob.arrayBuffer();
+    return new Uint8Array(data);
+  }
 }

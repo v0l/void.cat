@@ -1,17 +1,17 @@
 .admin {
-    width: 1024px;
-    margin-left: auto;
-    margin-right: auto;
+  width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .admin h2 {
-    background-color: #222;
-    padding: 10px;
+  background-color: #222;
+  padding: 10px;
 }
 
 .admin .btn {
-    padding: 5px 8px;
-    border-radius: 3px;
-    font-size: small;
-    margin: 2px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  font-size: small;
+  margin: 2px;
 }

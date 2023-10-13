@@ -1,20 +1,22 @@
 .image-grid {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .image-grid > a {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    width: 150px;
-    height: 150px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 150px;
+  height: 150px;
 }
 
-.image-grid img, .image-grid video, .image-grid audio {
-    max-width: stretch;
-    max-height: stretch;
+.image-grid img,
+.image-grid video,
+.image-grid audio {
+  max-width: stretch;
+  max-height: stretch;
 }

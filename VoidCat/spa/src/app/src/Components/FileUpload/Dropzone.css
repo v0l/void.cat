@@ -1,18 +1,18 @@
 .drop {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 20px;
-    border: 2px dashed;
-    margin: 5vh 2px 2px;
-    text-align: center;
-    user-select: none;
-    cursor: pointer;
-    height: 250px;
-    font-size: x-large;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  border: 2px dashed;
+  margin: 5vh 2px 2px;
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+  height: 250px;
+  font-size: x-large;
 }
 
 .drop small {
-    display: block;
-    font-size: x-small;
+  display: block;
+  font-size: x-small;
 }

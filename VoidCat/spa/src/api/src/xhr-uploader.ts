@@ -27,7 +27,7 @@ export class XHRUploader extends VoidUploader {
         undefined,
         1,
         1,
-        headers
+        headers,
       );
     }
   }
@@ -35,7 +35,7 @@ export class XHRUploader extends VoidUploader {
   async #doSplitXHRUpload(
     hash: string,
     splitSize: number,
-    headers?: HeadersInit
+    headers?: HeadersInit,
   ) {
     let xhr: VoidUploadResult | null = null;
     const segments = Math.ceil(this.file.size / splitSize);
@@ -49,7 +49,7 @@ export class XHRUploader extends VoidUploader {
         xhr?.file?.metadata?.editSecret,
         s + 1,
         segments,
-        headers
+        headers,
       );
       if (!xhr.ok) {
         break;
@@ -75,7 +75,7 @@ export class XHRUploader extends VoidUploader {
     editSecret?: string,
     part?: number,
     partOf?: number,
-    headers?: HeadersInit
+    headers?: HeadersInit,
   ) {
     this.onStateChange?.(UploadState.Uploading);
 
@@ -112,11 +112,11 @@ export class XHRUploader extends VoidUploader {
         req.setRequestHeader("Content-Type", "application/octet-stream");
         req.setRequestHeader(
           "V-Content-Type",
-          !this.file.type ? "application/octet-stream" : this.file.type
+          !this.file.type ? "application/octet-stream" : this.file.type,
         );
         req.setRequestHeader(
           "V-Filename",
-          "name" in this.file ? this.file.name : ""
+          "name" in this.file ? this.file.name : "",
         );
         req.setRequestHeader("V-Full-Digest", fullDigest);
         req.setRequestHeader("V-Segment", `${part}/${partOf}`);

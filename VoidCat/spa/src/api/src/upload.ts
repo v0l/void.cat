@@ -40,7 +40,7 @@ export abstract class VoidUploader {
     progress?: ProgressHandler,
     proxyChallenge?: ProxyChallengeHandler,
     auth?: AuthHandler,
-    chunkSize?: number
+    chunkSize?: number,
   ) {
     this.uri = uri;
     this.file = file;

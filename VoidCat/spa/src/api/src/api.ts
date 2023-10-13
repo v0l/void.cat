@@ -66,7 +66,7 @@ export class VoidApi {
     stateChange?: StateChangeHandler,
     progress?: ProgressHandler,
     proxyChallenge?: ProxyChallengeHandler,
-    chunkSize?: number
+    chunkSize?: number,
   ): VoidUploader {
     if (StreamUploader.canUse()) {
       return new StreamUploader(
@@ -76,7 +76,7 @@ export class VoidApi {
         progress,
         proxyChallenge,
         this.#auth,
-        chunkSize
+        chunkSize,
       );
     } else {
       return new XHRUploader(
@@ -86,7 +86,7 @@ export class VoidApi {
         progress,
         proxyChallenge,
         this.#auth,
-        chunkSize
+        chunkSize,
       );
     }
   }
@@ -142,7 +142,7 @@ export class VoidApi {
     return this.#req<PagedResponse<VoidFileResponse>>(
       "POST",
       `/user/${uid}/files`,
-      pageReq
+      pageReq,
     );
   }
 
@@ -170,7 +170,7 @@ export class VoidApi {
     return this.#req<PagedResponse<VoidFileResponse>>(
       "POST",
       "/admin/file",
-      pageReq
+      pageReq,
     );
   }
 
@@ -182,7 +182,7 @@ export class VoidApi {
     return this.#req<PagedResponse<AdminUserListResult>>(
       "POST",
       `/admin/users`,
-      pageReq
+      pageReq,
     );
   }
 

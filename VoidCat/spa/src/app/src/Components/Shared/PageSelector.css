@@ -1,35 +1,34 @@
 .page-buttons {
-    display: grid;
-    grid-auto-flow: column;
-    width: min-content;
-    margin-top: 10px;
-    white-space: nowrap;
+  display: grid;
+  grid-auto-flow: column;
+  width: min-content;
+  margin-top: 10px;
+  white-space: nowrap;
 }
 
 .page-buttons > div {
-    padding: 5px 8px;
-    border: 1px solid;
-    user-select: none;
-    cursor: pointer;
+  padding: 5px 8px;
+  border: 1px solid;
+  user-select: none;
+  cursor: pointer;
 }
 
 .page-buttons > div.active {
-    background-color: #333;
-    font-weight: bold;
+  background-color: #333;
+  font-weight: bold;
 }
 
 .page-buttons > div:first-child {
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
 }
 
 .page-buttons > div:last-child {
-    border-top-right-radius: 3px;
-    border-bottom-right-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
 .page-buttons > small {
-    line-height: 32px;
-    margin-left: 10px;
+  line-height: 32px;
+  margin-left: 10px;
 }
-

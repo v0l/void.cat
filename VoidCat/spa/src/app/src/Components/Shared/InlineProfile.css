@@ -1,19 +1,18 @@
-
 .small-profile {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
 }
 
 .small-profile .avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border: 2px solid;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 2px solid;
 }
 
 .small-profile .name {
-    padding-left: 15px;
+  padding-left: 15px;
 }

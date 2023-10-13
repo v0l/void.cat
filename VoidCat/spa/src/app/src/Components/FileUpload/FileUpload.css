@@ -1,41 +1,41 @@
 .upload {
-    display: flex;
-    padding: 10px;
-    border: 1px solid grey;
-    border-radius: 10px;
-    margin-top: 10px;
+  display: flex;
+  padding: 10px;
+  border: 1px solid grey;
+  border-radius: 10px;
+  margin-top: 10px;
 }
 
 @media (max-width: 720px) {
-    .upload {
-        flex-direction: column;
-    }
+  .upload {
+    flex-direction: column;
+  }
 }
 
 .upload .info {
-    flex: 2;
+  flex: 2;
 }
 
 .upload .status {
-    flex: 1;
+  flex: 1;
 }
 
 .upload dt {
-    font-size: 12px;
-    color: grey;
+  font-size: 12px;
+  color: grey;
 }
 
 .upload .iframe-challenge {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0,0,0,0.8);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 .upload .iframe-challenge iframe {
-    margin-left: 10vw;
-    width: 80vw;
-    height: 100vh;
+  margin-left: 10vw;
+  width: 80vw;
+  height: 100vh;
 }

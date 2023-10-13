@@ -1,38 +1,41 @@
 .preview {
-    margin-top: 2vh;
+  margin-top: 2vh;
 }
 
-.preview img, .preview video, .preview object, .preview audio {
-    max-width: 100%;
-    max-height: 100vh;
+.preview img,
+.preview video,
+.preview object,
+.preview audio {
+  max-width: 100%;
+  max-height: 100vh;
 }
 
 .preview .file-stats {
-    line-height: 32px;
-    display: grid;
-    grid-auto-flow: column;
-    text-align: center;
+  line-height: 32px;
+  display: grid;
+  grid-auto-flow: column;
+  text-align: center;
 }
 
 .preview .file-stats svg {
-    vertical-align: middle;
-    margin-right: 10px;
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
 .preview .virus-warning {
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid red;
-    margin-bottom: 5px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid red;
+  margin-bottom: 5px;
 }
 
 .preview .encrypted {
-    padding: 10px;
-    border-radius: 10px;
-    border: 2px solid #bbbbbb;
-    text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #bbbbbb;
+  text-align: center;
 }
 
 .error {
-    color: red;
+  color: red;
 }
