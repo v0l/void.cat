@@ -222,7 +222,7 @@ namespace VoidCat.Controllers
             var uid = HttpContext.GetUserId();
             var isOwner = uid.HasValue && await _userUploads.Uploader(fid) == uid;
 
-            var info = await _fileInfo.Get(fid, isOwner);
+            var info = await _fileInfo.Get(fid, isOwner || HttpContext.IsRole(Roles.Admin));
             if (info == default) return StatusCode(404);
 
             return Json(info);
@@ -339,7 +339,7 @@ namespace VoidCat.Controllers
             var gid = id.FromBase58Guid();
             var meta = await _metadata.Get(gid);
             if (meta == default) return NotFound();
-            if (!meta.CanEdit(fileMeta.EditSecret)) return Unauthorized();
+            if (!(meta.CanEdit(fileMeta.EditSecret) || HttpContext.IsRole(Roles.Admin))) return Unauthorized();
 
             await _metadata.Update(gid, new()
             {
