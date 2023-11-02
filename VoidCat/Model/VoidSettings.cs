@@ -11,7 +11,7 @@ namespace VoidCat.Model
         /// Maintenance flag
         /// </summary>
         public bool MaintenanceMode { get; init; } = false;
-        
+
         /// <summary>
         /// Base site url, used for redirect urls
         /// </summary>
@@ -127,11 +127,16 @@ namespace VoidCat.Model
             "udp://tracker.openbittorrent.com:6969/announce",
             "http://tracker.openbittorrent.com:80/announce"
         };
-        
+
         /// <summary>
         /// Lightning node configuration for LNProxy services
         /// </summary>
         public LndConfig? LndConfig { get; init; }
+
+        /// <summary>
+        /// Blocked origin hostnames
+        /// </summary>
+        public List<string> BlockedOrigins { get; init; } = new();
     }
 
     public sealed class TorSettings

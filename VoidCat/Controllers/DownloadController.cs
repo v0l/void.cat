@@ -111,6 +111,16 @@ public class DownloadController : Controller
 
     private async Task<VoidFileResponse?> SetupDownload(Guid id)
     {
+        var origin = Request.Headers.Origin.FirstOrDefault();
+        if (!string.IsNullOrEmpty(origin) && Uri.TryCreate(origin, UriKind.RelativeOrAbsolute, out var u))
+        {
+            if (_settings.BlockedOrigins.Any(a => string.Equals(a, u.DnsSafeHost, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                return default;
+            }
+        }
+
         var meta = await _fileInfo.Get(id, false);
         if (meta == null)
         {
@@ -181,7 +191,8 @@ public class DownloadController : Controller
             if (order?.Status == PaywallOrderStatus.Paid)
             {
                 return true;
-            } 
+            }
+
             if (order?.Status is PaywallOrderStatus.Unpaid)
             {
                 // check status
@@ -191,10 +202,11 @@ public class DownloadController : Controller
                 {
                     await _paymentOrders.UpdateStatus(order.Id, status.Status);
                 }
+
                 if (status?.Status == PaywallOrderStatus.Paid)
                 {
                     return true;
-                } 
+                }
             }
         }
 
