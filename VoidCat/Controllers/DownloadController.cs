@@ -111,7 +111,7 @@ public class DownloadController : Controller
 
     private async Task<VoidFileResponse?> SetupDownload(Guid id)
     {
-        var origin = Request.Headers.Origin.FirstOrDefault();
+        var origin = Request.Headers.Referer.FirstOrDefault() ?? Request.Headers.Origin.FirstOrDefault();
         if (!string.IsNullOrEmpty(origin) && Uri.TryCreate(origin, UriKind.RelativeOrAbsolute, out var u))
         {
             if (_settings.BlockedOrigins.Any(a => string.Equals(a, u.DnsSafeHost, StringComparison.InvariantCultureIgnoreCase)))
