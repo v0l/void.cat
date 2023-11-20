@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using File = VoidCat.Database.File;
 
 namespace VoidCat.Services.Files;
 
@@ -39,6 +40,11 @@ public class S3FileMetadataStore : IFileMetadataStore
         }
 
         return default;
+    }
+    
+    public ValueTask<File?> GetHash(string digest)
+    {
+        throw new NotImplementedException();
     }
 
     /// <inheritdoc />

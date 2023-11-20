@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VoidCat.Model;
 using VoidCat.Services.Abstractions;
+using File = VoidCat.Database.File;
 
 namespace VoidCat.Services.Files;
 
-/// <inheritdoc />
 public class PostgresFileMetadataStore : IFileMetadataStore
 {
     private readonly VoidContext _db;
@@ -18,8 +18,7 @@ public class PostgresFileMetadataStore : IFileMetadataStore
 
     public string? Key => "postgres";
 
-    /// <inheritdoc />
-    public async ValueTask<Database.File?> Get(Guid id)
+    public async ValueTask<File?> Get(Guid id)
     {
         return await _db.Files
             .AsNoTracking()
@@ -27,13 +26,20 @@ public class PostgresFileMetadataStore : IFileMetadataStore
             .SingleOrDefaultAsync(a => a.Id == id);
     }
 
-    public async ValueTask Add(Database.File f)
+    public async ValueTask<File?> GetHash(string digest)
+    {
+        return await _db.Files
+            .AsNoTracking()
+            .Include(a => a.Paywall)
+            .SingleOrDefaultAsync(a => a.Digest == digest || a.OriginalDigest == digest);
+    }
+
+    public async ValueTask Add(File f)
     {
         _db.Files.Add(f);
         await _db.SaveChangesAsync();
     }
 
-    /// <inheritdoc />
     public async ValueTask Delete(Guid id)
     {
         await _db.Files
@@ -41,8 +47,7 @@ public class PostgresFileMetadataStore : IFileMetadataStore
             .ExecuteDeleteAsync();
     }
 
-    /// <inheritdoc />
-    public async ValueTask<IReadOnlyList<Database.File>> Get(Guid[] ids)
+    public async ValueTask<IReadOnlyList<File>> Get(Guid[] ids)
     {
         return await _db.Files
             .Include(a => a.Paywall)
@@ -50,8 +55,7 @@ public class PostgresFileMetadataStore : IFileMetadataStore
             .ToArrayAsync();
     }
 
-    /// <inheritdoc />
-    public async ValueTask Update(Guid id, Database.File obj)
+    public async ValueTask Update(Guid id, File obj)
     {
         var existing = await _db.Files.FindAsync(id);
         if (existing == default)
@@ -63,10 +67,9 @@ public class PostgresFileMetadataStore : IFileMetadataStore
         await _db.SaveChangesAsync();
     }
 
-    /// <inheritdoc />
-    public async ValueTask<PagedResult<Database.File>> ListFiles(PagedRequest request)
+    public async ValueTask<PagedResult<File>> ListFiles(PagedRequest request)
     {
-        IQueryable<Database.File> MakeQuery(VoidContext db)
+        IQueryable<File> MakeQuery(VoidContext db)
         {
             var q = db.Files.AsNoTracking().AsQueryable();
             switch (request.SortBy, request.SortOrder)
@@ -99,12 +102,12 @@ public class PostgresFileMetadataStore : IFileMetadataStore
 
             return q.Skip(request.Page * request.PageSize).Take(request.PageSize);
         }
-        
-        async IAsyncEnumerable<Database.File> Enumerate()
+
+        async IAsyncEnumerable<File> Enumerate()
         {
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<VoidContext>();
-            
+
             await foreach (var r in MakeQuery(db).AsAsyncEnumerable())
             {
                 yield return r;
@@ -121,7 +124,6 @@ public class PostgresFileMetadataStore : IFileMetadataStore
         };
     }
 
-    /// <inheritdoc />
     public async ValueTask<IFileMetadataStore.StoreStats> Stats()
     {
         var size = await _db.Files

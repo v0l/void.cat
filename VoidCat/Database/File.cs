@@ -14,6 +14,8 @@ public record File
     public string Storage { get; set; } = "local-disk";
     public string? EncryptionParams { get; set; }
     public string? MagnetLink { get; set; }
+    public string? OriginalDigest { get; init; }
+    public string? MediaDimensions { get; init; }
     
     public Paywall? Paywall { get; init; }
 }

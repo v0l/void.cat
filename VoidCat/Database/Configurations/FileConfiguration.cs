@@ -26,7 +26,7 @@ public class FileConfiguration : IEntityTypeConfiguration<File>
             .IsRequired();
 
         builder.Property(a => a.Expires);
-        
+
         builder.Property(a => a.Storage)
             .IsRequired()
             .HasDefaultValue("local-disk");
@@ -34,6 +34,13 @@ public class FileConfiguration : IEntityTypeConfiguration<File>
         builder.Property(a => a.EncryptionParams);
         builder.Property(a => a.MagnetLink);
 
+        builder.Property(a => a.OriginalDigest);
+
+        builder.Property(a => a.MediaDimensions);
+
         builder.HasIndex(a => a.Uploaded);
+
+        builder.HasIndex(a => a.Digest);
+        builder.HasIndex(a => a.OriginalDigest);
     }
 }

@@ -59,8 +59,7 @@ namespace VoidCat.Controllers
         [HttpPost]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
-        [Authorize(AuthenticationSchemes = "Bearer,Nostr")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = "Bearer,Nostr", Policy = Policies.RequireNostr)]
         public async Task<IActionResult> UploadFile([FromQuery] bool cli = false)
         {
             try

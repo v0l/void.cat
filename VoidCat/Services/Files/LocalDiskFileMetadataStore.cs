@@ -26,6 +26,11 @@ public class LocalDiskFileMetadataStore : IFileMetadataStore
     {
         return GetMeta<Database.File>(id);
     }
+    
+    public ValueTask<Database.File?> GetHash(string digest)
+    {
+        throw new NotImplementedException();
+    }
 
     /// <inheritdoc />
     public async ValueTask<IReadOnlyList<Database.File>> Get(Guid[] ids)

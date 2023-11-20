@@ -16,6 +16,13 @@ public interface IFileMetadataStore
     ValueTask<File?> Get(Guid id);
     
     /// <summary>
+    /// Get metadata for a single file by its hash
+    /// </summary>
+    /// <param name="digest"></param>
+    /// <returns></returns>
+    ValueTask<File?> GetHash(string digest);
+    
+    /// <summary>
     /// Get metadata for multiple files
     /// </summary>
     /// <param name="ids"></param>

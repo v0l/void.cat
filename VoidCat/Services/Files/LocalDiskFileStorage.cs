@@ -50,6 +50,8 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
         if (payload.ShouldStripMetadata && payload.Segment == payload.TotalSegments)
         {
+            fsTemp.Seek(0, SeekOrigin.Begin);
+            var originalHash = await SHA256.Create().ComputeHashAsync(fsTemp, cts);
             fsTemp.Close();
             var ext = Path.GetExtension(vf.Name);
             var srcPath = $"{finalPath}_orig{ext}";
@@ -60,6 +62,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
             if (res.Success)
             {
                 File.Move(res.OutPath, finalPath);
+
                 File.Delete(srcPath);
 
                 // recompute metadata
@@ -69,7 +72,8 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
                 {
                     Size = (ulong)fInfo.Length,
                     Digest = hash.ToHex(),
-                    MimeType = res.MimeType ?? vf.MimeType
+                    MimeType = res.MimeType ?? vf.MimeType,
+                    OriginalDigest = originalHash.ToHex()
                 };
             }
             else
@@ -125,7 +129,7 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
 
         return path;
     }
-    
+
     private string MapPath(Guid id) =>
         Path.Join(_settings.DataDirectory, "files-v2", id.ToString()[..2], id.ToString()[2..4], id.ToString());
 }
