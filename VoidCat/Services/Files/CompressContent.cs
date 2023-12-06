@@ -31,6 +31,7 @@ public class CompressContent
                 case ".png":
                 case ".bmp":
                 case ".tiff":
+                case ".heic":
                 {
                     output = Path.ChangeExtension(output, ".webp");
                     outMime = "image/webp";
