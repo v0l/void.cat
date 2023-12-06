@@ -112,7 +112,7 @@ public static class VoidStartup
 
                 if (voidSettings.CorsOrigins.Count > 0)
                 {
-                    p.WithOrigins(voidSettings.CorsOrigins.Select(a => a.ToString()).ToArray())
+                    p.WithOrigins(voidSettings.CorsOrigins.ToArray())
                         .AllowCredentials();
                 }
                 else

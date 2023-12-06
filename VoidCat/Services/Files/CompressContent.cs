@@ -1,3 +1,4 @@
+using ExifLibrary;
 using FFMpegCore;
 
 namespace VoidCat.Services.Files;
@@ -21,6 +22,7 @@ public class CompressContent
         {
             string? outMime = null;
             var inExt = Path.GetExtension(input).ToLower();
+            var isImage = false;
             switch (inExt)
             {
                 case ".jpg":
@@ -32,10 +34,12 @@ public class CompressContent
                 {
                     output = Path.ChangeExtension(output, ".webp");
                     outMime = "image/webp";
+                    isImage = true;
                     break;
                 }
             }
-            
+
+            var probe = isImage ? await ImageFile.FromFileAsync(input) : default;
             var ffmpeg = FFMpegArguments
                 .FromFileInput(input)
                 .OutputToFile(output, true, o =>
@@ -44,6 +48,22 @@ public class CompressContent
                     if (inExt == ".gif")
                     {
                         o.Loop(0);
+                    }
+
+                    if (probe != default)
+                    {
+                        var orientation = probe.Properties.Get<ExifEnumProperty<Orientation>>(ExifTag.Orientation);
+                        if (orientation != default && orientation.Value != Orientation.Normal)
+                        {
+                            if (orientation.Value == Orientation.RotatedRight)
+                            {
+                                o.WithCustomArgument("-metadata:s:v rotate=\"90\"");
+                            }
+                            else if (orientation.Value == Orientation.RotatedLeft)
+                            {
+                                o.WithCustomArgument("-metadata:s:v rotate=\"-90\"");
+                            }
+                        }
                     }
                 })
                 .CancellableThrough(cts);

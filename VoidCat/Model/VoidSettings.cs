@@ -59,7 +59,7 @@ namespace VoidCat.Model
         /// <summary>
         /// CORS origins
         /// </summary>
-        public List<Uri> CorsOrigins { get; init; } = new();
+        public List<string> CorsOrigins { get; init; } = new();
 
         /// <summary>
         /// Cloud file storage settings
