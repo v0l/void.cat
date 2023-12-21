@@ -37,6 +37,8 @@ public class CleanupLocalDiskStore : IMigration
     private async Task CleanupDisk()
     {
         var baseDir = Path.Join(_settings.DataDirectory, "files-v2");
+        if (!Directory.Exists(baseDir)) return;
+
         foreach (var path in Directory.EnumerateFiles(baseDir, "*.*", SearchOption.AllDirectories))
         {
             if (!Guid.TryParse(Path.GetFileNameWithoutExtension(path), out var id))

@@ -1,26 +1,31 @@
-version: "3.9"
 services:
   web:
     build: .
+    restart: unless-stopped
     ports:
       - "8001:80"
     volumes:
       - "./VoidCat/appsettings.compose.json:/app/appsettings.json:ro"
+      - "./data/web:/app/data"
     depends_on:
       - postgres
       - redis
+      - clamav
   redis:
     image: "redis:alpine"
-    ports:
-      - "6079:6379"
+    restart: unless-stopped
+    volumes:
+      - "./data/redis:/data"
   postgres:
-    image: "postgres:14.1"
-    ports:
-      - "5432:5432"
+    image: "postgres:16"
+    restart: unless-stopped
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data"
     environment:
       - "POSTGRES_DB=void"
       - "POSTGRES_HOST_AUTH_METHOD=trust"
   clamav:
     image: "clamav/clamav"
-    ports:
-      - "3320:3310"
+    restart: unless-stopped
+    volumes:
+      - "./data/clamav:/var/lib/clamav"

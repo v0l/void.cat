@@ -15,6 +15,7 @@ public class DownloadController : BaseDownloadController
     {
     }
 
+    [HttpHead]
     [HttpOptions]
     [Route("{id}")]
     [EnableCors("*")]

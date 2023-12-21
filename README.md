@@ -11,12 +11,30 @@ Free, simple file hosting
 
 Use the docker image to run void.cat:
 
-`docker run --rm -it -p 8080:80 ghcr.io/v0l/void.cat/app:latest`
+`docker run --rm -it -p 8080:80 git.v0l.io/kieran/void-cat:latest`
 
 Then open your browser at http://localhost:8080.
 
 **The first registration will be set as admin, 
 so make sure to create your own account**
+
+### Deploying
+Docker compose is the best option for most as this sets up postgres / redis / clamav.
+
+Run the following commands to get going:
+```bash
+git clone https://git.v0l.io/Kieran/void.cat
+cd void.cat/
+docker compose up -d
+```
+
+You should now be able to access void.cat on `http://localhost`.
+
+If you already have something running on port `80` you may have problems, you can modify the `docker-compose.yml` 
+file to change the port.
+
+You can modify the site config in `./VoidCat/appsettings.compose.json`, this is recommended for anything other 
+than a simple test
 
 ### Usage
 
