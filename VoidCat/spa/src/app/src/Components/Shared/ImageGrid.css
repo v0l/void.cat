@@ -17,6 +17,5 @@
 .image-grid img,
 .image-grid video,
 .image-grid audio {
-  max-width: stretch;
-  max-height: stretch;
+  height: inherit;
 }
