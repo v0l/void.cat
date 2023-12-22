@@ -20,8 +20,9 @@ export default defineConfig({
     ],
     assetsInclude: [],
     build: {
-        outDir: "build",
+        outDir: "build"
     },
+    base: "/",
     clearScreen: false,
     resolve: {
         alias: {

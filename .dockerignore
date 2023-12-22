@@ -24,3 +24,5 @@ LICENSE
 README.md
 **/appsettings.*.json
 **/data
+**/build
+**/dist
