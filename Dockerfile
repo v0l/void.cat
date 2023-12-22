@@ -13,12 +13,12 @@ RUN apt update && \
 
 #run yarn install
 COPY . .
-RUN cd VoidCat/spa \
+RUN git config --global --add safe.directory /app \
+    && cd VoidCat/spa \
     && npx yarn \
     && npx yarn build
     
 RUN rm -rf VoidCat/appsettings.*.json \
-    && git config --global --add safe.directory /app \
     && dotnet publish -c Release -o out VoidCat/VoidCat.csproj
 
 # Build runtime image
