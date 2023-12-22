@@ -12,8 +12,8 @@ import { StrikePaymentConfig } from "./StrikePaymentConfig";
 import { NoPaymentConfig } from "./NoPaymentConfig";
 import { VoidButton } from "../Shared/VoidButton";
 
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
 
 interface FileEditProps {
   file: VoidFileResponse;

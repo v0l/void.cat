@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { AdminProfile } from "@void-cat/api";
 
-import { VoidButton } from "../Components/Shared/VoidButton";
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
+import { VoidButton } from "@/Components/Shared/VoidButton";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
 
 export default function EditUser({
   user,

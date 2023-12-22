@@ -5,13 +5,13 @@ import { Navigate } from "react-router-dom";
 import { AdminProfile } from "@void-cat/api";
 
 import { UserList } from "./UserList";
-import { VoidButton } from "../Components/Shared/VoidButton";
-import VoidModal from "../Components/Shared/VoidModal";
+import { VoidButton } from "@/Components/Shared/VoidButton";
+import VoidModal from "@/Components/Shared/VoidModal";
 import EditUser from "./EditUser";
 
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
-import ImageGrid from "../Components/Shared/ImageGrid";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
+import ImageGrid from "@/Components/Shared/ImageGrid";
 
 export function Admin() {
   const auth = useSelector((state: RootState) => state.login.jwt);

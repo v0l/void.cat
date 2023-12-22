@@ -17,3 +17,4 @@ sw.js
 .idea/
 appsettings.*.json
 VoidCat.xml
+build/

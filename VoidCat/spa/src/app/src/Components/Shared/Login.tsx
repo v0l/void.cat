@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 import "./Login.css";
-import { setAuth } from "../../LoginState";
+import { setAuth } from "@/LoginState";
 import { VoidButton } from "./VoidButton";
 
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
 
 export function Login() {
   const Api = useApi();

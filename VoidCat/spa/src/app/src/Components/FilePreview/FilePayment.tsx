@@ -4,8 +4,8 @@ import { LightningPayment } from "./LightningPayment";
 import { VoidButton } from "../Shared/VoidButton";
 import { PaymentOrder, PaymentServices, VoidFileResponse } from "@void-cat/api";
 
-import useApi from "Hooks/UseApi";
-import { FormatCurrency } from "Util";
+import useApi from "@/Hooks/UseApi";
+import { FormatCurrency } from "@/Util";
 
 interface FilePaymentProps {
   file: VoidFileResponse;

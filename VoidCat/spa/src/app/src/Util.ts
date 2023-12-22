@@ -1,4 +1,4 @@
-import * as Const from "Const";
+import * as Const from "@/Const";
 
 /**
  * Formats bytes into binary notation

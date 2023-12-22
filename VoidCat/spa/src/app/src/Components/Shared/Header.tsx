@@ -1,16 +1,14 @@
 import "./Header.css";
-import VoidCat from "../../image/voidcat.png";
 
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import { InlineProfile } from "./InlineProfile";
-import { logout, setAuth, setProfile } from "../../LoginState";
-import { setInfo } from "../../SiteInfoStore";
-
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
+import { logout, setAuth, setProfile } from "@/LoginState";
+import { setInfo } from "@/SiteInfoStore";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
 
 export function Header() {
   const dispatch = useDispatch();
@@ -51,7 +49,7 @@ export function Header() {
 
   return (
     <div className="header page">
-      <img src={VoidCat} alt="logo" className="logo" />
+      <img src="/logo_128.jpg" alt="logo" className="logo" />
       <div className="title">
         <Link to="/">{window.location.hostname}</Link>
       </div>

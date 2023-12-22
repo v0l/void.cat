@@ -5,7 +5,7 @@ import { ApiKey } from "@void-cat/api";
 import { VoidButton } from "../Shared/VoidButton";
 import VoidModal from "../Shared/VoidModal";
 
-import useApi from "Hooks/UseApi";
+import useApi from "@/Hooks/UseApi";
 
 export default function ApiKeyList() {
   const Api = useApi();

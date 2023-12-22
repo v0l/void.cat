@@ -1,11 +1,11 @@
 import { useSelector } from "react-redux";
 
-import { Dropzone } from "../Components/FileUpload/Dropzone";
-import { GlobalStats } from "../Components/HomePage/GlobalStats";
-import { FooterLinks } from "../Components/HomePage/FooterLinks";
-import { MetricsGraph } from "../Components/HomePage/MetricsGraph";
+import { Dropzone } from "@/Components/FileUpload/Dropzone";
+import { GlobalStats } from "@/Components/HomePage/GlobalStats";
+import { FooterLinks } from "@/Components/HomePage/FooterLinks";
+import { MetricsGraph } from "@/Components/HomePage/MetricsGraph";
 
-import { RootState } from "Store";
+import { RootState } from "@/Store";
 
 export function HomePage() {
   const metrics = useSelector((s: RootState) => s.info.info);

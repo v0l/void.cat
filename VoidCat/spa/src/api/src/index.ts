@@ -145,32 +145,32 @@ export interface ApiKey {
   token: string;
 }
 
-export enum PaymentCurrencies {
+export const enum PaymentCurrencies {
   BTC = 0,
   USD = 1,
   EUR = 2,
   GBP = 3,
 }
 
-export enum PaymentServices {
+export const enum PaymentServices {
   None = 0,
   Strike = 1,
 }
 
-export enum PaymentOrderState {
+export const enum PaymentOrderState {
   Unpaid = 0,
   Paid = 1,
   Expired = 2,
 }
 
-export enum PagedSortBy {
+export const enum PagedSortBy {
   Name = 0,
   Date = 1,
   Size = 2,
   Id = 3,
 }
 
-export enum PageSortOrder {
+export const enum PageSortOrder {
   Asc = 0,
   Dsc = 1,
 }

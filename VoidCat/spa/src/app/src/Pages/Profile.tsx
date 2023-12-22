@@ -5,14 +5,14 @@ import { default as moment } from "moment";
 import { useLoaderData } from "react-router-dom";
 import { Profile } from "@void-cat/api";
 
-import useApi from "Hooks/UseApi";
-import { RootState } from "Store";
-import { DefaultAvatar } from "Const";
+import useApi from "@/Hooks/UseApi";
+import { RootState } from "@/Store";
+import { DefaultAvatar } from "@/Const";
 
-import { logout, setProfile as setGlobalProfile } from "../LoginState";
-import { FileList } from "../Components/Shared/FileList";
-import { VoidButton } from "../Components/Shared/VoidButton";
-import ApiKeyList from "../Components/Profile/ApiKeyList";
+import { logout, setProfile as setGlobalProfile } from "@/LoginState";
+import { FileList } from "@/Components/Shared/FileList";
+import { VoidButton } from "@/Components/Shared/VoidButton";
+import ApiKeyList from "@/Components/Profile/ApiKeyList";
 
 export function ProfilePage() {
   const dispatch = useDispatch();

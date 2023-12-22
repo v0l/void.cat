@@ -1,9 +1,10 @@
 {
   "name": "@void-cat/api",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "void.cat API package",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "module": "src/index.ts",
   "repository": "https://git.v0l.io/Kieran/void.cat",
   "author": "Kieran",
   "license": "MIT",
@@ -12,7 +13,7 @@
   },
   "devDependencies": {
     "@types/sjcl": "^1.0.30",
-    "typescript": "^5.0.4"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "sjcl": "^1.0.8"

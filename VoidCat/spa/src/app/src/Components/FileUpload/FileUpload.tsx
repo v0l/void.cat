@@ -6,9 +6,9 @@ import { UploadState, VoidFileResponse } from "@void-cat/api";
 import { VoidButton } from "../Shared/VoidButton";
 import { useFileTransfer } from "../Shared/FileTransferHook";
 
-import { RootState } from "Store";
-import { ConstName, FormatBytes } from "Util";
-import useApi from "Hooks/UseApi";
+import { RootState } from "@/Store";
+import { ConstName, FormatBytes } from "@/Util";
+import useApi from "@/Hooks/UseApi";
 
 interface FileUploadProps {
   file: File | Blob;

@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
-    "target": "es2020",
+    "baseUrl": ".",
+    "target": "ESNext",
+    "module": "ESNext",
     "jsx": "react-jsx",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
+    "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "allowJs": true
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }

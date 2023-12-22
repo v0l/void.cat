@@ -8,17 +8,16 @@ import {
   StreamEncryption,
 } from "@void-cat/api";
 
-import { TextPreview } from "../Components/FilePreview/TextPreview";
-import { FileEdit } from "../Components/FileEdit/FileEdit";
-import { FilePayment } from "../Components/FilePreview/FilePayment";
-import { InlineProfile } from "../Components/Shared/InlineProfile";
-import { VoidButton } from "../Components/Shared/VoidButton";
-import { useFileTransfer } from "../Components/Shared/FileTransferHook";
-import Icon from "../Components/Shared/Icon";
+import { TextPreview } from "@/Components/FilePreview/TextPreview";
+import { FileEdit } from "@/Components/FileEdit/FileEdit";
+import { FilePayment } from "@/Components/FilePreview/FilePayment";
+import { InlineProfile } from "@/Components/Shared/InlineProfile";
+import { VoidButton } from "@/Components/Shared/VoidButton";
+import { useFileTransfer } from "@/Components/Shared/FileTransferHook";
+import Icon from "@/Components/Shared/Icon";
 
-import useApi from "Hooks/UseApi";
-import { FormatBytes } from "Util";
-import { ApiHost } from "Const";
+import useApi from "@/Hooks/UseApi";
+import { FormatBytes } from "@/Util";
 
 export function FilePreview() {
   const Api = useApi();
@@ -249,7 +248,7 @@ export function FilePreview() {
 
   useEffect(() => {
     if (info) {
-      const fileLink = info.metadata?.url ?? `${ApiHost}/d/${info.id}`;
+      const fileLink = info.metadata?.url ?? `${import.meta.env.VITE_API_HOST}/d/${info.id}`;
       setFileSize(info.metadata?.size ?? 0);
 
       const order = window.localStorage.getItem(`payment-${info.id}`);

@@ -2,8 +2,8 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-import { Login } from "../Components/Shared/Login";
-import { RootState } from "Store";
+import { Login } from "@/Components/Shared/Login";
+import { RootState } from "@/Store";
 
 export function UserLogin() {
   const auth = useSelector((s: RootState) => s.login.jwt);

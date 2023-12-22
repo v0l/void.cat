@@ -3,9 +3,9 @@ import { Fragment } from "react";
 import moment from "moment";
 import { useSelector } from "react-redux";
 
-import Icon from "Components/Shared/Icon";
-import { RootState } from "Store";
-import { FormatBytes } from "Util";
+import Icon from "@/Components/Shared/Icon";
+import { RootState } from "@/Store";
+import { FormatBytes } from "@/Util";
 
 export function GlobalStats() {
   let stats = useSelector((s: RootState) => s.info.info);

@@ -8,7 +8,7 @@ import {
 
 import { Countdown } from "../Shared/Countdown";
 
-import useApi from "Hooks/UseApi";
+import useApi from "@/Hooks/UseApi";
 
 interface LightningPaymentProps {
   file: VoidFileResponse;

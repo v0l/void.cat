@@ -11,10 +11,10 @@ import {
   VoidFileResponse,
 } from "@void-cat/api";
 
-import { logout } from "../../LoginState";
+import { logout } from "@/LoginState";
 import { PageSelector } from "./PageSelector";
 
-import { FormatBytes } from "Util";
+import { FormatBytes } from "@/Util";
 
 interface FileListProps {
   actions?: (f: VoidFileResponse) => ReactNode;

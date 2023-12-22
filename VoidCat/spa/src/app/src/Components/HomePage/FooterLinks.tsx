@@ -2,7 +2,7 @@ import "./FooterLinks.css";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
-import { RootState } from "Store";
+import { RootState } from "@/Store";
 
 export function FooterLinks() {
   const profile = useSelector((s: RootState) => s.login.profile);

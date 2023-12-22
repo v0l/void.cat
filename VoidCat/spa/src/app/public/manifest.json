@@ -5,9 +5,24 @@
   "description": "Void.cat file hosting",
   "icons": [
     {
-      "src": "voidcat_512.png",
-      "type": "image/png",
+      "src": "logo_512.jpg",
+      "type": "image/jpg",
       "sizes": "512x512"
+    },
+    {
+      "src": "logo_256.jpg",
+      "type": "image/jpg",
+      "sizes": "256x256"
+    },
+    {
+      "src": "logo_128.jpg",
+      "type": "image/jpg",
+      "sizes": "128x128"
+    },
+    {
+      "src": "logo_32.png",
+      "type": "image/png",
+      "sizes": "32x32"
     }
   ],
   "start_url": ".",

@@ -3,7 +3,7 @@ import { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { Profile } from "@void-cat/api";
 
-import { DefaultAvatar } from "Const";
+import { DefaultAvatar } from "@/Const";
 
 const DefaultSize = 64;
 

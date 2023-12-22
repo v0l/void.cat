@@ -2,7 +2,7 @@ import { Bar, BarChart, Tooltip, XAxis } from "recharts";
 import moment from "moment";
 import { BandwidthPoint } from "@void-cat/api";
 
-import { FormatBytes } from "Util";
+import { FormatBytes } from "@/Util";
 
 interface MetricsGraphProps {
   metrics?: Array<BandwidthPoint>;

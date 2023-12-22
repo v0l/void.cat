@@ -7,6 +7,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { Provider } from "react-redux";
+import { VoidApi } from "@void-cat/api";
 
 import store from "./Store";
 import { FilePreview } from "./Pages/FilePreview";
@@ -16,8 +17,6 @@ import { UserLogin } from "./Pages/UserLogin";
 import { ProfilePage } from "./Pages/Profile";
 import { Header } from "./Components/Shared/Header";
 import { Donate } from "./Pages/Donate";
-import { VoidApi } from "@void-cat/api";
-import { ApiHost } from "./Const";
 
 const router = createBrowserRouter([
   {
@@ -35,7 +34,7 @@ const router = createBrowserRouter([
         path: "/u/:id",
         loader: async ({ params }: LoaderFunctionArgs) => {
           const state = store.getState();
-          const api = new VoidApi(ApiHost, state.login.jwt ? () => Promise.resolve(`Bearer ${state.login.jwt}`) : undefined);
+          const api = new VoidApi(import.meta.env.VITE_API_HOST, state.login.jwt ? () => Promise.resolve(`Bearer ${state.login.jwt}`) : undefined);
           if (params.id) {
             try {
               return await api.getUser(params.id);

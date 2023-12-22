@@ -10,10 +10,10 @@ import {
   PageSortOrder,
 } from "@void-cat/api";
 
-import { logout } from "../LoginState";
+import { logout } from "@/LoginState";
 import { PageSelector } from "../Components/Shared/PageSelector";
 
-import useApi from "Hooks/UseApi";
+import useApi from "@/Hooks/UseApi";
 
 interface UserListProps {
   actions: (u: AdminProfile) => ReactNode;
