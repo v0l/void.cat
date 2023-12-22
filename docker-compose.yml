@@ -11,6 +11,7 @@ services:
       - postgres
       - redis
       - clamav
+      - prometheus
   redis:
     image: "redis:alpine"
     restart: unless-stopped
@@ -29,3 +30,9 @@ services:
     restart: unless-stopped
     volumes:
       - "./data/clamav:/var/lib/clamav"
+  prometheus:
+    image: bitnami/prometheus
+    restart: unless-stopped
+    volumes:
+      - "./data/prometheus:/opt/bitnami/prometheus/data"
+      - "./prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro"
