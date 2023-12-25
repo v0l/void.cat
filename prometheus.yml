@@ -3,4 +3,4 @@ global:
 scrape_configs:
   - job_name: void-cat
     static_configs:
-      - targets: [ "web:9090" ]
+      - targets: [ "web:80" ]
