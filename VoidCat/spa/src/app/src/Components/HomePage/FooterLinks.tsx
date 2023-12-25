@@ -1,4 +1,3 @@
-import "./FooterLinks.css";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
@@ -8,7 +7,7 @@ export function FooterLinks() {
   const profile = useSelector((s: RootState) => s.login.profile);
 
   return (
-    <div className="footer">
+    <footer className="flex gap-4 items-center justify-center">
       <a href="https://discord.gg/8BkxTGs" target="_blank" rel="noreferrer">
         Discord
       </a>
@@ -21,6 +20,6 @@ export function FooterLinks() {
       </a>
       <Link to="/donate">Donate</Link>
       {profile?.roles?.includes("Admin") ? <a href="/admin">Admin</a> : null}
-    </div>
+    </footer>
   );
 }

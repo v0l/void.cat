@@ -41,7 +41,10 @@ public class IndexController : Controller
         };
 
         var indexPath = Path.Combine(_webHost.WebRootPath, "index.html");
-        var indexContent = await System.IO.File.ReadAllTextAsync(indexPath);
+
+        var indexContent = System.IO.File.Exists(indexPath) ?
+            await System.IO.File.ReadAllTextAsync(indexPath)
+            : string.Empty;
 
         var meta = (await _fileMetadata.Get(gid))?.ToMeta(false);
         var tags = new List<KeyValuePair<string, string>>()

@@ -14,3 +14,9 @@ services:
     image: "clamav/clamav"
     ports:
       - "3320:3310"
+  prometheus:
+    image: bitnami/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml:ro"

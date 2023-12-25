@@ -12,6 +12,7 @@ import EditUser from "./EditUser";
 import useApi from "@/Hooks/UseApi";
 import { RootState } from "@/Store";
 import ImageGrid from "@/Components/Shared/ImageGrid";
+import { IconButton } from "@/Components/Shared/Icon";
 
 export function Admin() {
   const auth = useSelector((state: RootState) => state.login.jwt);
@@ -45,7 +46,15 @@ export function Admin() {
         />
 
         <h2>Files</h2>
-        <ImageGrid loadPage={(r) => AdminApi.adminListFiles(r)} />
+        <ImageGrid
+          loadPage={(r) => AdminApi.adminListFiles(r)}
+          actions={(f) => <>
+            <IconButton name="trash" onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              deleteFile(f.id)
+            }} />
+          </>} />
 
         {editUser && (
           <VoidModal title="Edit user">

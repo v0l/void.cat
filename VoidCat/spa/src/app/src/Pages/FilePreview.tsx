@@ -310,12 +310,12 @@ export function FilePreview() {
           {renderPayment()}
           {renderPreview()}
           {renderEncryptedDownload()}
-          <div className="file-stats">
-            <div>
+          <div className="flex justify-around py-2">
+            <div className="flex gap-2 items-center">
               <Icon name="download-cloud" />
               {FormatBytes(info?.bandwidth?.egress ?? 0, 2)}
             </div>
-            <div>
+            <div className="flex gap-2 items-center">
               <Icon name="save" />
               {FormatBytes(info?.metadata?.size ?? 0, 2)}
             </div>

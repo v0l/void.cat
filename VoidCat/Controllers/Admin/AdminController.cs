@@ -32,6 +32,7 @@ public class AdminController : Controller
     /// </summary>
     /// <param name="request">Page request</param>
     /// <returns></returns>
+    [HttpOptions]
     [HttpPost]
     [Route("file")]
     public async Task<RenderedResults<VoidFileResponse>> ListFiles([FromBody] PagedRequest request)
@@ -51,6 +52,7 @@ public class AdminController : Controller
     /// Delete a file from the system
     /// </summary>
     /// <param name="id">Id of the file to delete</param>
+    [HttpOptions]
     [HttpDelete]
     [Route("file/{id}")]
     public async Task DeleteFile([FromRoute] string id)
@@ -65,6 +67,7 @@ public class AdminController : Controller
     /// </summary>
     /// <param name="request">Page request</param>
     /// <returns></returns>
+    [HttpOptions]
     [HttpPost]
     [Route("users")]
     public async Task<RenderedResults<AdminListedUser>> ListUsers([FromBody] PagedRequest request)
@@ -91,6 +94,7 @@ public class AdminController : Controller
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>
+    [HttpOptions]
     [HttpPost]
     [Route("update-user")]
     public async Task<IActionResult> UpdateUser([FromBody] AdminUpdateUser user)
@@ -100,7 +104,7 @@ public class AdminController : Controller
 
         oldUser.Storage = user.Storage;
         oldUser.Email = user.Email;
-        
+
         await _userStore.AdminUpdateUser(oldUser);
         return Ok();
     }
