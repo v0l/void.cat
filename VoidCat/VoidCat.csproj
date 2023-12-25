@@ -50,8 +50,9 @@
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 	</ItemGroup>
-	<ItemGroup>
-		<!--<Protobuf Include="Services/Lightning/proto/*.proto" GrpcServices="Client" ProtoRoot="Services/Lightning/proto" />-->
+	<ItemGroup><!--<Protobuf Include="Services/Lightning/proto/*.proto" GrpcServices="Client" ProtoRoot="Services/Lightning/proto" />-->
+	
+	  <Folder Include="wwwroot\" />
 	</ItemGroup>
 	<ItemGroup>
 		<!-- Don't publish the SPA source files, but do show them in the project files list -->
@@ -89,9 +90,6 @@
 			<_Parameter2>$([System.DateTime]::UtcNow.ToBinary())</_Parameter2>
 		</AssemblyAttributes>
 		<Compile Include="$(IntermediateOutputPath)\build_date.cs" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Migrations\" />
 	</ItemGroup>
 	<Target Name="GetBuildDate" BeforeTargets="CoreCompile">
 		<WriteCodeFragment Language="C#" OutputFile="$(IntermediateOutputPath)\build_date.cs" AssemblyAttributes="@(AssemblyAttributes)" />

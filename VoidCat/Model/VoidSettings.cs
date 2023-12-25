@@ -26,6 +26,11 @@ namespace VoidCat.Model
         /// Size in bytes to split uploads into chunks
         /// </summary>
         public ulong? UploadSegmentSize { get; init; }
+        
+        /// <summary>
+        /// Max file size for upload
+        /// </summary>
+        public ulong? MaxFileSize { get; init; }
 
         /// <summary>
         /// Tor configuration

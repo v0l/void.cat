@@ -57,6 +57,8 @@ namespace VoidCat.Controllers
         /// <param name="cli">True if you want to return only the url of the file in the response</param>
         /// <returns>Returns <see cref="UploadResult"/></returns>
         [HttpPost]
+        [HttpOptions]
+        [HttpHead]
         [DisableRequestSizeLimit]
         [DisableFormValueModelBinding]
         [Authorize(AuthenticationSchemes = "Bearer,Nostr", Policy = Policies.RequireNostr)]
@@ -71,6 +73,12 @@ namespace VoidCat.Controllers
                 if (_settings.MaintenanceMode && !stripMetadata)
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
+                }
+
+                var bodyLength = Request.ContentLength ?? 0;
+                if ((ulong)bodyLength >= (_settings.MaxFileSize ?? ulong.MaxValue))
+                {
+                    throw new InvalidOperationException("File size too large");
                 }
 
                 var uid = HttpContext.GetUserId();
