@@ -1,5 +1,3 @@
-export const DefaultAvatar = "https://i.imgur.com/8A5Fu65.jpeg";
-
 /**
  * @constant {number} - Size of 1 kiB
  */

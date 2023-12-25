@@ -248,7 +248,9 @@ export function FilePreview() {
 
   useEffect(() => {
     if (info) {
-      const fileLink = info.metadata?.url ?? `${import.meta.env.VITE_API_HOST ?? ""}/d/${info.id}`;
+      const fileLink =
+        info.metadata?.url ??
+        `${import.meta.env.VITE_API_HOST ?? ""}/d/${info.id}`;
       setFileSize(info.metadata?.size ?? 0);
 
       const order = window.localStorage.getItem(`payment-${info.id}`);

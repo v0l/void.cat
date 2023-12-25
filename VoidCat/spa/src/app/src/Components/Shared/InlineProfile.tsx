@@ -3,8 +3,6 @@ import { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { Profile } from "@void-cat/api";
 
-import { DefaultAvatar } from "@/Const";
-
 const DefaultSize = 64;
 
 interface InlineProfileProps {
@@ -24,8 +22,8 @@ export function InlineProfile({ profile, options }: InlineProfileProps) {
     ...options,
   };
 
-  let avatarUrl = profile.avatar ?? DefaultAvatar;
-  if (!avatarUrl.startsWith("http")) {
+  let avatarUrl = profile.avatar ?? "/logo_256.jpg";
+  if (profile.avatar && !avatarUrl.startsWith("http")) {
     avatarUrl = `/d/${avatarUrl}`;
   }
   let avatarStyles = {

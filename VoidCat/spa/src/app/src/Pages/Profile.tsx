@@ -7,7 +7,6 @@ import { Profile } from "@void-cat/api";
 
 import useApi from "@/Hooks/UseApi";
 import { RootState } from "@/Store";
-import { DefaultAvatar } from "@/Const";
 
 import { logout, setProfile as setGlobalProfile } from "@/LoginState";
 import { FileList } from "@/Components/Shared/FileList";
@@ -173,9 +172,8 @@ export function ProfilePage() {
   }
 
   if (profile) {
-    let avatarUrl = profile.avatar ?? DefaultAvatar;
-    if (!avatarUrl.startsWith("http")) {
-      // assume void-cat hosted avatar
+    let avatarUrl = profile.avatar ?? "/logo_256.jpg";
+    if (profile.avatar && !avatarUrl.startsWith("http")) {
       avatarUrl = `/d/${avatarUrl}`;
     }
     let avatarStyles = {

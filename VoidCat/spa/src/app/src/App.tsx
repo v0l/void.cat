@@ -34,7 +34,12 @@ const router = createBrowserRouter([
         path: "/u/:id",
         loader: async ({ params }: LoaderFunctionArgs) => {
           const state = store.getState();
-          const api = new VoidApi(import.meta.env.VITE_API_HOST, state.login.jwt ? () => Promise.resolve(`Bearer ${state.login.jwt}`) : undefined);
+          const api = new VoidApi(
+            import.meta.env.VITE_API_HOST,
+            state.login.jwt
+              ? () => Promise.resolve(`Bearer ${state.login.jwt}`)
+              : undefined,
+          );
           if (params.id) {
             try {
               return await api.getUser(params.id);
