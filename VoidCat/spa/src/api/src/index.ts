@@ -104,6 +104,7 @@ export interface VoidFileMeta {
   encryptionParams?: string;
   magnetLink?: string;
   storage: string;
+  mediaDimensions?: string;
 }
 
 export interface VirusScanStatus {
