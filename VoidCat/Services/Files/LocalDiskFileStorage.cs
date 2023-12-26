@@ -73,7 +73,8 @@ public class LocalDiskFileStore : StreamFileStore, IFileStore
                     Size = (ulong)fInfo.Length,
                     Digest = hash.ToHex(),
                     MimeType = res.MimeType ?? vf.MimeType,
-                    OriginalDigest = originalHash.ToHex()
+                    OriginalDigest = originalHash.ToHex(),
+                    MediaDimensions = res is {Width: not null, Height: not null} ? $"{res.Width.Value}x{res.Height.Value}" : null
                 };
             }
             else

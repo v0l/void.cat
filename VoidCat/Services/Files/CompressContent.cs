@@ -40,6 +40,7 @@ public class CompressContent
                 }
             }
 
+            var ffProbe = await TryProbe(input, cts);
             var probe = isImage ? await ImageFile.FromFileAsync(input) : default;
             var ffmpeg = FFMpegArguments
                 .FromFileInput(input)
@@ -73,7 +74,9 @@ public class CompressContent
             var result = await ffmpeg.ProcessAsynchronously();
             return new(result, output)
             {
-                MimeType = outMime
+                MimeType = outMime,
+                Width = ffProbe?.PrimaryVideoStream?.Width,
+                Height = ffProbe?.PrimaryVideoStream?.Height,
             };
         }
         catch (Exception ex)
@@ -84,8 +87,24 @@ public class CompressContent
         return new(false, output);
     }
 
+    private async Task<IMediaAnalysis?> TryProbe(string path, CancellationToken cts)
+    {
+        try
+        {
+            return await FFProbe.AnalyseAsync(path, cancellationToken: cts);
+        }
+        catch
+        {
+            // ignored
+        }
+
+        return default;
+    }
+
     public record CompressResult(bool Success, string OutPath)
     {
         public string? MimeType { get; init; }
+        public int? Width { get; init; }
+        public int? Height { get; init; }
     }
 }

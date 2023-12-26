@@ -32,4 +32,5 @@ public class VoidFileMeta
     public string Storage { get; init; } = "local-disk";
     public string? EncryptionParams { get; init; }
     public string? MagnetLink { get; init; }
+    public string? MediaDimensions { get; init; }
 }

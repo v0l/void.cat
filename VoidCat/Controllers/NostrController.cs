@@ -86,17 +86,24 @@ public class NostrController : BaseDownloadController
             await _fileMetadata.Add(vf);
             await _userUploads.AddFile(nostrUser.Id, vf.Id);
 
+            List<List<string>> tags = new()
+            {
+                new() {"url", new Uri(_settings.SiteUrl, $"/nostr/{vf.OriginalDigest}{Path.GetExtension(vf.Name)}").ToString()},
+                new() {"ox", vf.OriginalDigest ?? "", _settings.SiteUrl.ToString()},
+                new() {"x", vf.Digest ?? ""},
+                new() {"m", vf.MimeType}
+            };
+
+            if (!string.IsNullOrEmpty(vf.MediaDimensions))
+            {
+                tags.Add(new() {"dim", vf.MediaDimensions});
+            }
+
             var ret = new Nip96UploadResult
             {
                 FileHeader = new()
                 {
-                    Tags = new()
-                    {
-                        new() {"url", new Uri(_settings.SiteUrl, $"/nostr/{vf.OriginalDigest}{Path.GetExtension(vf.Name)}").ToString()},
-                        new() {"ox", vf.OriginalDigest ?? "", _settings.SiteUrl.ToString()},
-                        new() {"x", vf.Digest ?? ""},
-                        new() {"m", vf.MimeType}
-                    }
+                    Tags = tags
                 }
             };
 

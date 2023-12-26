@@ -359,7 +359,8 @@ public static class Extensions
             EditSecret = withEditSecret ? f.EditSecret : null,
             Storage = f.Storage,
             EncryptionParams = f.EncryptionParams,
-            MagnetLink = f.MagnetLink
+            MagnetLink = f.MagnetLink,
+            MediaDimensions = f.MediaDimensions
         };
     }
 
