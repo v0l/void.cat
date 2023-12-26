@@ -67,8 +67,9 @@ namespace VoidCat.Controllers
         {
             try
             {
-                var stripMetadata = Request.Headers.GetHeader("V-Strip-Metadata")
-                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false;
+                var mime = Request.Headers.GetHeader("V-Content-Type");
+                var stripMetadata = (mime?.StartsWith("image/") ?? false) || (Request.Headers.GetHeader("V-Strip-Metadata")
+                    ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false);
 
                 if (_settings.MaintenanceMode && !stripMetadata)
                 {
@@ -89,7 +90,6 @@ namespace VoidCat.Controllers
                     uid = nostrUser.Id;
                 }
 
-                var mime = Request.Headers.GetHeader("V-Content-Type");
                 var filename = Request.Headers.GetHeader("V-Filename");
 
                 if (string.IsNullOrEmpty(mime) && !string.IsNullOrEmpty(filename))
