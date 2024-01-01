@@ -276,8 +276,8 @@ export function FilePreview() {
             {renderOpenGraphTags()}
           </Helmet>
           {renderVirusWarning()}
-          <div className="flex flex-center">
-            <div className="flx-grow">
+          <div className="flex items-center">
+            <div className="grow">
               {info.uploader ? <InlineProfile profile={info.uploader} /> : null}
             </div>
             <div>

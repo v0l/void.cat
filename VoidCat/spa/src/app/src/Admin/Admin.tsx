@@ -48,13 +48,19 @@ export function Admin() {
         <h2>Files</h2>
         <ImageGrid
           loadPage={(r) => AdminApi.adminListFiles(r)}
-          actions={(f) => <>
-            <IconButton name="trash" onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              deleteFile(f.id)
-            }} />
-          </>} />
+          actions={(f) => (
+            <>
+              <IconButton
+                name="trash"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  deleteFile(f.id);
+                }}
+              />
+            </>
+          )}
+        />
 
         {editUser && (
           <VoidModal title="Edit user">

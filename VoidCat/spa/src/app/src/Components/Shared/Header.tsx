@@ -48,11 +48,11 @@ export function Header() {
   }, [jwt]);
 
   return (
-    <div className="header page">
-      <img src="/logo_128.jpg" alt="logo" className="logo" />
-      <div className="title">
-        <Link to="/">{window.location.hostname}</Link>
-      </div>
+    <div className="flex justify-between items-center page">
+      <Link to="/" className="flex gap-2 items-center">
+        <img src="/logo_128.jpg" alt="logo" className="h-20" />
+        <div className="text-2xl">{window.location.hostname}</div>
+      </Link>
       {profile ? (
         <InlineProfile
           profile={profile}

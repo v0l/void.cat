@@ -6,10 +6,18 @@
 body {
   margin: 0;
   font-family: "Source Code Pro", monospace;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   background-color: black;
   color: white;
+}
+
+h1 {
+  font-size: 2rem;
+}
+h2 {
+  font-size: 1.75rem;
+}
+h3 {
+  font-size: 1.5rem;
 }
 
 a {
@@ -39,30 +47,6 @@ a:hover {
   background-color: #666;
 }
 
-.flex {
-  display: flex;
-}
-
-.flex-inline {
-  display: inline-flex;
-}
-
-.flx-1 {
-  flex: 1;
-}
-
-.flx-2 {
-  flex: 2;
-}
-
-.flx-grow {
-  flex-grow: 1;
-}
-
-.flex-center {
-  align-items: center;
-}
-
 input[type="text"],
 input[type="number"],
 input[type="password"],
@@ -75,6 +59,7 @@ select {
   padding: 10px 20px;
   margin: 5px;
   border: 0;
+  color: black;
 }
 
 input[type="checkbox"] {

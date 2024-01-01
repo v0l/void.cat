@@ -17,7 +17,7 @@ import { PageSelector } from "./PageSelector";
 
 interface ImageGridProps {
   loadPage: (req: PagedRequest) => Promise<PagedResponse<any>>;
-  actions?: (f: VoidFileResponse) => ReactNode
+  actions?: (f: VoidFileResponse) => ReactNode;
 }
 
 export default function ImageGrid(props: ImageGridProps) {
@@ -107,9 +107,11 @@ export default function ImageGrid(props: ImageGridProps) {
         {files?.results.map((v) => (
           <Link key={v.id} to={`/${v.id}`} className="relative">
             {renderPreview(v)}
-            {props.actions && <div className="absolute hover:opacity-100 h-full w-full opacity-0 border border-slate-600 flex flex-wrap gap-2 items-center justify-center bg-[rgba(0,0,0,0.5)]">
-              {props.actions(v)}
-            </div>}
+            {props.actions && (
+              <div className="absolute hover:opacity-100 h-full w-full opacity-0 border border-slate-600 flex flex-wrap gap-2 items-center justify-center bg-[rgba(0,0,0,0.5)]">
+                {props.actions(v)}
+              </div>
+            )}
           </Link>
         ))}
       </div>

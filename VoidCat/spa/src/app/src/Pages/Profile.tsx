@@ -198,7 +198,7 @@ export function ProfilePage() {
             )}
           </div>
           <div className="flex">
-            <div className="flx-1">
+            <div className="flex-1">
               <div className="avatar" style={avatarStyles}>
                 {cantEditProfile ? (
                   <div className="edit-avatar" onClick={() => changeAvatar()}>
@@ -207,7 +207,7 @@ export function ProfilePage() {
                 ) : null}
               </div>
             </div>
-            <div className="flx-1">
+            <div className="flex-1">
               <dl>
                 <dt>Created</dt>
                 <dd>{moment(profile.created).fromNow()}</dd>

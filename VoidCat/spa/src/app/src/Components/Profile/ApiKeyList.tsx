@@ -44,7 +44,7 @@ export default function ApiKeyList() {
   return (
     <>
       <div className="flex flex-center">
-        <div className="flx-grow">
+        <div className="grow">
           <h1>API Keys</h1>
         </div>
         <div>

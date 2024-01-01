@@ -25,9 +25,8 @@ export function GlobalStats() {
         </div>
         <div className="flex gap-2 items-center">
           <Icon name="hash" />
-          {stats?.count ?? 0}
+          {(stats?.count ?? 0).toLocaleString()}
         </div>
-
       </div>
       {stats?.buildInfo && (
         <div className="fixed bottom-2 left-2 text-xs text-slate-700">

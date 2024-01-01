@@ -30,9 +30,9 @@ export default defineConfig({
     },
   },
   define: {},
-  server:{
+  server: {
     proxy: {
-      "/d": "http://localhost:7195/"
-    }
-  }
+      "/d": "http://localhost:7195/",
+    },
+  },
 });

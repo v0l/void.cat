@@ -89,7 +89,7 @@ export function FileEdit({ file }: FileEditProps) {
 
   return (
     <div className="file-edit flex">
-      <div className="flx-1">
+      <div className="flex-1">
         <h3>File info</h3>
         <dl>
           <dt>Filename:</dt>
@@ -131,7 +131,7 @@ export function FileEdit({ file }: FileEditProps) {
           Save
         </VoidButton>
       </div>
-      <div className="flx-1">
+      <div className="flex-1">
         <h3>Payment Config</h3>
         Type:
         <select

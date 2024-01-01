@@ -3,7 +3,7 @@ export interface IconProps {
   size?: number;
   className?: string;
   onClick?: React.MouseEventHandler;
-};
+}
 
 const Icon = (props: IconProps) => {
   const size = props.size || 20;
@@ -21,9 +21,14 @@ const Icon = (props: IconProps) => {
   );
 };
 
-export function IconButton({onClick, ...props}: IconProps) {
-  return <button onClick={onClick} className="p-2 bg-slate-800 rounded-xl hover:bg-slate-600">
-    <Icon {...props} />
-  </button>
+export function IconButton({ onClick, ...props }: IconProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="p-2 bg-slate-800 rounded-xl hover:bg-slate-600"
+    >
+      <Icon {...props} />
+    </button>
+  );
 }
 export default Icon;
