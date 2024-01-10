@@ -158,6 +158,7 @@ public abstract class BaseDownloadController : Controller
         Response.Headers.XFrameOptions = "SAMEORIGIN";
         Response.Headers.ContentDisposition = $"inline; filename=\"{meta?.Metadata?.Name}\"";
         Response.ContentType = meta?.Metadata?.MimeType ?? "application/octet-stream";
+        Response.ContentLength = (long?)meta?.Metadata?.Size;
 
         return meta;
     }
