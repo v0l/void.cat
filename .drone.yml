@@ -8,12 +8,14 @@ metadata:
 
 steps:
   - name: build
-    image: r.j3ss.co/img
+    image: docker
     privileged: true
     environment: 
       TOKEN:
         from_secret: gitea
     commands:
-      - img login -u kieran -p $TOKEN git.v0l.io
-      - img build -t git.v0l.io/kieran/void-cat:latest .
-      - img push git.v0l.io/kieran/void-cat:latest
+      - dockerd &
+      - docker login -u kieran -p $TOKEN git.v0l.io
+      - docker buildx create --name mybuilder --bootstrap --use
+      - docker buildx build -t git.v0l.io/kieran/void-cat:latest --platform linux/amd64 --push .
+      - kill $(cat /var/run/docker.pid)
