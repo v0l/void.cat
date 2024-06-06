@@ -71,7 +71,7 @@ namespace VoidCat.Controllers
                 var stripMetadata = (mime?.StartsWith("image/") ?? false) || (Request.Headers.GetHeader("V-Strip-Metadata")
                     ?.Equals("true", StringComparison.InvariantCultureIgnoreCase) ?? false);
 
-                if (_settings.MaintenanceMode && !stripMetadata)
+                if (_settings.MaintenanceMode)
                 {
                     throw new InvalidOperationException("Site is in maintenance mode");
                 }
