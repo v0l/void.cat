@@ -65,9 +65,12 @@ public class NostrController : BaseDownloadController
         {
             return Unauthorized();
         }
-
         try
         {
+            if (_settings.MaintenanceMode)
+            {
+                throw new InvalidOperationException("Site is in maintenance mode");
+            }
             var nostrUser = await _userManager.LoginOrRegister(pubkey);
             var file = Request.Form.Files.First();
 
