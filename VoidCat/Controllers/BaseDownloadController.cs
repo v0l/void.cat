@@ -43,13 +43,6 @@ public abstract class BaseDownloadController : Controller
             return;
         }
 
-        if (voidFile.Uploader?.IsNostr ?? false)
-        {
-            Response.StatusCode = (int)HttpStatusCode.Redirect;
-            Response.Headers.Location = $"https://files.v0l.io/{voidFile.Metadata.Digest}";
-            return;
-        }
-
         var egressReq = new EgressRequest(gid, GetRanges(Request, (long)voidFile!.Metadata!.Size));
         if (egressReq.Ranges.Count() > 1)
         {
@@ -101,6 +94,13 @@ public abstract class BaseDownloadController : Controller
         if (meta == null)
         {
             Response.StatusCode = 404;
+            return default;
+        }
+        
+        if (meta.Uploader?.IsNostr ?? false)
+        {
+            Response.StatusCode = (int)HttpStatusCode.Redirect;
+            Response.Headers.Location = $"https://files.v0l.io/{meta.Metadata.Digest}";
             return default;
         }
 
