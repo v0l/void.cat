@@ -12,7 +12,7 @@ public class VoidFileResponse
     public Guid Id { get; init; }
     public VoidFileMeta Metadata { get; init; } = null!;
     public Paywall? Payment { get; init; }
-    public ApiUser? Uploader { get; init; }
+    public ApiUser? Uploader { get; set; }
     public Bandwidth? Bandwidth { get; init; }
     public VirusStatus? VirusScan { get; init; }
 }

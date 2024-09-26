@@ -90,18 +90,23 @@ public abstract class BaseDownloadController : Controller
 
     protected async Task<VoidFileResponse?> SetupDownload(Guid id)
     {
-        var meta = await _fileInfo.Get(id, false);
+        var meta = await _fileInfo.Get(id, true);
         if (meta == null)
         {
             Response.StatusCode = 404;
             return default;
         }
-        
+
         if (meta.Uploader?.IsNostr ?? false)
         {
             Response.StatusCode = (int)HttpStatusCode.Redirect;
             Response.Headers.Location = $"https://files.v0l.io/{meta.Metadata.Digest}";
             return default;
+        }
+
+        if (meta.Uploader != default)
+        {
+            meta.Uploader = meta.Uploader!.PublicProfile ? meta.Uploader : null;
         }
 
         return await CheckDownload(meta);
