@@ -48,4 +48,6 @@ public class ApiUser
     /// When the account was created
     /// </summary>
     public DateTime Created { get; init; }
+    
+    public bool IsNostr { get; init; }
 }

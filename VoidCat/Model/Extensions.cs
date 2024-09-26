@@ -375,7 +375,8 @@ public static class Extensions
             NeedsVerification = isSelf ? !u.Flags.HasFlag(UserFlags.EmailVerified) : null,
             PublicProfile = u.Flags.HasFlag(UserFlags.PublicProfile),
             PublicUploads = u.Flags.HasFlag(UserFlags.PublicUploads),
-            Roles = u.Roles.Select(a => a.Role).ToList()
+            Roles = u.Roles.Select(a => a.Role).ToList(),
+            IsNostr = u.AuthType is UserAuthType.Nostr
         };
     }
 
